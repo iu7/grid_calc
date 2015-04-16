@@ -156,31 +156,67 @@ basicstyle=\ttfamily\small,
   \label{tab:db-types}
   \begin{tabu}{|c|c|X[c]|X[c]|}
     \hline
-        Таблица     &     Поле      & Тип                               & Описание                    \\ \hline
-        Subtask     &   AgentUsed   & UID?                              & Использованный узел         \\ \cline{2-4}
+        Таблица     &     Поле      & Тип     & Описание                    \\ \hline
+        Subtask     &   AgentUsed   & UID?    & Использованный узел         \\ \cline{2-4}
                     &    Status     & \shortstack{Scheduled, In process \\ Terminated, N/A \\ Completed}    & Статус задачи \\ \cline{2-4}
-                    &  ResultFile   & string?                           & Имя архива с результатами   \\ \hline
-         Task       &  ConfigFile   & string                            & Имя конфигурационного файла \\ \hline
-         Agent      &      --       & --                                & --                          \\ \hline
-         Trait      &     Name      & string                            & Имя черты                   \\ \cline{2-4}
-                    &   Version     &    string                         & Версия черты                \\ \hline
+                    & ResultArchive & string? & Имя архива с результатами   \\ \hline
+         Task       &    Archive    & string  & Имя архива с файлами задачи \\ \cline{2-4}
+                    &    MaxTime    & int     & Максимальное время расчёта задачи, в секундах \\\cline{2-4}
+                    &  StartScript  & string  & Имя скрипта, запускающего задачу \\\cline{2-4}
+                    &  ResultFiles  & string  & Через запятую, имена результирующих файлов \\\hline
+         Agent      &      --       & --      & --                          \\ \hline
+         Trait      &     Name      & string  & Имя черты                   \\ \cline{2-4}
+                    &   Version     & string  & Версия черты                \\ \hline
   \end{tabu}
 \end{table}
 
 \subsection{Проектирование API отдельных сервисов}
-\subsubsection{Сервер БД}
-REST API, полное отражение структуры БД на набор эндпойнтов-объектов (/agents/id, /traits/id, tasks/id и т д)
+В данном разделе описываются API отдельных сервисов. 
+
+В случае успешного выполнения запроса сервис отвечает сообщением с HTTP--кодом "200 OK" и указанным в соответствующей таблице значением в теле сообщения.
+В случае ошибки сервис отвечает сообщением с HTTP--кодом "422 Unprocessable Entry" и JSON--значением {"status"="error", "message"="..."} в теле сообщения.
+Поле message в теле сообщения содержит пояснения к ошибке.
+
+\FloatBarrier
+\subsubsection{Сервис БД}
+Основная задача сервиса БД -- инкапсуляция СУБД и отображение структуры БД на REST-API в виде ресурсов -- объектов (Agents/id, /traits/id, tasks/id и т д).
+
+Выдача результатов производится в формате JSON. 
+Сервис предоставляет одинаковое API для доступа ко всем таблицам.
+API сервиса, относящееся к таблице БД "type", приведено в таблице~\ref{tab:db-api}.
+
+\begin{table}[h]
+  \caption{API сервиса БД}
+  \label{tab:db-api}
+  \begin{tabu}{|c|c|c|X[c]|}
+  	\hline
+  	 Ресурс  & Метод  & JSON -- параметры &  Возвращаемое JSON -- значение в случае успеха:  \\ \hline
+  	 /type   &  GET   &                   & массив со списком идентификаторов объектов types \\ \cline{2-4}
+  	         &  POST  &    объект type    &                 \{"status"="ok"\}                  \\ \hline
+  	/type/id &  GET   &                   &                   объект type                    \\ \cline{2-4}
+  	         &  PUT   &    объект type    &                 \{"status"="ok"\}                  \\ \cline{2-4}
+  	         & DELETE &                   &                 \{"status"="ok"\}                  \\ \hline
+  \end{tabu}  
+\end{table}
 
 \subsubsection{Балансировщик}
-\begin{tabu}{|c|c|X[c]|}
-  \hline
-          Функционал          &    Endpoint     & Хедеры-параметры                 \\ \hline
-    Получение новой задачи    &  GET /newtask   & AgentID                          \\ \hline
-  Выдача результатов расчёта  &  POST /result   & AgentID, SubtaskID, Status, Body \\ \hline
-  Оповещение о статусе работы & POST /heartbeat & AgentID                          \\ \hline
-\end{tabu}
+Основная задача балансировщика -- выдача новых задач вычислительным узлам, отслеживание состояния узлов и запись присланных вычислительными узлами результатов в базу данных.
+API балансировщика приведено в таблице~\ref{tab:balance-api}.
+При обращении на ресурс "/result" в теле сообщения должен быть архив с результатами.
 
-\subsubsection{Фронтенд вычлительных узлов}
+\begin{table}[h]
+    \caption{API сервиса--балансировщика}
+    \label{tab:balance-api}
+    \begin{tabu}{|c|c|c|X[c]|}
+    	\hline
+    	 Ресурс  & Метод &         Заголовки          & Возвращаемое JSON -- значение в случае успеха:                          \\ \hline
+    	  task   &  GET  &          AgentID           & \{"task "=объект task, "subtask"=объект subtask, "archive"=архив задачи\} \\ \hline
+    	 result  & POST  & AgentID, SubtaskID, Status & \{"status"="ok"\}                                                         \\ \hline
+    	hearbeat & POST  &          AgentID           & \{"status"="ok"\}                                                         \\ \hline
+    \end{tabu}
+\end{table}
+
+\subsubsection{Фронтенд вычислительных узлов}
 Дублирует эндпойнты балансировщика; добавлены функции:
 \begin{itemize}
   \item Регистрация нового узла в сети
