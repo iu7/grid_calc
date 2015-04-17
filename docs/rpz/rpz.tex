@@ -109,7 +109,7 @@ basicstyle=\ttfamily\small,
 
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=.6\linewidth]{img/schema}
+    \includegraphics[width=.6\linewidth]{img/schema.eps}
     \caption{Схема комплекса}
     \label{fig:schema}
 \end{figure}
@@ -141,9 +141,9 @@ basicstyle=\ttfamily\small,
 \subsubsection{ER-диаграмма}
 С учётом вышеописанных ограничений на структуру, отношения сущностей в базе данных можно представить в виде ER-диаграммы на рис.~\ref{fig:db-erd}.
 
-\begin{figure}
+\begin{figure}[h]
     \centering
-    \includegraphics[width=\linewidth]{img/db-er-crowsfoot}
+    \includegraphics[width=\linewidth]{img/DB-ER-Crowsfoot.eps}
     \caption{ER-диаграмма сущностей в базе данных}
     \label{fig:db-erd}
 \end{figure}
@@ -165,8 +165,8 @@ basicstyle=\ttfamily\small,
                     &  StartScript  & string  & Имя скрипта, запускающего задачу \\\cline{2-4}
                     &  ResultFiles  & string  & Через запятую, имена результирующих файлов \\\hline
          Agent      &      --       & --      & --                          \\ \hline
-         Trait      &     Name      & string  & Имя черты                   \\ \cline{2-4}
-                    &   Version     & string  & Версия черты                \\ \hline
+         Trait      &     Name      & string  & Имя параметра                   \\ \cline{2-4}
+                    &   Version     & string  & Версия параметра                \\ \hline
   \end{tabu}
 \end{table}
 
