@@ -1,0 +1,36 @@
+# Template used to create this container: /usr/share/lxc/templates/lxc-archlinux
+# Parameters passed to the template:
+# For additional config options, please look at lxc.container.conf(5)
+
+## default values
+lxc.rootfs = /var/lib/lxc/grid_pg_node0/rootfs
+lxc.utsname = grid_pg_node0
+lxc.arch = x86_64
+lxc.include = /usr/share/lxc/config/archlinux.common.conf
+
+## network
+lxc.network.type = veth
+lxc.network.link = br0
+lxc.network.flags = up
+lxc.network.ipv4 = 10.10.0.2/24
+lxc.network.ipv4.gateway = 10.10.0.1
+lxc.network.name = eth0
+
+## mounts
+## specify shared filesystem paths in the format below
+## make sure that the mount point exists on the lxc
+lxc.mount.entry = /mnt/data/share0 mnt/data none bind 0 0
+
+## systemd within the lxc
+lxc.autodev = 1
+lxc.pts = 1024
+lxc.kmsg = 0
+lxc.hook.autodev=/var/lib/lxc/grid_pg_node0/autodev
+
+## for xorg
+## fix overmounting see: https://github.com/lxc/lxc/issues/434
+lxc.mount.entry = tmpfs tmp tmpfs defaults
+lxc.mount.entry = /dev/dri dev/dri none bind,optional,create=dir
+lxc.mount.entry = /dev/snd dev/snd none bind,optional,create=dir
+lxc.mount.entry = /tmp/.X11-unix tmp/.X11-unix none bind,optional,create=dir
+lxc.mount.entry = /dev/video0 dev/video0 none bind,optional,create=file
