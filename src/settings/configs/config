@@ -12,8 +12,8 @@ lxc.include = /usr/share/lxc/config/archlinux.common.conf
 lxc.network.type = veth
 lxc.network.link = br0
 lxc.network.flags = up
-lxc.network.ipv4 = 10.10.0.2/24
-lxc.network.ipv4.gateway = 10.10.0.1
+lxc.network.ipv4 = 10.0.0.10/24
+lxc.network.ipv4.gateway = 10.0.0.1
 lxc.network.name = eth0
 
 ## mounts
