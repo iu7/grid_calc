@@ -118,13 +118,13 @@ basicstyle=\ttfamily\small,
   \caption{Описание элементов схемы на рис.~\ref{fig:schema}}
   \label{tab:schema}
   \begin{tabu}{|c|X[c]|}
-    \hline
-    Название сервиса   & Функционал сервиса                                                                            \\ \hline
-    Логика             & Реализация пользовательского интерфейса в виде API либо веб-страницы                          \\ \hline
-    Бекенд данных      & Инкапсуляция доступа к БД                                                                     \\ \hline
-    Сессия 1..N        & Аутентификация и авторизация пользователей                                                    \\ \hline
-     Балансировщик 1..N & Отслеживание состояния вычислителей, выдача им новых задач, сбор результатов выполнения задач \\ \hline
-      Фронтенд П,В       & Проверка прав пользователей на доступ к предоставляемому API                                  \\ \hline
+  	\hline
+  	 Название сервиса  & Функционал сервиса                                                                            \\ \hline
+  	      Логика       & Реализация пользовательского интерфейса в виде API либо веб-страницы                          \\ \hline
+  	  Бекенд данных    & Инкапсуляция доступа к БД                                                                     \\ \hline
+  	   Сессия 1..N     & Аутентификация и авторизация пользователей                                                    \\ \hline
+  	Балансировщик 1..N & Отслеживание состояния вычислителей, выдача им новых задач, сбор результатов выполнения задач \\ \hline
+  	   Фронтенд П,В    & Проверка прав пользователей на доступ к предоставляемому API                                  \\ \hline
   \end{tabu}
 \end{table}
 
@@ -192,14 +192,14 @@ API СМ приведено в таблице~\ref{tab:mon-api}.
     \label{tab:mon-api}
     \begin{tabu}{|c|c|c|X[c]|}
     	\hline
-    	        Ресурс         & Метод & JSON -- параметры & Возвращаемое JSON -- значение в случае успеха:  \\ \hline
-    	    /services/Type     & POST  &       Port        & \{"status"="success", "Address"="ipaddr:Port"\} \\ \cline{2-4}
-    	                       &  GET  &                   & [{"Address"="...", "State"="..."}]              \\ \hline
-    	/services/Type/Address & POST  & \{"State"="..."\} & {"status"="ok"}                                 \\ \cline{2-4}
-    	/services/Type/Address &  GET  &                   & \{"status"="ok", "State"="..."\}                \\ \hline
+    	        Ресурс         & Метод &  Параметры  & Возвращаемое JSON -- значение в случае успеха:   \\ \hline
+    	    /services/type     & POST  & port, state & \{"status":"success", "address":"ipaddr:port"\}  \\ \cline{2-4}
+    	                       &  GET  &             & \{address:\{state:"...", lastbeat:"..."\}, ...\} \\ \hline
+    	/services/type/address &  PUT  &    state    & {"status"="success"}                             \\ \cline{2-4}
+    	/services/type/address &  GET  &             & \{"state":"...", "lastbeat":"..."\}              \\ \hline
     \end{tabu}  
 \end{table}
-
+CHANGE 4 STR TO FIRST
 
 \FloatBarrier
 \subsubsection{Сервис БД}
