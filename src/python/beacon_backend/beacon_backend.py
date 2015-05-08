@@ -3,6 +3,7 @@ import jsonpickle
 import datetime
 import threading
 import time
+import sys
 
 timeout = 10
 
@@ -62,13 +63,15 @@ def collector():
         if len(typedict) == 0:
             del services[type]
     
-    threading.Timer(timeout, collector).start()
+    thr = threading.Timer(timeout, collector)
+    thr.daemon = True
+    thr.start()
         
 def jsenc(o):
     return jsonpickle.encode(o, unpicklable=False)
 
 class ServiceState:
-    state = ""
+    state = ''
     lastbeat = None
     def __init__(self, state):
         self.state = state
@@ -79,5 +82,15 @@ class ServiceState:
         return state
 
 if __name__ == '__main__':
+    p = 666
+    if len(sys.argv) == 1:
+        print ('Port number defaulted to ' + str(p))
+    else:
+        if sys.argv[1].isdigit():
+            p = int(sys.argv[1])
+        else:
+            print('Unprocessable port number')
+            sys.exit()
+    
     collector()
-    app.run(host = '0.0.0.0', port = 666)
+    app.run(host = '0.0.0.0', port = p)
