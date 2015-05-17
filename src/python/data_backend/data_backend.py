@@ -1,28 +1,31 @@
-from settings import *
-from .. . common . common import *
+import settings
+from common import *
 
 from flask import *
 from werkzeug.routing import BaseConverter
 
 app = Flask(__name__)
-app.config.update(dict(\
-    SQLALCHEMY_DATABASE_URI=DATABASE_CONNECTION_STRING),\
-    DEBUG=True\
-)
 
-###>> Imports for models.py
+###>> init models
+from models import *
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
-engine = create_engine(DATABASE_CONNECTION_STRING, convert_unicode=True)
-db_session = scoped_session(sessionmaker(autocommit=False, autoflush=False, bind=engine))
+dbconnstring = settings.get_connection_string('10.0.0.10', 5432) # here must be if __name__ == main shit instead
 
+app.config.update(dict(\
+        SQLALCHEMY_DATABASE_URI=dbconnstring),\
+        DEBUG=True\
+    )
+
+engine = create_engine(dbconnstring, convert_unicode=True)
+db_session = scoped_session(sessionmaker(autocommit=False, autoflush=False, bind=engine))
 Base = declarative_base()
 Base.query = db_session.query_property()
 
-from .. . common . models import *
-###<< Imports for models.py
+init_models(Base)
+###<< init models
 
 table_name_d = {\
     'subtask': Subtask,\
@@ -56,7 +59,7 @@ def get_item(table, column, value):
                     return api_200(res.to_dict())
                 else:
                     return api_404()
-            except Exception, e:
+            except Exception as e:
                 return api_400(msg_type_err_fmt.format(table, column, value, tp, type(value)))
         else:
             return api_404(msg_col_not_found_fmt.format(table, column))
@@ -73,14 +76,14 @@ def post_item(table, value_json):
                 tppsr = tbl.metainf.col_type_parsers[field] if field in tbl.metainf.col_type_parsers else tp
                 try:
                     kwargs.update({field : tppsr(field)})
-                except Exception, e:
+                except Exception as e:
                     return api_400(msg_type_err_fmt.format(table, field, value, tp, type(value)))
             else:
                 return api_404(msg_col_not_found_fmt.format(table, field))
         val = None
         try:
             val = tbl(kwargs)
-        except Exception, e:
+        except Exception as e:
             return api_400(str(e))
         db_session.add(val)
         db_session.commit()
@@ -98,13 +101,13 @@ def put_item(table, pkf, pkfv, value_json):
             pkfv = None
             try:
                 pkfv = pkpftpsr(pkfvs)
-            except Exception, e:
+            except Exception as e:
                 return api_400(msg_type_err_fmt.format(table, pkf, pkfvs, pkft, pkf, type(pkfvs)))
             
             item = None
             try:
                 tbl.query.filter_by({pkf : pkfv}).first()
-            except Exception, e:
+            except Exception as e:
                 return api_404(msg_col_not_found_fmt.format(table, pkf))
             
             if not item:
@@ -116,7 +119,7 @@ def put_item(table, pkf, pkfv, value_json):
                     tppsr = tbl.metainf.col_type_parsers[field] if field in tbl.metainf.col_type_parsers else tp
                     try:
                         setattr(item, field, tppsr(field))
-                    except Exception, e:
+                    except Exception as e:
                         return api_400(msg_type_err_fmt.format(table, field, value, tp, type(value)))
                 else:
                     return api_404(msg_col_not_found_fmt.format(table, field))
@@ -139,13 +142,13 @@ def delete_item(table, pkf, pkfv):
             pkfv = None
             try:
                 pkfv = pkpftpsr(pkfvs)
-            except Exception, e:
+            except Exception as e:
                 return api_400(msg_type_err_fmt.format(table, pkf, pkfvs, pkft, pkf, type(pkfvs)))
             
             item = None
             try:
                 tbl.query.filter_by({pkf : pkfv}).first()
-            except Exception, e:
+            except Exception as e:
                 return api_404(msg_col_not_found_fmt.format(table, pkf))
             
             if not item:
@@ -172,11 +175,11 @@ def rest_post_item(table):
     return post_item(table, value)
 
 @app.route('/data/<table>/<column>/<value>', methods=['PUT'])
-def rest_post_item(table, column, value):
+def rest_put_item(table, column, value):
     return put_item(table, column, value)
 
 @app.route('/data/<table>/<column>/<value>', methods=['DELETE'])
-def rest_post_item(table, column, value):
+def rest_delete_item(table, column, value):
     return delete_item(table, column, value)
 
 ### Error handlers ###
@@ -194,6 +197,5 @@ def api_200(data = {}):
 
 ### Other ###
 
-#if __name__ == '__main__':
-#    protocol, host, port = settings.backends['session'].split(':')
-#    app.run(host = host[2:], port = int(port))
+if __name__ == '__main__':
+    app.run(host = '0.0.0.0', port = 50000)
