@@ -1,6 +1,24 @@
+<p>
 ROLES:
 1. REST-wrapper for postresql/pgpool2 queries
+</p>
 
+<p>
 API:
-/data/table/column/value GET PUT DELETE
-/data/table              POST
+<br/>
+<table>
+<tr>
+<td>/data/table/column/value</td><td>GET PUT DELETE</td>
+</tr>
+<tr>
+<td>/data/table</td> <td>POST</td>
+</tr>
+</p>
+
+<p>
+About those symlinks.
+<br/>
+Relative import in python works strange.
+<br/>
+With symlinks at least it works, but looks ugly.
+</p>
