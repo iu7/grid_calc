@@ -1,4 +1,12 @@
 <p>
+About those symlinks.
+<br/>
+Relative import in python works strange.
+<br/>
+With symlinks at least it works, but looks ugly.
+</p>
+
+<p>
 ROLES:
 1. REST-wrapper for postresql/pgpool2 queries
 </p>
@@ -13,12 +21,4 @@ API:
 <tr>
 <td>/data/table</td> <td>POST</td>
 </tr>
-</p>
-
-<p>
-About those symlinks.
-<br/>
-Relative import in python works strange.
-<br/>
-With symlinks at least it works, but looks ugly.
 </p>
