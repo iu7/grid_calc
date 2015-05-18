@@ -1,0 +1,36 @@
+digraph "classes_Models" {
+charset="utf-8";
+rankdir="TB";
+//size=2.5;
+//ratio=compress;
+//splines=ortho;
+"1" [label="{models.Agent|__tablename__ : str\lid : Column.Integer\lsubtasks : sqlalchemy.orm.relation\l|__init__()\l__repr__()\lto_dict()\l}", shape="record"];
+"2" [label="{models.Subtask|__tablename__ : str\lid : Column.Integer\lagent_id : Column.ForeignKey\ltask_id : Column.ForeignKey\lresult_archive : Column.String\lstatus : Column.Integer\l|__init__()\l__repr__()\lto_dict()\l}", shape="record"];
+"3" [label="{models.Task|__tablename__ : str\lid : Column.Integer\lmax_time : Column.Integer\lresult_files : Column.String\lstart_script : Column.String\lsubtasks : sqlalchemy.qorm.relation\l|__init__()\l__repr__()\lto_dict()\l}", shape="record"];
+"4" [label="{models.Trait|__tablename__ : str\lid : Column.Integer\lname : Column.String\lversion : Column.String\lagents : sqlalchemy.qorm.relation\ltasks : sqlalchemy.qorm.relation\l|__init__()\l__repr__()\lto_dict()\l}", shape="record"];
+"5" [label="{models.User|__tablename__ : str\lid : Column.Integer\lmail : Column.String\lphone : Column.String\lpw_hash : Column.String\lusername : Column.String\lsessions : sqlalchemy.qorm.relation\l|__init__()\l__repr__()\lto_dict()\l}", shape="record"];
+"6" [label="{models.UserSession|__tablename__ : str\lid : Column.Integer\lsession_id : Column.ForeignKey\luser_id : Column.ForeignKey\ltimestamp : Column.String\l|__repr__()\lrefresh()\lsession_expired()\lto_dict()\lusersession_init()\l}", shape="record"];
+"7" [label="{sqlalchemy.sql.schema.Column|}", shape="record"];
+"7" -> "1" [arrowhead="diamond", arrowtail="none", fontcolor="green", label="id", style="solid"];
+"7" -> "2" [arrowhead="diamond", arrowtail="none", fontcolor="green", label="id", style="solid"];
+"7" -> "2" [arrowhead="diamond", arrowtail="none", fontcolor="green", label="status", style="solid"];
+"7" -> "2" [arrowhead="diamond", arrowtail="none", fontcolor="green", label="agent_id", style="solid"];
+"7" -> "2" [arrowhead="diamond", arrowtail="none", fontcolor="green", label="result_archive", style="solid"];
+"7" -> "2" [arrowhead="diamond", arrowtail="none", fontcolor="green", label="task_id", style="solid"];
+"7" -> "3" [arrowhead="diamond", arrowtail="none", fontcolor="green", label="result_files", style="solid"];
+"7" -> "3" [arrowhead="diamond", arrowtail="none", fontcolor="green", label="id", style="solid"];
+"7" -> "3" [arrowhead="diamond", arrowtail="none", fontcolor="green", label="start_script", style="solid"];
+"7" -> "3" [arrowhead="diamond", arrowtail="none", fontcolor="green", label="max_time", style="solid"];
+"7" -> "4" [arrowhead="diamond", arrowtail="none", fontcolor="green", label="id", style="solid"];
+"7" -> "4" [arrowhead="diamond", arrowtail="none", fontcolor="green", label="version", style="solid"];
+"7" -> "4" [arrowhead="diamond", arrowtail="none", fontcolor="green", label="name", style="solid"];
+"7" -> "5" [arrowhead="diamond", arrowtail="none", fontcolor="green", label="pw_hash", style="solid"];
+"7" -> "5" [arrowhead="diamond", arrowtail="none", fontcolor="green", label="id", style="solid"];
+"7" -> "5" [arrowhead="diamond", arrowtail="none", fontcolor="green", label="phone", style="solid"];
+"7" -> "5" [arrowhead="diamond", arrowtail="none", fontcolor="green", label="username", style="solid"];
+"7" -> "5" [arrowhead="diamond", arrowtail="none", fontcolor="green", label="mail", style="solid"];
+"7" -> "6" [arrowhead="diamond", arrowtail="none", fontcolor="green", label="session_id", style="solid"];
+"7" -> "6" [arrowhead="diamond", arrowtail="none", fontcolor="green", label="id", style="solid"];
+"7" -> "6" [arrowhead="diamond", arrowtail="none", fontcolor="green", label="user_id", style="solid"];
+"7" -> "6" [arrowhead="diamond", arrowtail="none", fontcolor="green", label="timestamp", style="solid"];
+}
