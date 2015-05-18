@@ -143,22 +143,6 @@ Load balancer</y:NodeLabel>
       </data>
     </node>
     <node id="n8">
-      <data key="d4"/>
-      <data key="d6">
-        <y:SVGNode>
-          <y:Geometry height="40.0" width="115.0" x="933.7000000000008" y="323.5359999999998"/>
-          <y:Fill hasColor="false" transparent="false"/>
-          <y:BorderStyle color="#000000" type="line" width="1.0"/>
-          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="33.40234375" modelName="internal" modelPosition="l" textColor="#000000" visible="true" width="101.365234375" x="4.0" y="3.298828125">&lt;&lt;component&gt;&gt;
-Monitoring system</y:NodeLabel>
-          <y:SVGNodeProperties usingVisualBounds="false"/>
-          <y:SVGModel svgBoundsPolicy="0">
-            <y:SVGContent refid="1"/>
-          </y:SVGModel>
-        </y:SVGNode>
-      </data>
-    </node>
-    <node id="n9">
       <data key="d6">
         <y:SVGNode>
           <y:Geometry height="80.0" width="137.9596814222221" x="432.8307382034386" y="175.82617277440025"/>
@@ -172,13 +156,13 @@ Monitoring system</y:NodeLabel>
         </y:SVGNode>
       </data>
     </node>
-    <node id="n10">
+    <node id="n9">
       <data key="d6">
         <y:SVGNode>
           <y:Geometry height="80.0" width="137.9596814222221" x="432.83073820343856" y="75.75308638720011"/>
           <y:Fill color="#CCCCFF" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
-          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" modelName="internal" modelPosition="t" textColor="#000000" visible="true" width="78.02734375" x="29.966168836111024" y="4.0">ControlServer</y:NodeLabel>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" modelName="internal" modelPosition="t" textColor="#000000" visible="true" width="78.02734375" x="29.96616883611108" y="4.0">ControlServer</y:NodeLabel>
           <y:SVGNodeProperties usingVisualBounds="false"/>
           <y:SVGModel svgBoundsPolicy="0">
             <y:SVGContent refid="2"/>
@@ -186,8 +170,7 @@ Monitoring system</y:NodeLabel>
         </y:SVGNode>
       </data>
     </node>
-    <node id="n11">
-      <data key="d5"/>
+    <node id="n10">
       <data key="d6">
         <y:SVGNode>
           <y:Geometry height="80.0" width="137.9596814222221" x="627.8353716655088" y="-34.24691361279983"/>
@@ -201,14 +184,27 @@ Monitoring system</y:NodeLabel>
         </y:SVGNode>
       </data>
     </node>
-    <node id="n12">
-      <data key="d5"/>
+    <node id="n11">
       <data key="d6">
         <y:SVGNode>
           <y:Geometry height="80.0" width="137.9596814222221" x="432.8307382034386" y="-34.24691361279989"/>
           <y:Fill color="#CCCCFF" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
-          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" modelName="internal" modelPosition="t" textColor="#000000" visible="true" width="112.708984375" x="12.62534852361108" y="4.0">UserFrontendServer</y:NodeLabel>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" modelName="internal" modelPosition="t" textColor="#000000" visible="true" width="112.708984375" x="12.625348523611024" y="4.0">UserFrontendServer</y:NodeLabel>
+          <y:SVGNodeProperties usingVisualBounds="false"/>
+          <y:SVGModel svgBoundsPolicy="0">
+            <y:SVGContent refid="2"/>
+          </y:SVGModel>
+        </y:SVGNode>
+      </data>
+    </node>
+    <node id="n12">
+      <data key="d6">
+        <y:SVGNode>
+          <y:Geometry height="80.0" width="137.9596814222221" x="212.52364782279227" y="175.8261727744002"/>
+          <y:Fill color="#CCCCFF" transparent="false"/>
+          <y:BorderStyle color="#000000" type="line" width="1.0"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" modelName="internal" modelPosition="t" textColor="#000000" visible="true" width="82.03515625" x="27.962262586111052" y="4.0">SessionServer</y:NodeLabel>
           <y:SVGNodeProperties usingVisualBounds="false"/>
           <y:SVGModel svgBoundsPolicy="0">
             <y:SVGContent refid="2"/>
@@ -217,13 +213,12 @@ Monitoring system</y:NodeLabel>
       </data>
     </node>
     <node id="n13">
-      <data key="d5"/>
       <data key="d6">
         <y:SVGNode>
-          <y:Geometry height="80.0" width="137.9596814222221" x="212.52364782279227" y="175.8261727744002"/>
+          <y:Geometry height="80.0" width="137.9596814222221" x="430.95089749232744" y="325.02923938877336"/>
           <y:Fill color="#CCCCFF" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
-          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" modelName="internal" modelPosition="t" textColor="#000000" visible="true" width="82.03515625" x="27.962262586111024" y="4.0">SessionServer</y:NodeLabel>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" modelName="internal" modelPosition="t" textColor="#000000" visible="true" width="122.060546875" x="7.9495672736110805" y="4.0">NodesFrontendServer</y:NodeLabel>
           <y:SVGNodeProperties usingVisualBounds="false"/>
           <y:SVGModel svgBoundsPolicy="0">
             <y:SVGContent refid="2"/>
@@ -232,22 +227,6 @@ Monitoring system</y:NodeLabel>
       </data>
     </node>
     <node id="n14">
-      <data key="d5"/>
-      <data key="d6">
-        <y:SVGNode>
-          <y:Geometry height="80.0" width="137.9596814222221" x="430.95089749232744" y="325.02923938877336"/>
-          <y:Fill color="#CCCCFF" transparent="false"/>
-          <y:BorderStyle color="#000000" type="line" width="1.0"/>
-          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" modelName="internal" modelPosition="t" textColor="#000000" visible="true" width="122.060546875" x="7.949567273611024" y="4.0">NodesFrontendServer</y:NodeLabel>
-          <y:SVGNodeProperties usingVisualBounds="false"/>
-          <y:SVGModel svgBoundsPolicy="0">
-            <y:SVGContent refid="2"/>
-          </y:SVGModel>
-        </y:SVGNode>
-      </data>
-    </node>
-    <node id="n15">
-      <data key="d5"/>
       <data key="d6">
         <y:SVGNode>
           <y:Geometry height="80.0" width="137.9596814222221" x="635.7528956455848" y="175.0581727744002"/>
@@ -261,8 +240,7 @@ Monitoring system</y:NodeLabel>
         </y:SVGNode>
       </data>
     </node>
-    <node id="n16">
-      <data key="d5"/>
+    <node id="n15">
       <data key="d6">
         <y:SVGNode>
           <y:Geometry height="80.0" width="137.9596814222221" x="639.3152123766198" y="325.02923938877336"/>
@@ -276,8 +254,7 @@ Monitoring system</y:NodeLabel>
         </y:SVGNode>
       </data>
     </node>
-    <edge id="e0" source="n10" target="n9">
-      <data key="d9"/>
+    <edge id="e0" source="n9" target="n8">
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0"/>
@@ -287,8 +264,7 @@ Monitoring system</y:NodeLabel>
         </y:PolyLineEdge>
       </data>
     </edge>
-    <edge id="e1" source="n12" target="n11">
-      <data key="d9"/>
+    <edge id="e1" source="n11" target="n10">
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0"/>
@@ -298,8 +274,7 @@ Monitoring system</y:NodeLabel>
         </y:PolyLineEdge>
       </data>
     </edge>
-    <edge id="e2" source="n12" target="n10">
-      <data key="d9"/>
+    <edge id="e2" source="n11" target="n9">
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0"/>
@@ -309,8 +284,7 @@ Monitoring system</y:NodeLabel>
         </y:PolyLineEdge>
       </data>
     </edge>
-    <edge id="e3" source="n12" target="n13">
-      <data key="d9"/>
+    <edge id="e3" source="n11" target="n12">
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0"/>
@@ -320,8 +294,7 @@ Monitoring system</y:NodeLabel>
         </y:PolyLineEdge>
       </data>
     </edge>
-    <edge id="e4" source="n13" target="n9">
-      <data key="d9"/>
+    <edge id="e4" source="n12" target="n8">
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0"/>
@@ -331,8 +304,7 @@ Monitoring system</y:NodeLabel>
         </y:PolyLineEdge>
       </data>
     </edge>
-    <edge id="e5" source="n13" target="n14">
-      <data key="d9"/>
+    <edge id="e5" source="n12" target="n13">
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0"/>
@@ -342,8 +314,7 @@ Monitoring system</y:NodeLabel>
         </y:PolyLineEdge>
       </data>
     </edge>
-    <edge id="e6" source="n15" target="n14">
-      <data key="d9"/>
+    <edge id="e6" source="n14" target="n13">
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0"/>
@@ -353,8 +324,7 @@ Monitoring system</y:NodeLabel>
         </y:PolyLineEdge>
       </data>
     </edge>
-    <edge id="e7" source="n9" target="n15">
-      <data key="d9"/>
+    <edge id="e7" source="n8" target="n14">
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0"/>
@@ -364,8 +334,7 @@ Monitoring system</y:NodeLabel>
         </y:PolyLineEdge>
       </data>
     </edge>
-    <edge id="e8" source="n14" target="n16">
-      <data key="d9"/>
+    <edge id="e8" source="n13" target="n15">
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0"/>
