@@ -61,12 +61,24 @@ msg_col_not_found_fmt = 'table <{0}>: column <{1}> not found'
 msg_tbl_not_found_fmt = 'table <{0}>: not found'
 msg_item_not_found_fmt = 'table <{0}>: <{1}> = <{2}> not found'
 msg_mtm_pk_not_found_fmt = 'MtM table <{0}>: pk <{1}> not found in input'
+msg_mtm_only = 'Bad request: Only MtM tables supported'
+msg_mtm_not_found = 'MtM relation not found'
 
 def init_db():
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
 
-def check_mtm(table, value_json):
+def parse_field_value(tbl, field, value):
+    res = None
+    tp = tbl.metainf.col_type_d[field]
+    tppsr = tbl.metainf.col_type_parsers[field] if field in tbl.metainf.col_type_parsers else tp
+    try:
+        res = tppsr(value)
+    except Exception as e:
+        return False, api_400(msg_type_err_fmt.format(tbl.__tablename__, field, value, tp, type(value)))
+    return True, res
+
+def get_mtm(table, value_json):
     if table in mtm_table_name_d:
         mtmd = mtm_table_name_d[table]
         kwargs = {}
@@ -74,13 +86,55 @@ def check_mtm(table, value_json):
             if pk in value_json:
                 value = value_json[pk]
                 kwargs.update({pk : value})
+            else:
+                return api_404(msg_mtm_pk_not_found_fmt.format(table, pk))
         res = db_session.query(mtmd[2]).filter_by(**kwargs).first()
         if res:
             return api_200(kwargs)
         else:
             return api_404()
     elif table in table_name_d:
-        return api_400('Bad request: Only MtM tables supported')
+        return api_400(msg_mtm_only)
+    else:
+        return api_404(msg_tbl_not_found_fmt.format(table))
+
+def delete_mtm(table, value_json):
+    if table in mtm_table_name_d:
+        mtmd = mtm_table_name_d[table]
+        par_tbl_pk, par_tbl = list(mtmd[0].items())[0]
+        for pk, tbl in mtmd[1].items():
+            if pk in value_json:
+                bres, res = parse_field_value(tbl, tbl.metainf.pk_field, value_json[pk])
+                if not bres:
+                    return res
+                obj = tbl.query.filter_by(**{tbl.metainf.pk_field : res}).first()
+                if obj:
+                    if pk in par_tbl.metainf.relationship_lst:
+                        if par_tbl_pk in value_json:
+                            bres_, res_ = parse_field_value(par_tbl, par_tbl.metainf.pk_field, value_json[par_tbl_pk])
+                            if not bres_:
+                                return res_
+                            parobj = par_tbl.query.filter_by(**{par_tbl.metainf.pk_field : res_}).first()
+                            if parobj:
+                                coll = parobj.metainf.relationship_by_pk(pk, parobj)
+                                if obj in coll:
+                                    parobj.metainf.relationship_by_pk(pk, parobj).remove(obj)
+                                else:
+                                    return api_404(msg_mtm_not_found)
+                            else:
+                                return api_404(msg_item_not_found_fmt.format(par_tbl.__tablename__, par_tbl.metainf.pk_field, value_json[par_tbl_pk]))
+                        else:
+                            return api_400(msg_mtm_pk_not_found_fmt.format(table, par_tbl_pk))
+                    else:
+                        return api_404(msg_col_not_found_fmt.format(par_tbl, pk))
+                else:
+                    return api_404(msg_item_not_found_fmt.format(tbl.__tablename__, tbl.metainf.pk_field, value_json[pk]))
+            else:
+                return api_400(msg_mtm_pk_not_found_fmt.format(table, pk))
+        db_session.commit()
+        return api_200()
+    elif table in table_name_d:
+        return api_400(msg_mtm_only)
     else:
         return api_404(msg_tbl_not_found_fmt.format(table))
 
@@ -103,7 +157,7 @@ def get_item(table, column, value):
         else:
             return api_404(msg_col_not_found_fmt.format(table, column))
     elif table in mtm_table_name_d:
-        return api_400('Bad request: For MtM table use GET /data/table/mtmcheck endpoint')
+        return api_400('Bad request: For MtM table use GET /data/mtm/table/ endpoint with required JSON parameters.')
     else:
         return api_404(msg_tbl_not_found_fmt.format(table))
 
@@ -113,12 +167,11 @@ def post_item(table, value_json):
         kwargs = {}
         for field, value in value_json.items():
             if field in tbl.metainf.col_type_d:
-                tp = tbl.metainf.col_type_d[field]
-                tppsr = tbl.metainf.col_type_parsers[field] if field in tbl.metainf.col_type_parsers else tp
-                try:
-                    kwargs.update({field : tppsr(value)})
-                except Exception as e:
-                    return api_400(msg_type_err_fmt.format(table, field, value, tp, type(value)))
+                bres, res = parse_field_value(tbl, field, value)
+                if bres:
+                    kwargs.update({field : res})
+                else:
+                    return res
             else:
                 return api_404(msg_col_not_found_fmt.format(table, field))
         val = None
@@ -134,15 +187,19 @@ def post_item(table, value_json):
         par_tbl_pk, par_tbl = list(mtmd[0].items())[0]
         for pk, tbl in mtmd[1].items():
             if pk in value_json:
-                obj = tbl.query.filter_by(**{tbl.metainf.pk_field : value_json[pk]}).first()
+                bres, res = parse_field_value(tbl, tbl.metainf.pk_field, value_json[pk])
+                if not bres:
+                    return res
+                obj = tbl.query.filter_by(**{tbl.metainf.pk_field : res}).first()
                 if obj:
                     if pk in par_tbl.metainf.relationship_lst:
                         if par_tbl_pk in value_json:
-                            parobj = par_tbl.query.filter_by(**{par_tbl.metainf.pk_field : value_json[par_tbl_pk]}).first()
+                            bres_, res_ = parse_field_value(par_tbl, par_tbl.metainf.pk_field, value_json[par_tbl_pk])
+                            if not bres_:
+                                return res_
+                            parobj = par_tbl.query.filter_by(**{par_tbl.metainf.pk_field : res_}).first()
                             if parobj:
                                 parobj.metainf.relationship_by_pk(pk, parobj).append(obj)
-                                db_session.commit()
-                                return api_200()
                             else:
                                 return api_404(msg_item_not_found_fmt.format(par_tbl.__tablename__, par_tbl.metainf.pk_field, value_json[par_tbl_pk]))
                         else:
@@ -153,17 +210,20 @@ def post_item(table, value_json):
                     return api_404(msg_item_not_found_fmt.format(tbl.__tablename__, tbl.metainf.pk_field, value_json[pk]))
             else:
                 return api_400(msg_mtm_pk_not_found_fmt.format(table, pk))
+        db_session.commit()
+        return api_200()
     else:
         return api_404(msg_tbl_not_found_fmt.format(table))
 
-def put_item(table, pkf, pkfv, value_json):
+def put_item(table, pkf, pkfvs, value_json):
+    #import pdb
+    #pdb.set_trace()
     if table in table_name_d:
         tbl = table_name_d[table]
 
-        if pkf != tbl.metainf.pk_field:
+        if pkf == tbl.metainf.pk_field:
             pkft = tbl.metainf.col_type_d[pkf]
             pkftpsr = tbl.metainf.col_type_parsers[pkf] if pkf in tbl.metainf.col_type_parsers else pkft
-            pkfvs = value_json[pkf]
             pkfv = None
             try:
                 pkfv = pkftpsr(pkfvs)
@@ -172,7 +232,7 @@ def put_item(table, pkf, pkfv, value_json):
             
             item = None
             try:
-                tbl.query.filter_by(**{pkf : pkfv}).first()
+                item = tbl.query.filter_by(**{pkf : pkfv}).first()
             except Exception as e:
                 return api_404(msg_col_not_found_fmt.format(table, pkf))
             
@@ -190,30 +250,31 @@ def put_item(table, pkf, pkfv, value_json):
                 else:
                     return api_404(msg_col_not_found_fmt.format(table, field))
 
-            db_session.update(item)
             db_session.commit()
+            return api_200(item.to_dict())
         else:
             return api_400(msg_pk_invalid_fmt.format(table, pkf))
+    elif table in mtm_table_name_d:
+        return api_400('Bad request: Unsupported for MtM tables. Perform a chain Delete -> Insert.')
     else:
         return api_404(msg_tbl_not_found_fmt.format(table))
 
-def delete_item(table, pkf, pkfv):
+def delete_item(table, pkf, pkfvs):
     if table in table_name_d:
         tbl = table_name_d[table]
         
-        if pkf != tbl.metainf.pk_field:
+        if pkf == tbl.metainf.pk_field:
             pkft = tbl.metainf.col_type_d[pkf]
             pkftpsr = tbl.metainf.col_type_parsers[pkf] if pkf in tbl.metainf.col_type_parsers else pkft
-            pkfvs = value_json[pkf]
             pkfv = None
             try:
-                pkfv = pkpftpsr(pkfvs)
+                pkfv = pkftpsr(pkfvs)
             except Exception as e:
                 return api_400(msg_type_err_fmt.format(table, pkf, pkfvs, pkft, pkf, type(pkfvs)))
             
             item = None
             try:
-                tbl.query.filter_by({pkf : pkfv}).first()
+                item = tbl.query.filter_by(**{pkf : pkfv}).first()
             except Exception as e:
                 return api_404(msg_col_not_found_fmt.format(table, pkf))
             
@@ -222,15 +283,27 @@ def delete_item(table, pkf, pkfv):
 
             db_session.delete(item)
             db_session.commit()
+            return api_200()
         else:
             return api_400(msg_pk_invalid_fmt.format(table, pkf))
+    elif table in mtm_table_name_d:
+        return api_400('Bad request: For MtM table use DELETE /data/mtm/table/ endpoint with required JSON parameters')
     else:
         return api_404(msg_tbl_not_found_fmt.format(table))
 
-@app.route('/data/<table>/mtmcheck', methods=['GET'])
-def rest_check_mtm(table):
+### MtM ###
+
+@app.route('/data/mtm/<table>', methods=['GET'])
+def rest_get_mtm(table):
     value = get_url_parameter('value')
-    return check_mtm(table, value)
+    return get_mtm(table, value)
+
+@app.route('/data/mtm/<table>', methods=['DELETE'])
+def rest_delete_mtm(table):
+    value = get_url_parameter('value')
+    return delete_mtm(table, value)
+
+### Normal ###
 
 @app.route('/data/<table>/<column>/<value>', methods=['GET'])
 def rest_get_item(table, column, value):
@@ -240,11 +313,6 @@ def rest_get_item(table, column, value):
 def rest_get_item_by_id(table, id):
     return get_item(table, 'id', id)
 
-@app.route('/data/<table>', methods=['POST'])
-def rest_post_item(table):
-    value = get_url_parameter('value')
-    return post_item(table, value)
-
 @app.route('/data/<table>/<column>/<value>', methods=['PUT'])
 def rest_put_item(table, column, value):
     value_json = get_url_parameter('value')
@@ -253,6 +321,13 @@ def rest_put_item(table, column, value):
 @app.route('/data/<table>/<column>/<value>', methods=['DELETE'])
 def rest_delete_item(table, column, value):
     return delete_item(table, column, value)
+
+### Both ###
+
+@app.route('/data/<table>', methods=['POST'])
+def rest_post_item(table):
+    value = get_url_parameter('value')
+    return post_item(table, value)
 
 ### Error handlers ###
 @app.errorhandler(400)

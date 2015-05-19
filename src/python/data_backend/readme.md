@@ -16,9 +16,15 @@ API:
 <br/>
 <table>
 <tr>
-<td>/data/table/column/value</td><td>GET PUT DELETE</td>
+<td>/data/mtm/table</td><td>GET DELETE for Many to Many, PUT not supported</td>
 </tr>
 <tr>
-<td>/data/table</td> <td>POST</td>
+<td>/data/table/PKColumn/value</td><td>GET PUT DELETE</td>
+</tr>
+<tr>
+<td>/data/table</td> <td>POST for any table</td>
 </tr>
 </p>
+
+<p>All required parameters for these methods are passed via JSON (even for MtM GET)</p>
+<p>The reason for separating many-to-many tables is compound PK, which is almost incompatible with REST paradigm</p>

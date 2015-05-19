@@ -95,7 +95,7 @@ def init_models(Base):
 \
         sessions = relationship("UserSession", cascade="all, delete-orphan"),\
 \
-        __init__ = user_init,
+        __init__ = user_init,\
 \
         __repr__ = lambda self :'id: {0}, username: {1}, mail: {2}, phone: {3}'.format(self.id, self.username, self.mail, self.phone),\
 \
@@ -228,7 +228,7 @@ def init_models(Base):
         subtasks = relationship("Subtask", cascade="all, delete-orphan"),\
         #mtm_tt = relationship("mtmTraitTask", cascade="all, delete-orphan"),\
 \
-        __init__ = task_init,
+        __init__ = task_init,\
 \
         __repr__ = lambda self :'id: {0}, max_time: {1}, start_script: {2}, result_files: {3}'.format(self.id, self.max_time, self.start_script, self.result_files),\
 \
@@ -258,7 +258,7 @@ def init_models(Base):
         status = Column(Integer(), nullable = False),\
         result_archive = Column(String(200)),\
 \
-        __init__ = subtask_init,
+        __init__ = subtask_init,\
 \
         __repr__ = lambda self :'id: {0}, task_id: {1}, agent_id: {2}, status: {3}, result_archive: {4}'.format(self.id, self.task_id, self.agent_id, self.status, self.result_archive),\
 \
