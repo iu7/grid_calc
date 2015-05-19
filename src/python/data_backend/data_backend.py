@@ -166,13 +166,13 @@ def put_item(table, pkf, pkfv, value_json):
             pkfvs = value_json[pkf]
             pkfv = None
             try:
-                pkfv = pkpftpsr(pkfvs)
+                pkfv = pkftpsr(pkfvs)
             except Exception as e:
                 return api_400(msg_type_err_fmt.format(table, pkf, pkfvs, pkft, pkf, type(pkfvs)))
             
             item = None
             try:
-                tbl.query.filter_by({pkf : pkfv}).first()
+                tbl.query.filter_by(**{pkf : pkfv}).first()
             except Exception as e:
                 return api_404(msg_col_not_found_fmt.format(table, pkf))
             
@@ -184,7 +184,7 @@ def put_item(table, pkf, pkfv, value_json):
                     tp = tbl.metainf.col_type_d[field]
                     tppsr = tbl.metainf.col_type_parsers[field] if field in tbl.metainf.col_type_parsers else tp
                     try:
-                        setattr(item, field, tppsr(field))
+                        setattr(item, field, tppsr(value))
                     except Exception as e:
                         return api_400(msg_type_err_fmt.format(table, field, value, tp, type(value)))
                 else:
@@ -247,7 +247,8 @@ def rest_post_item(table):
 
 @app.route('/data/<table>/<column>/<value>', methods=['PUT'])
 def rest_put_item(table, column, value):
-    return put_item(table, column, value)
+    value_json = get_url_parameter('value')
+    return put_item(table, column, value, value_json)
 
 @app.route('/data/<table>/<column>/<value>', methods=['DELETE'])
 def rest_delete_item(table, column, value):

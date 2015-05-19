@@ -11,19 +11,8 @@ from sqlalchemy.orm import relationship, backref
 def random_string(size):
     return ''.join([random.choice(string.ascii_letters) for i in range(size)])
 
-### Define here class names for each table
-### SQLAlchmemy marks first int non-FK field as autoincrement
-### Then declare actual classes dynamically in init_models with Base class passed as argument
-
-User = None
-UserSession = None
-Subtask = None
-Task = None
-Agent = None
-Trait = None
-
-mtmTraitAgent = None
-mtmTraitTask = None
+table_name_d = {}
+mtm_table_name_d = {}
 
 ### User methods ###
 def user_init(self, **kwargs):
@@ -61,10 +50,12 @@ def agent_init(self, **kwargs):
 
 ### Task methods ###
 
-def task_init(self, start_script, result_files):
+def task_init(self, **kwargs):
+    if len(kwargs) < 2:
+        raise Exception('Task: not enough parameters')
     self.max_time = 3600 #seconds
-    self.start_script = start_script
-    self.result_files = result_files
+    self.start_script = kwargs['start_script']
+    self.result_files = kwargs['result_files']
 
 ### Subtask methods ###
 
@@ -103,14 +94,12 @@ def init_models(Base):
         phone = Column(String(11)),\
 \
         sessions = relationship("UserSession", cascade="all, delete-orphan"),\
-        posts = relationship("Post"),\
-        comments = relationship("Comment"),\
 \
         __init__ = user_init,
 \
-        __repr__ = lambda : 'id: {0}, username: {1}, mail: {2}, phone: {3}'.format(self.id, self.username, self.mail, self.phone),\
+        __repr__ = lambda self :'id: {0}, username: {1}, mail: {2}, phone: {3}'.format(self.id, self.username, self.mail, self.phone),\
 \
-        to_dict = lambda : {'id': self.id, 'username': self.username, 'password': self.pw_hash, 'mail': self.mail, 'phone': self.phone}\
+        to_dict = lambda self :{'id': self.id, 'username': self.username, 'password': self.pw_hash, 'mail': self.mail, 'phone': self.phone}\
     ))
 
     ### UserSession ###
@@ -138,13 +127,13 @@ def init_models(Base):
 \
         __init__ = usersession_init,\
 \
-        __repr__ = lambda : 'id: {0}, user_id: {1}, sesson_id: {2}, timestamp: {3}'.format(self.id, self.user_id, self.session_id, self.timestamp),\
+        __repr__ = lambda self :'id: {0}, user_id: {1}, sesson_id: {2}, timestamp: {3}'.format(self.id, self.user_id, self.session_id, self.timestamp),\
 \
         refresh = usersession_refresh,\
 \
-        session_expired = lambda : (self.timestamp - datetime.utcnow()) >= timedelta(hours = 1),\
+        session_expired = lambda self :(self.timestamp - datetime.utcnow()) >= timedelta(hours = 1),\
 \
-        to_dict = lambda : {'id' : self.id, 'session_id' : self.session_id, 'timestamp' : self.timestamp, 'user_id' : self.user_id},\
+        to_dict = lambda self :{'id' : self.id, 'session_id' : self.session_id, 'timestamp' : self.timestamp, 'user_id' : self.user_id},\
     ))
 
     ### Agent ###
@@ -162,26 +151,26 @@ def init_models(Base):
 \
         id = Column(Integer(), primary_key = True, autoincrement = True),\
 \
-        subtasks = relationship("Task"),\
+        subtasks = relationship("Subtask"),\
         #mtm_ta = relationship("mtmTraitAgent", cascade="all, delete-orphan"),\
 \
         __init__ = agent_init,\
 \
-        __repr__ = lambda : 'id: {0}'.format(self.id),\
+        __repr__ = lambda self : 'id: {0}'.format(self.id),\
 \
-        to_dict = lambda : {'id' : self.id},\
+        to_dict = lambda self : {'id' : self.id},\
     ))
 
     ### MTM ###
 
     mtmTraitAgent = Table('mtm_traitagent', Base.metadata,\
-        trait_id = Column(ForeignKey("trait.id"), nullable = False),\
-        agent_id = Column(ForeignKey("agent.id"), nullable = False)\
+        Column('trait_id', Integer, ForeignKey("trait.id"), nullable = False),\
+        Column('agent_id', Integer, ForeignKey("agent.id"), nullable = False)\
     )
 
     mtmTraitTask = Table('mtm_traittask', Base.metadata,\
-        trait_id = Column(ForeignKey("trait.id"), nullable = False),\
-        task_id = Column(ForeignKey("task.id"), nullable = False)\
+        Column('trait_id', Integer, ForeignKey("trait.id"), nullable = False),\
+        Column('task_id', Integer, ForeignKey("task.id"), nullable = False)\
     )
 
     ### Trait ###
@@ -193,24 +182,26 @@ def init_models(Base):
             col_type_d = {\
                 'id'        : int,\
                 'name'      : str,\
-                'version'    : str\
+                'version'   : str\
             },\
             col_type_parsers = {},\
             pk_field = 'id',\
+            relationship_lst = ['agent_id', 'task_id'],\
+            relationship_by_pk = lambda pk, trait: trait.agents if pk == 'agent_id' else trait.tasks,\
         )),\
 \
         id = Column(Integer(), primary_key = True, autoincrement = True),\
         name = Column(String(200), nullable = False),\
         version = Column(String(200)),\
 \
-        agents = relationship("mtmTraitAgent", secondary=mtmTraitAgent, backref=backref('traits', lazy='dynamic'), cascade="all, delete-orphan"),\
-        tasks = relationship("mtmTraitTask", secondary=mtmTraitTask, backref=backref('traits', lazy='dynamic'), cascade="all, delete-orphan"),\
+        agents = relationship("Agent", secondary=mtmTraitAgent, backref='traits'),\
+        tasks = relationship("Task", secondary=mtmTraitTask, backref='traits'),\
 \
         __init__ = trait_init,\
 \
-        __repr__ = lambda : 'id: {0}, name: {1}, version: {2}'.format(self.id, self.name, self.version),\
+        __repr__ = lambda self :'id: {0}, name: {1}, version: {2}'.format(self.id, self.name, self.version),\
 \
-        to_dict = lambda : {'id' : self.id, 'name' : self.name, 'version' : self.version},\
+        to_dict = lambda self :{'id' : self.id, 'name' : self.name, 'version' : self.version},\
     ))
 
     ### Task ###
@@ -239,9 +230,9 @@ def init_models(Base):
 \
         __init__ = task_init,
 \
-        __repr__ = lambda : 'id: {0}, max_time: {1}, start_script: {2}, result_files: {3}'.format(self.id, self.max_time, self.start_script, self.result_files),\
+        __repr__ = lambda self :'id: {0}, max_time: {1}, start_script: {2}, result_files: {3}'.format(self.id, self.max_time, self.start_script, self.result_files),\
 \
-        to_dict = lambda : {'id': self.id, 'max_time': self.max_time, 'start_script': self.start_script, 'result_files': self.result_files}\
+        to_dict = lambda self :{'id': self.id, 'max_time': self.max_time, 'start_script': self.start_script, 'result_files': self.result_files}\
     ))
 
     ### Subtask ###
@@ -262,16 +253,30 @@ def init_models(Base):
         )),\
 \
         id = Column(Integer(), primary_key = True, autoincrement = True),\
-        agent_id = Column(Integer()),\
+        agent_id = Column(ForeignKey("agent.id")),\
         task_id = Column(ForeignKey("task.id"), nullable=False),\
         status = Column(Integer(), nullable = False),\
         result_archive = Column(String(200)),\
 \
         __init__ = subtask_init,
 \
-        __repr__ = lambda : 'id: {0}, task_id: {1}, agent_id: {2}, status: {3}, result_archive: {4}'.format(self.id, self.task_id, self.agent_id, self.status, self.result_archive),\
+        __repr__ = lambda self :'id: {0}, task_id: {1}, agent_id: {2}, status: {3}, result_archive: {4}'.format(self.id, self.task_id, self.agent_id, self.status, self.result_archive),\
 \
-        to_dict = lambda : {'id': self.id, 'task_id': self.task_id, 'agent_id': self.agent_id, 'status': self.status, 'result_archive': self.result_archive}\
+        to_dict = lambda self :{'id': self.id, 'task_id': self.task_id, 'agent_id': self.agent_id, 'status': self.status, 'result_archive': self.result_archive}\
     ))
+
+    table_name_d.update({\
+        'subtask'      : Subtask,\
+        'task'         : Task,\
+        'agent'        : Agent,\
+        'trait'        : Trait,\
+        'user'         : User,\
+        'session'      : UserSession
+    })
+
+    mtm_table_name_d.update({\
+        'mtm_traitagent': ({'trait_id' : Trait}, {'agent_id' : Agent}, mtmTraitAgent),\
+        'mtm_traittask' : ({'trait_id' : Trait}, {'task_id': Task}, mtmTraitTask)\
+    })
 
 ###

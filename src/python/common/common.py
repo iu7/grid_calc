@@ -25,4 +25,4 @@ def has_url_parameter(name):
     return ((name in rjson) or part) if rjson else part
 
 def api_func(addr, f):
-    return '/'.join([addr, f]) 
+    return '/'.join([addr, f])
