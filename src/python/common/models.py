@@ -271,7 +271,7 @@ def init_models(Base):
         'agent'        : Agent,\
         'trait'        : Trait,\
         'user'         : User,\
-        'session'      : UserSession
+        'usersession'      : UserSession
     })
 
     mtm_table_name_d.update({\
