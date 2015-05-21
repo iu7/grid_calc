@@ -40,9 +40,10 @@ from models import *
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.exc import IntegrityError
 
 engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'], convert_unicode=True)
-db_session = scoped_session(sessionmaker(autocommit=False, autoflush=False, bind=engine))
+db_session = scoped_session(sessionmaker(autocommit=True, autoflush=True, bind=engine))
 Base = declarative_base()
 Base.query = db_session.query_property()
 
@@ -61,10 +62,12 @@ msg_col_not_found_fmt = 'table <{0}>: column <{1}> not found'
 msg_tbl_not_found_fmt = 'table <{0}>: not found'
 msg_item_not_found_fmt = 'table <{0}>: <{1}> = <{2}> not found'
 msg_mtm_pk_not_found_fmt = 'MtM table <{0}>: pk <{1}> not found in input'
+msg_mtm_use_another_endpoint_fmt = 'For MtM table use {0} /data/mtm/table/ endpoint with required JSON parameters.'
 
 msg_mtm_only = 'Bad request: Only MtM tables supported'
 msg_mtm_not_found = 'MtM relation not found'
-msg_put_invalid_input = 'Bad request: PUT requires additional json field "changes":[list_of_key-value_pairs]}'
+msg_put_invalid_input = 'PUT requires additional json field <changes>:[list_of_key-value_pairs]}'
+msg_mtm_put_unsupported = 'Unsupported for MtM tables. Perform a chain Delete -> Insert.'
 
 def init_db():
     Base.metadata.drop_all(bind=engine)
@@ -138,7 +141,11 @@ def delete_mtm(table, value_json):
                             if parobj:
                                 coll = parobj.metainf.relationship_by_pk(pk, parobj)
                                 if obj in coll:
-                                    parobj.metainf.relationship_by_pk(pk, parobj).remove(obj)
+                                    try:
+                                        parobj.metainf.relationship_by_pk(pk, parobj).remove(obj)
+                                    except IntegrityError as e:
+                                        db_session.rollback()
+                                        return api_500(str(e))
                                 else:
                                     return api_404(msg_mtm_not_found)
                             else:
@@ -151,7 +158,7 @@ def delete_mtm(table, value_json):
                     return api_404(msg_item_not_found_fmt.format(tbl.__tablename__, tbl.metainf.pk_field, value_json[pk]))
             else:
                 return api_400(msg_mtm_pk_not_found_fmt.format(table, pk))
-        db_session.commit()
+        #db_session.commit()
         return api_200()
     elif table in table_name_d:
         return api_400(msg_mtm_only)
@@ -175,7 +182,11 @@ def post_mtm(table, value_json):
                             return res_
                         parobj = par_tbl.query.filter_by(**{par_tbl.metainf.pk_field : res_}).first()
                         if parobj:
-                            parobj.metainf.relationship_by_pk(pk, parobj).append(obj)
+                            try:
+                                parobj.metainf.relationship_by_pk(pk, parobj).append(obj)
+                            except IntegrityError as e:
+                                db_session.rollback()
+                                return api_500(str(e))
                         else:
                             return api_404(msg_item_not_found_fmt.format(par_tbl.__tablename__, par_tbl.metainf.pk_field, value_json[par_tbl_pk]))
                     else:
@@ -186,7 +197,7 @@ def post_mtm(table, value_json):
                 return api_404(msg_item_not_found_fmt.format(tbl.__tablename__, tbl.metainf.pk_field, value_json[pk]))
         else:
             return api_400(msg_mtm_pk_not_found_fmt.format(table, pk))
-    db_session.commit()
+    #db_session.commit()
     return api_200()
 
 def get_item(table, column, value):
@@ -194,21 +205,19 @@ def get_item(table, column, value):
     if table in table_name_d:
         tbl = table_name_d[table]
         if column in tbl.metainf.col_type_d:
-            tp = tbl.metainf.col_type_d[column]
-            tppsr = tbl.metainf.col_type_parsers[column] if column in tbl.metainf.col_type_parsers else tp
-            try:
-                res = tbl.query.filter_by(**{column : tppsr(value)})
-                res = res.first()
+            bres, maybe_val = parse_field_value(tbl, column, value)
+            if not bres:
+                return maybe_val
+            else:
+                res = tbl.query.filter_by(**{column : maybe_val}).first()
                 if res:
                     return api_200(res.to_dict())
                 else:
                     return api_404()
-            except Exception as e:
-                return api_400(msg_type_err_fmt.format(table, column, value, tp, type(value)))
         else:
             return api_404(msg_col_not_found_fmt.format(table, column))
     elif table in mtm_table_name_d:
-        return api_400('Bad request: For MtM table use GET /data/mtm/table/ endpoint with required JSON parameters.')
+        return api_400(msg_mtm_use_another_endpoint_fmt.format('GET'))
     else:
         return api_404(msg_tbl_not_found_fmt.format(table))
 
@@ -225,8 +234,14 @@ def post_item(table, value_json):
             val = tbl(**maybe_kwargs)
         except Exception as e:
             return api_400(str(e))
-        db_session.add(val)
-        db_session.commit()
+        
+        try:
+            db_session.add(val)
+            db_session.flush()
+        except IntegrityError as e:
+            db_session.rollback()
+            return api_500(str(e))
+        
         return api_200(val.to_dict())
     elif table in mtm_table_name_d:
         return post_mtm(table, value_json)
@@ -259,13 +274,19 @@ def put_item(table, pkf, pkfvs, value_json):
             if not bres:
                 return maybe_kwargs
 
-            update_table_object(item, **maybe_kwargs)
-            db_session.commit()
+            db_session.begin()
+            try:
+                update_table_object(item, **maybe_kwargs)
+                db_session.commit()
+            except IntegrityError as e:
+                db_session.rollback()
+                return api_500(str(e))
+            
             return api_200(item.to_dict())
         else:
             return api_400(msg_pk_invalid_fmt.format(table, pkf))
     elif table in mtm_table_name_d:
-        return api_400('Bad request: Unsupported for MtM tables. Perform a chain Delete -> Insert.')
+        return api_400(msg_mtm_put_unsupported)
     else:
         return api_404(msg_tbl_not_found_fmt.format(table))
 
@@ -291,19 +312,23 @@ def delete_item(table, pkf, pkfvs):
             if not item:
                 return api_404()
 
-            db_session.delete(item)
-            db_session.commit()
+            try:
+                db_session.delete(item)
+            except IntegrityError as e:
+                db_session.rollback()
+                return api_500(str(e))
+            
             return api_200()
         else:
             return api_400(msg_pk_invalid_fmt.format(table, pkf))
     elif table in mtm_table_name_d:
-        return api_400('Bad request: For MtM table use DELETE /data/mtm/table/ endpoint with required JSON parameters')
+        return api_400(msg_mtm_use_another_endpoint_fmt.format('DELETE'))
     else:
         return api_404(msg_tbl_not_found_fmt.format(table))
 
 def table_filter_get(table, value_json):
-    if table in table_name_d:
-        tbl = table_name_d[table]
+    if table in table_name_d or table in mtm_table_name_d:
+        tbl = table_name_d[table] if table in table_name_d else mtm_table_name_d[table][2]
 
         bres, maybe_kwargs = try_json_to_filter_kwargs(tbl, value_json)
         if not bres:
@@ -326,12 +351,20 @@ def table_filter_delete(table, value_json):
 
         reslo = tbl.query.filter_by(**maybe_kwargs).all()
         if reslo:
-            for obj in reslo:
-                db_session.delete(obj)
-            db_session.commit()
+            db_session.begin()
+            try:
+                for obj in reslo:
+                    db_session.delete(obj)
+                db_session.commit()
+            except Exception as e:
+                db_session.rollback()
+                return api_500(str(e))
+            
             return api_200({'count': len(reslo)})
         else:
             return api_404()
+    elif table in mtm_table_name_d:
+        return api_400(msg_mtm_use_another_endpoint_fmt.format('DELETE'))
     else:
         return api_404(msg_tbl_not_found_fmt.format(table))
 
@@ -350,16 +383,24 @@ def table_filter_put(table, value_json):
 
             reslo = tbl.query.filter_by(**maybe_filter_kwargs).all()
             if reslo:
-                for obj in reslo:
-                    update_table_object(obj, **maybe_changes_kwargs)
-                db_session.commit()
+                db_session.begin()
+                try:
+                    for obj in reslo:
+                        update_table_object(obj, **maybe_changes_kwargs)
+                    db_session.commit()
+                except Exception as e:
+                    db_session.rollback()
+                    return api_500(str(e))
+
                 return api_200({'count': len(reslo)})
             else:
                 return api_404()
+        elif table in mtm_table_name_d:
+            return api_400(msg_mtm_put_unsupported)
         else:
             return api_404(msg_tbl_not_found_fmt.format(table))
     else:
-        return api_400('Bad request: Object <changes> not found in input')
+        return api_400(msg_put_invalid_input)
 
 ### MtM ###
 
@@ -417,6 +458,10 @@ def rest_post_item(table):
     return post_item(table, value)
 
 ### Error handlers ###
+@app.errorhandler(400)
+def api_500(msg = 'Internal error'):
+    return response_builder({'error': msg}, 500)
+
 @app.errorhandler(400)
 def api_400(msg = 'Bad request'):
     return response_builder({'error': msg}, 400)
