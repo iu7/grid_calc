@@ -128,9 +128,9 @@ basicstyle=\ttfamily\small,
 
 Диаграмма этих и дополнительных служебных прецедентов приведена на рис.~\ref{fig:prec-common}.
 
-\begin{figure}
+\begin{figure}[b]
   \centering
-  \includegraphics[width=\linewidth]{diagrams/common/usecase}
+  \includegraphics[width=.9\linewidth]{diagrams/common/usecase}
   \caption{Диаграмма прецедентов всей системы в целом}
   \label{fig:prec-common}
 \end{figure}
@@ -139,7 +139,7 @@ basicstyle=\ttfamily\small,
 расщепляется на набор диаграмм, соответствующих каждой из выделенных подсистем.
 Соответствующие диаграммы приведены на рисунках~\ref{fig:prec-session},\ref{fig:prec-logic},\ref{fig:prec-balancer}.
 
-\begin{figure}  
+\begin{figure}
   \centering
   \begin{minipage}{.49\linewidth}
     \centering
@@ -167,19 +167,23 @@ basicstyle=\ttfamily\small,
 Прецеденты, описанные в предыдущем пункте, отвечают определённой деятельности.
 Диаграмма деятельности на рис.~\ref{fig:act-common} описывает полный процесс взаимодействия пользователя с системой.
 
-\begin{figure} %[h]
+С учётом требований к разделению внутреннего функционала системы, диаграмма деятельности на рис.~\ref{fig:act-common}
+расщепляется на набор диаграмм, соответствующих определённым подсистемам из выделенных.
+
+Диаграммы действий прецедентов подсистемы управления сессией "регистрация" и "вход в систему" приведены на рисунках~\ref{fig:act-register} и~\ref{fig:act-auth} соответственно.
+
+Диаграммы действий прецедентов системы балансировки нагрузки "регистрация", "запрос новой задачи" и "завершение выполнения задачи" приведены на рисунках~\ref{fig:bal-register},~\ref{fig:bal-request} и~\ref{fig:bal-submit} соответственно.
+
+Диаграммы действий прецедентов системы управления "постановка задачи" и "просмотр статсуа задачи" приведены на рисунках~\ref{fig:logic-place} и~\ref{fig:logic-view} соответственно.
+
+\begin{figure}[h]
   \centering
   \includegraphics[width=.9\linewidth]{diagrams/common/activity}
   \caption{Диаграмма действий прецедента "общая деятельность" для системы в целом}
   \label{fig:act-common}
 \end{figure}
 
-С учётом требований к разделению внутреннего функционала системы, диаграмма деятельности на рис.~\ref{fig:act-common}
-расщепляется на набор диаграмм, соответствующих определённым подсистемам из выделенных.
-
-Диаграммы действий прецедентов подсистемы управления сессией "регистрация" и "вход в систему" приведены на рисунках~\ref{fig:act-register} и~\ref{fig:act-auth} соответственно.
-
-\begin{figure}  
+\begin{figure}
   \centering
   \begin{minipage}{.43\linewidth}
     \centering
@@ -196,59 +200,50 @@ basicstyle=\ttfamily\small,
   \end{minipage}  
 \end{figure}
 
-Диаграммы действий прецедентов системы балансировки нагрузки "регистрация", "запрос новой задачи" и "завершение выполнения задачи" приведены на рисунках~\ref{fig:bal-register},~\ref{fig:bal-request} и~\ref{fig:bal-submit} соответственно.
-
 \begin{figure}  
   \centering
   \begin{minipage}{.49\linewidth}
     \centering
-    \includegraphics[width=\linewidth]{img/placeholder} %diagrams/balancer/activity-register}
+    \includegraphics[width=\linewidth]{diagrams/balancer/activity-register}
     \caption{Диаграмма действий прецедента "регистрация" СБН}
     \label{fig:bal-register}
   \end{minipage}
   \hfill
   \begin{minipage}{.49\linewidth}
     \centering
-    \includegraphics[width=\linewidth]{img/placeholder} %diagrams/balancer/activity-register}
+    \includegraphics[width=\linewidth]{diagrams/balancer/activity-request}
     \caption{Диаграмма действий прецедента "запрос новой задачи" СБН}
     \label{fig:bal-request}
   \end{minipage}  
 \end{figure}
 
-\begin{figure}
-  \centering
-  \includegraphics[width=.6\linewidth]{img/placeholder} %diagrams/balancer/activity-submit}
-  \caption{Диаграмма действий прецедента "завершение выполнения задачи" СБН}
-  \label{fig:bal-submit}
-\end{figure}
-
-Диаграммы действий прецедентов системы управления "постановка задачи", "просмотр статсуа задачи" и "отмена задачи" приведены на рисунках~\ref{fig:logic-place},~\ref{fig:logic-view} и~\ref{fig:logic-cancel} соответственно.
-
 \begin{figure}  
   \centering
   \begin{minipage}{.49\linewidth}
     \centering
-    \includegraphics[width=\linewidth]{img/placeholder} %diagrams/logic/activity-place}
-    \caption{Диаграмма действий прецедента "постановка задачи" СУ}
-    \label{fig:logic-place}
-  \end{minipage}
+    \includegraphics[width=\linewidth]{diagrams/balancer/activity-submit}
+    \caption{Диаграмма действий прецедента "завершение выполнения задачи" СБН}
+    \label{fig:bal-submit}
+  \end{minipage} 
   \hfill
   \begin{minipage}{.49\linewidth}
     \centering
-    \includegraphics[width=\linewidth]{img/placeholder} %diagrams/logic/activity-view}
-    \caption{Диаграмма действий прецедента "просмотр статсуа задачи" СУ}
-    \label{fig:logic-view}
-  \end{minipage}  
+    \includegraphics[width=\linewidth]{diagrams/logic/activity-place}
+    \caption{Диаграмма действий прецедента "постановка задачи" СУ}
+    \label{fig:logic-place}
+  \end{minipage} 
 \end{figure}
 
 \begin{figure}
   \centering
-  \includegraphics[width=.6\linewidth]{img/placeholder} %diagrams/logic/activity-cancel}
-  \caption{Диаграмма действий прецедента "отмена задачи" СУ}
-  \label{fig:logic-cancel}
+  \includegraphics[width=\linewidth]{diagrams/logic/activity-view}
+  \caption{Диаграмма действий прецедента "просмотр статсуа задачи" СУ}
+  \label{fig:logic-view}
 \end{figure}
 
 \subsection{Вывод}
+В данном разделе были приведены диаграммы, описывающие функционал основных узлов системы.
+Данный анализ в дальнейшем используется для более строгой формализации функционала подсистем.
 
 \clearpage
 \section{Конструкторский раздел}
