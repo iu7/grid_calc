@@ -1,0 +1,26 @@
+\select@language {russian}
+\contentsline {section}{\numberline {1}Аналитический раздел}{4}{section*.4}
+\contentsline {subsection}{\numberline {1.1}Введение}{4}{subsection.0.1.1}
+\contentsline {subsection}{\numberline {1.2}Возможные прецеденты}{4}{subsection.0.1.2}
+\contentsline {subsection}{\numberline {1.3}Осуществляемая деятельность}{6}{subsection.0.1.3}
+\contentsline {subsection}{\numberline {1.4}Вывод}{8}{subsection.0.1.4}
+\contentsline {section}{\numberline {2}Конструкторский раздел}{9}{section*.13}
+\contentsline {subsection}{\numberline {2.1}Введение}{9}{subsection.0.2.1}
+\contentsline {subsection}{\numberline {2.2}Общая структура системы}{9}{subsection.0.2.2}
+\contentsline {subsection}{\numberline {2.3}Система мониторинга}{9}{subsection.0.2.3}
+\contentsline {subsection}{\numberline {2.4}Фронтэнд пользователей}{10}{subsection.0.2.4}
+\contentsline {subsection}{\numberline {2.5}Фронтэнд вычислительных узлов}{10}{subsection.0.2.5}
+\contentsline {subsection}{\numberline {2.6}Система управления сессией}{11}{subsection.0.2.6}
+\contentsline {subsection}{\numberline {2.7}Система управления}{12}{subsection.0.2.7}
+\contentsline {subsection}{\numberline {2.8}Система хранения данных}{12}{subsection.0.2.8}
+\contentsline {subsection}{\numberline {2.9}Система балансировки нагрузки}{12}{subsection.0.2.9}
+\contentsline {subsection}{\numberline {2.10}Система вычисления}{12}{subsection.0.2.10}
+\contentsline {subsection}{\numberline {2.11}Вывод}{12}{subsection.0.2.11}
+\contentsline {section}{\numberline {3}Технологический раздел}{13}{section*.14}
+\contentsline {subsection}{\numberline {3.1}Введение}{13}{subsection.0.3.1}
+\contentsline {subsection}{\numberline {3.2}Выбор языка программирования}{13}{subsection.0.3.2}
+\contentsline {subsection}{\numberline {3.3}Выбор программных средств}{13}{subsection.0.3.3}
+\contentsline {subsection}{\numberline {3.4}?необязательно? программная реализация отдельных компонентов}{13}{subsection.0.3.4}
+\contentsline {subsection}{\numberline {3.5}Тестирование}{13}{subsection.0.3.5}
+\contentsline {subsection}{\numberline {3.6}Вывод}{13}{subsection.0.3.6}
+\contentsline {section}{\numberline {4}Заключение}{14}{section*.15}

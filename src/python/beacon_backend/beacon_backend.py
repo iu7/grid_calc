@@ -25,7 +25,7 @@ def servicesOfTypeHandler(type):
         else:
             return jsenc({})
     else:
-        if not 'port' in request.form:
+        if (not 'port' in request.form) || (not isinstance( request.form['port'], int )):
             abort(422)
         else:
             port = request.form['port']
