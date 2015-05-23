@@ -16,16 +16,13 @@ API:
 <br/>
 <table>
 <tr>
-<td>/data/mtm/table</td><td>GET DELETE for MtM, PUT not supported</td>
+<td>/data/table</td><td>POST for any table</td>
 </tr>
 <tr>
-<td>/data/table/PKColumn/value</td><td>GET PUT DELETE</td>
+<td>/data/table/PKColumn/value</td><td>GET PUT DELETE for non-compound PK</td>
 </tr>
 <tr>
-<td>/data/table</td> <td>POST for any table</td>
-</tr>
-<tr>
-<td>/data/table/filter</td><td>GET PUT DELETE for non-MtM</td>
+<td>/data/table/filter</td><td>GET PUT DELETE for any table</td>
 </tr>
 </p>
 
