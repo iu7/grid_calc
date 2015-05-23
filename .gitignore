@@ -8,5 +8,8 @@
 *.[Cc]ache
 *.vshost.*
 *.exe.config
+
+*__pycache__*
+
 [Oo]bj
 [Ll]ib
