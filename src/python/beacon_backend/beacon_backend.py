@@ -6,6 +6,7 @@ import time
 import sys
 
 timeout = 10
+defaultport = 666
 
 app = Flask(__name__)
 
@@ -24,7 +25,7 @@ def servicesOfTypeHandler(type):
         else:
             return jsenc({})
     else:
-        if not 'port' in request.form:
+        if (not 'port' in request.form) || (not isinstance( request.form['port'], int )):
             abort(422)
         else:
             port = request.form['port']
@@ -82,7 +83,7 @@ class ServiceState:
         return state
 
 if __name__ == '__main__':
-    p = 666
+    p = defaultport
     if len(sys.argv) == 1:
         print ('Port number defaulted to ' + str(p))
     else:

@@ -2,6 +2,7 @@
 *.log
 *.out
 *.gz
+*.toc
 
 *.suo
 *.pdb
