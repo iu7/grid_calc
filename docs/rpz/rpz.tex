@@ -263,18 +263,18 @@
 
 \subsection{Общая структура системы}
 Для того, чтобы удовлетворить требованиям по предоставлению механизма деградации функциональности,
-а также для упрощения процесса разработки, комплекс должна быть разделена на отдельные слабосвязанные элементы.
+а также для упрощения процесса разработки, комплекс должен быть разделен на отдельные слабосвязанные элементы.
 
 Различные подсистемы комплекса имеют некую модель поведения.
-Поведение подсистемы описывается его активной и пассивной частью.
+Поведение подсистемы описывается её активной и пассивной частью.
 Активная часть соответствует действиям, которые подсистема выполняет разово либо с некоторой периодичностью, в автоматическом режиме.
 Пассивная часть соответствует API подсистемы.
 Взаимосвязи между различными компонентами системы приведены на диаграмме компонентов на рис.~\ref{fig:comp-common}.
 Физическое размещение компонент по отдельным узлам проиллюстрировано на диаграмме развёртывания на рис.~\ref{fig:depl-common}.
 
-\begin{figure}
+\begin{figure}[b]
   \centering
-  \includegraphics[width=\linewidth]{diagrams/common/component}
+  \includegraphics[width=.7\linewidth]{diagrams/common/component}
   \caption{Диаграмма компонент комплекса}
   \label{fig:comp-common}
 \end{figure}
@@ -381,13 +381,13 @@
   По завершении выполнения задачи она должна закрыть все созданные окна и уничтожить все порождённые процессы.
 \end{itemize}
 
-\begin{lstlisting}[float={},language=bash,caption={Пример корректного файла со списком черт задачи},label=lst:task-traits]
+\begin{lstlisting}[float={},language={},caption={Пример корректного файла со списком черт задачи},label=lst:task-traits]
 root_folder_file.txt
 directory/subdirectory_file.extension
 
 \end{lstlisting}
 
-\begin{lstlisting}[float={},language=bash,caption={Пример корректного файла со списком выходных файлов},label=lst:task-output]
+\begin{lstlisting}[float={},language={},caption={Пример корректного файла со списком выходных файлов},label=lst:task-output]
 root_folder_file.txt
 directory/subdirectory_file.extension
 
@@ -578,7 +578,7 @@ directory/subdirectory_file.extension
 
 \begin{figure}
   \centering
-  \includegraphics[width=.6\linewidth]{diagrams/compnode/state}
+  \includegraphics[width=\linewidth]{diagrams/compnode/state}
   \caption{Диаграмма состояний ВУ}
   \label{fig:node-state}
 \end{figure}
@@ -598,6 +598,21 @@ directory/subdirectory_file.extension
 \subsection{?необязательно? программная реализация отдельных компонентов}
 
 \subsection{Тестирование}
+\subsubsection{Система мониторинга}
+
+\subsubsection{Фронтэнд пользователей}
+
+\subsubsection{Фронтэнд вычислительных узлов}
+
+\subsubsection{Система управления сессией}
+
+\subsubsection{Система управления}
+
+\subsubsection{Система хранения данных}
+
+\subsubsection{Система балансировки нагрузки}
+
+\subsubsection{Система вычисления}
 
 \subsection{Вывод}
 
