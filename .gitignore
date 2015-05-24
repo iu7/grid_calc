@@ -2,6 +2,7 @@
 *.log
 *.out
 *.gz
+*.gz(busy)
 *.toc
 
 *.suo

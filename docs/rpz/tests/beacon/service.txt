@@ -1,0 +1,15 @@
+...\grid_calc\src\python\beacon_backend>py beacon_backend.py
+Port number defaulted to 666
+ * Running on http://0.0.0.0:666/ (Press CTRL+C to quit)
+127.0.0.1 - - [25/May/2015 00:28:36] "GET /services HTTP/1.1" 200 -
+127.0.0.1 - - [25/May/2015 00:28:36] "GET /services/test HTTP/1.1" 200 -
+127.0.0.1 - - [25/May/2015 00:28:36] "GET /services/test/127.0.0.1:345 HTTP/1.1" 404 -
+127.0.0.1 - - [25/May/2015 00:28:36] "POST /services/test HTTP/1.1" 422 -
+127.0.0.1 - - [25/May/2015 00:28:36] "POST /services/test HTTP/1.1" 200 -
+127.0.0.1 - - [25/May/2015 00:28:36] "GET /services HTTP/1.1" 200 -
+127.0.0.1 - - [25/May/2015 00:28:36] "GET /services/test HTTP/1.1" 200 -
+127.0.0.1 - - [25/May/2015 00:28:36] "PUT /services/test/127.0.0.1:345 HTTP/1.1" 200 -
+127.0.0.1 - - [25/May/2015 00:28:36] "GET /services/test/127.0.0.1:345 HTTP/1.1" 200 -
+127.0.0.1 - - [25/May/2015 00:28:51] "GET /services HTTP/1.1" 200 -
+127.0.0.1 - - [25/May/2015 00:28:51] "GET /services/test HTTP/1.1" 200 -
+127.0.0.1 - - [25/May/2015 00:28:51] "GET /services/test/127.0.0.1:345 HTTP/1.1" 404 -

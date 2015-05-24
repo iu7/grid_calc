@@ -595,28 +595,78 @@ directory/subdirectory_file.extension
 
 \subsection{Выбор программных средств}
 
-\subsection{?необязательно? программная реализация отдельных компонентов}
+\subsection{Система мониторинга}
+\subsubsection{Реализация}
 
-\subsection{Тестирование}
-\subsubsection{Система мониторинга}
+\subsubsection{Тестирование}
+В ходе юнит-тестирования проверялись следующие сценарии:
 
-\subsubsection{Фронтэнд пользователей}
+\begin{itemize}
+  \item доступ к отсутствующему элементу через ресурсы \url{/services}, \url{/services/type} и \url{/services/type/address};
+  \item попытка создания записи по ресурсу \url{/services/test} без указания порта;
+  \item попытка создания записи по ресурсу \url{/services/test};
+  \item выборка всех активных сервисов по ресурсу \url{/services};
+  \item выборка активных сервисов роли test по ресурсу \url{/services/test};
+  \item изменение статусного сообщения сервиса по ресурсу \url{/services/test/address};
+  \item проверка удаления сервиса из списка активных после определённого времени неактивности.
+\end{itemize}
 
-\subsubsection{Фронтэнд вычислительных узлов}
+Тест был выполнен на языке Python.
+%Исходный код теста приведён в листинге в приложении такомто
+Выход теста приведён в листинге~\ref{lst:test-beacon-testout}.
+Соответствующие сообщения сервера приведены в листинге~\ref{lst:test-beacon-servout}.
 
-\subsubsection{Система управления сессией}
+\lstinputlisting[float={},language={},caption={Выход юнит-теста системы мониторинга},label=lst:test-beacon-testout]{tests/beacon/tester.txt}
 
-\subsubsection{Система управления}
+\lstinputlisting[float={},language={},caption={Сообщения системы мониторинга в ходе юнит-теста},label=lst:test-beacon-servout]{tests/beacon/service.txt}
 
-\subsubsection{Система хранения данных}
+\subsection{Фронтэнд пользователей}
+\subsubsection{Реализация}
 
-\subsubsection{Система балансировки нагрузки}
+\subsubsection{Тестирование}
 
-\subsubsection{Система вычисления}
+\subsection{Фронтэнд вычислительных узлов}
+\subsubsection{Реализация}
+
+\subsubsection{Тестирование}
+\subsection{Система управления сессией}
+\subsubsection{Реализация}
+
+\subsubsection{Тестирование}
+
+\subsection{Система управления}
+\subsubsection{Реализация}
+
+\subsubsection{Тестирование}
+
+\subsection{Система хранения данных}
+\subsubsection{Реализация}
+
+\subsubsection{Тестирование}
+
+\subsection{Система балансировки нагрузки}
+\subsubsection{Реализация}
+
+\subsubsection{Тестирование}
+
+\subsection{Система вычисления}
+\subsubsection{Реализация}
+
+\subsubsection{Тестирование}
 
 \subsection{Вывод}
 
 \clearpage
 \section{Заключение}
+
+\section{Список литературы}
+%\printbibliography[heading=none]
+
+%разобраться с автонумерацией приложений
+%\section*{\titleline[r]{Приложение 1}} \addcontentsline{toc}{section}{Приложение 1}
+%\subsection*{Конфигурационный файл Alex}
+%\lstinputlisting[float={},language=Python,caption={Исходный код юнит-теста системы мониторинга},label=lst:test-beacon]{tests/beacon/service}
+%\clearpage
+
 
 \end{document}
