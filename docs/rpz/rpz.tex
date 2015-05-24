@@ -52,7 +52,7 @@
 \definecolor{xmlcomments}{rgb}{0.5,0.5,0.5}
 \definecolor{types}{rgb}{0.17,0.57,0.68}
 
-\lstloadlanguages{bash, python}
+\lstloadlanguages{bash, python, Java}
 
 \lstset{
   frame=none,
@@ -335,6 +335,29 @@
   \end{description}
 \end{itemize}
 
+Коллекция верхнего уровня \url{/services} имеет словарь JSON-формата, приведённого на примере в листинге~\ref{lst:json-beacon}. Запросы к коллекциям более глубокого уровня \url{/services/type} и \url{/services/type/address} отображаются в подсловари root[type] и root[type][address] словаря верхнего уровня, соответственно.
+
+\begin{lstlisting}[float={},language=Java,caption={Пример JSON-представления коллекции верхнего уровня сервиса мониторинга},label=lst:json-beacon]
+{
+  "type1": {
+    "ipaddr1:port1": {
+      "state": "message1", 		// arbitrary string
+      "lastbeat": "datetime1"	// ex. "2015-05-25 01:46:35.857670"
+    },
+    "ipaddr2:port2": {
+      "state": "message2",
+      "lastbeat": "datetime2"
+    }
+  },
+  "type2": {
+    "ipaddr3:port3": {
+      "state": "message3",
+      "lastbeat": "datetime3"
+    }
+  }
+}
+\end{lstlisting}
+
 \subsection{Фронтэнд пользователей}
 Задача данной подсистемы -- проверки безопасности и перенаправление запросов от пользователей к системе управления, а также отрисовка веб-интерфейса.
 
@@ -604,7 +627,7 @@ python
 \subsubsection{Реализация}
 Система была реализована с помощью python-фреймворка flask.
 Для сериализации данных в json-формат и обратно была использована библиотека jsonpickle.
-Исходный код системы приведён в приложении~[необходимо разобраться с автонумерацией приложений]
+Исходный код системы приведён в приложении~[необходимо разобраться с автонумерацией приложений].
 
 \subsubsection{Тестирование}
 В ходе юнит-тестирования проверялись следующие сценарии:
