@@ -52,33 +52,33 @@
 \definecolor{xmlcomments}{rgb}{0.5,0.5,0.5}
 \definecolor{types}{rgb}{0.17,0.57,0.68}
 
-\lstset{language=[Sharp]C,
-captionpos=b,
-%numbers=left, %Nummerierung
-%numberstyle=\tiny, % kleine Zeilennummern
-frame=lines, % Oberhalb und unterhalb des Listings ist eine Linie
-showspaces=false,
-showtabs=false,
-breaklines=true,
-showstringspaces=false,
-breakatwhitespace=true,
-escapeinside={(*@}{@*)},
-commentstyle=\color{greencomments},
-morekeywords={partial, var, value, get, set},
-keywordstyle=\color{bluekeywords},
-stringstyle=\color{redstrings},
-basicstyle=\ttfamily\small,
-}
+\lstloadlanguages{bash, python}
 
 \lstset{
+  frame=none,
+  xleftmargin=2pt,
+  stepnumber=1,
   numbers=left,
-  numberstyle=\scriptsize,
-  basicstyle=\ttfamily\scriptsize,
-  columns=fullflexible,
-  keepspaces, % for spaces in unicode text!
-  captionpos=b
+  numbersep=5pt,
+  numberstyle=\ttfamily\tiny\color[gray]{0.3},
+  belowcaptionskip=\bigskipamount,
+  captionpos=b,
+  escapeinside={*'}{'*},
+  language=python,
+  tabsize=2,
+  emphstyle={\bf},
+  commentstyle=\it,
+  stringstyle=\mdseries\rmfamily,
+  showspaces=false,
+  keywordstyle=\bfseries\rmfamily,
+  columns=flexible,
+  basicstyle=\small\sffamily,
+  showstringspaces=false,
+  morecomment=[l]\%,
+  breaklines=true,
+  showlines=true
 }
-\renewcommand{\lstlistingname}{Листинг}
+\renewcommand\lstlistingname{Листинг}
 
 \date{\today}
 
@@ -265,6 +265,27 @@ basicstyle=\ttfamily\small,
 Для того, чтобы удовлетворить требованиям по предоставлению механизма деградации функциональности,
 а также для упрощения процесса разработки, комплекс должна быть разделена на отдельные слабосвязанные элементы.
 
+Различные подсистемы комплекса имеют некую модель поведения.
+Поведение подсистемы описывается его активной и пассивной частью.
+Активная часть соответствует действиям, которые подсистема выполняет разово либо с некоторой периодичностью, в автоматическом режиме.
+Пассивная часть соответствует API подсистемы.
+Взаимосвязи между различными компонентами системы приведены на диаграмме компонентов на рис.~\ref{fig:comp-common}.
+Физическое размещение компонент по отдельным узлам проиллюстрировано на диаграмме развёртывания на рис.~\ref{fig:depl-common}.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\linewidth]{diagrams/common/component}
+  \caption{Диаграмма компонент комплекса}
+  \label{fig:comp-common}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\linewidth]{diagrams/common/deployment}
+  \caption{Диаграмма развёртывания комплекса}
+  \label{fig:depl-common}
+\end{figure}
+
 \subsection{Система мониторинга}
 Задача данной подсистемы -- отслеживание топологии сети.
 Все узлы комплекса должны оповещать СМ о своём статусе работы, 
@@ -331,7 +352,7 @@ basicstyle=\ttfamily\small,
   \item регистрация пользователя
   \item авторизация пользователя
   \item просмотр списка существующих в системе черт
-  \item постановка задачи с передачей в систему архива задачи, содержащего:
+  \item постановка задачи с передачей в систему описания задачи, содержащего:
   \subitem файл со списком черт задачи
   \subitem все необходимые для запуска задачи файлы
   \subitem в зависимости от платформы, либо файл run.bat, либо файл run.sh, осуществляющий запуск программы
@@ -341,13 +362,36 @@ basicstyle=\ttfamily\small,
   \item удаление задач
 \end{itemize}
 
-На файлы, находящиеся в архиве, накладываются следующие ограничения:
+На файлы, составляющие описание задачи, накладываются следующие ограничения:
 
-Файл output.txt должен содержать набор строк в кодировке UTF8-8.
-В каждой строке должен быть записан путь к одному из выходных файлов.
-Началом пути считается корень архива.
-Файл может заканчиваться пустой строкой.
-Пример корректного файла дан в листинге~\ref{lst:task-output}.
+\begin{itemize}
+  \item Все файлы, кроме файла traits.txt, должны содержаться в zip-архиве.
+  \item Файл traits.txt должен содержать набор строк в кодировке UTF-8.
+  В каждой строке должна быть записана очередная черта задачи.
+  Черта задачи состоит из имени черты и версии черты, разделёнными символом табуляции
+  Файл может заканчиваться пустой строкой.
+  Пример корректного файла дан в листинге~\ref{lst:task-traits}.
+  \item Файл output.txt должен содержать набор строк в кодировке UTF-8.
+  В каждой строке должен быть записан путь к одному из выходных файлов.
+  Началом пути считается корень архива.
+  Файл может заканчиваться пустой строкой.
+  Пример корректного файла дан в листинге~\ref{lst:task-output}.
+  \item Файл run.bat / run.sh должен содержать инструкции по запуску задачи и корректно исполняться на вычислительном узле, удовлетворяющем требованиям, описанных чертами задачи.
+  Именно этот файл будет запущен вычислительным узлом для начала расчётов.
+  По завершении выполнения задачи она должна закрыть все созданные окна и уничтожить все порождённые процессы.
+\end{itemize}
+
+\begin{lstlisting}[float={},language=bash,caption={Пример корректного файла со списком черт задачи},label=lst:task-traits]
+root_folder_file.txt
+directory/subdirectory_file.extension
+
+\end{lstlisting}
+
+\begin{lstlisting}[float={},language=bash,caption={Пример корректного файла со списком выходных файлов},label=lst:task-output]
+root_folder_file.txt
+directory/subdirectory_file.extension
+
+\end{lstlisting}
 
 \subsection{Фронтэнд вычислительных узлов}
 Задача данной подсистемы -- перенаправление запросов от вычислительных узлов на балансировщик нагрузки.
@@ -459,7 +503,6 @@ basicstyle=\ttfamily\small,
 \end{itemize}
 
 \subsection{Система хранения данных}
---- сюда пойдёт как минимум ER, так же будет описание апишки. реализация и д.классов и иже с ними -- в технологическом
 Задача данной системы -- хранение данных о задачах, вычислительных узлах и их чертах, а также предоставление API по доступу к этим данным.
 
 Связи между разными типами хранимых данных предоставлены в виде ER-диаграммы на рис.~\ref{fig:db-er}.
@@ -503,10 +546,10 @@ basicstyle=\ttfamily\small,
 \end{itemize}
 
 \subsubsection{Пассивная часть}
-Исходя из требований к СХД и с учётом REST-методик, она должна предоставлять следующее API:
+Исходя из требований к СХД и с учётом REST-методик, она должна предоставлять следующее API в дополнение к дублированию всех методов, предоставляемых фронтэндом вычислительных узлов:
 
 \begin{itemize}
-  \item
+  \item 
   \begin{description}
     \item[Ресурс:] \url{/foo}
     \item[Метод:] BAR
