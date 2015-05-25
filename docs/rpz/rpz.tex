@@ -141,7 +141,7 @@
 \begin{figure}[b]
   \centering
   \includegraphics[width=.9\linewidth]{diagrams/common/usecase}
-  \caption{Диаграмма прецедентов всеего комплекса в целом}
+  \caption{Диаграмма прецедентов всего комплекса в целом}
   \label{fig:prec-common}
 \end{figure}
 
@@ -461,7 +461,32 @@ directory/subdirectory_file.extension
     \item[Результат:] сообщение об успешном приёме результата
   \end{description}
 \end{itemize}
-  
+
+Методы API POST \url{/nodes}, PUT \url{/nodes/nodeid}, GET \url{/tasks/newtask} и POST \url{/tasks/taskid} соответствуют прецедентам "регистрация", "запрос новой задачи", "отчёт о выполнении задачи" и "завершение выполнения задачи" соответственно.
+
+Диаграммы последовательности действий при выполнении прецедентов "регистрация", "запрос новой задачи" и "завершение выполнения задачи" приведены на рис.~\ref{fig:seq-reg}, \ref{fig:seq-req}~и~\ref{fig:seq-sub}.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=.7\linewidth]{diagrams/frontnode/seq-register}
+  \caption{Диаграмма последовательности действий прецедента "регистрация" ФВУ}
+  \label{fig:seq-reg}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=.7\linewidth]{diagrams/frontnode/seq-request}
+  \caption{Диаграмма последовательности действий прецедента "запрос новой задачи" ФВУ}
+  \label{fig:seq-req}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=.7\linewidth]{diagrams/frontnode/seq-submit}
+  \caption{Диаграмма последовательности действий прецедента "завершение выполнения задачи" ФВУ}
+  \label{fig:seq-sub}
+\end{figure}
+
 \subsection{Система управления сессией}
 Задача данной подсистемы -- регистрация, авторизация и аутентификация пользователей в сети.
 
@@ -569,18 +594,7 @@ directory/subdirectory_file.extension
 \end{itemize}
 
 \subsubsection{Пассивная часть}
-Исходя из требований к СХД и с учётом REST-методик, она должна предоставлять следующее API в дополнение к дублированию всех методов, предоставляемых фронтэндом вычислительных узлов:
-
-\begin{itemize}
-  \item 
-  \begin{description}
-    \item[Ресурс:] \url{/foo}
-    \item[Метод:] BAR
-    \item[Параметры:] lorem
-    \item[Результат:] ipsum
-    \item[Ошибки:] dolor
-  \end{description}
-\end{itemize}
+Исходя из требований к СБН и с учётом REST-методик, она должна предоставлять API, идентичное предоставляемому фронтэндом вычислительных узлов.
 
 \subsection{Система вычисления}
 Данная система представлена набором вычислительных узлов с установленным на них специальным ПО, 
