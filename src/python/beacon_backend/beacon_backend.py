@@ -7,6 +7,7 @@ import sys
 
 timeout = 10
 defaultport = 666
+collector_cycletime = 3
 
 app = Flask(__name__)
 
@@ -25,7 +26,7 @@ def servicesOfTypeHandler(type):
         else:
             return jsenc({})
     else:
-        if (not 'port' in request.form) || (not isinstance( request.form['port'], int )):
+        if (not 'port' in request.form) or (not isInt (request.form['port'])):
             abort(422)
         else:
             port = request.form['port']
@@ -64,13 +65,20 @@ def collector():
         if len(typedict) == 0:
             del services[type]
     
-    thr = threading.Timer(timeout, collector)
+    thr = threading.Timer(collector_cycletime, collector)
     thr.daemon = True
     thr.start()
         
 def jsenc(o):
     return jsonpickle.encode(o, unpicklable=False)
 
+def isInt(s):
+    try: 
+        int(s)
+        return True
+    except ValueError:
+        return False
+    
 class ServiceState:
     state = ''
     lastbeat = None

@@ -1,0 +1,10 @@
+...\grid_calc\src\python\beacon_backend\tests>py beacon_backend_ut.py
+#1: Running empty run test... [PASSED]
+#2: Running incorrect POST placing test... [PASSED]
+#3: Running correct POST placing test... [PASSED]
+#4: Running root request test... [PASSED]
+#5: Running role request test... [PASSED]
+#6: Running data modification test... [PASSED]
+#7: Running specific access test... [PASSED]
+#8: Running expiration test... [PASSED]
+All tests passed.
