@@ -53,7 +53,9 @@ Task,\
 Agent,\
 Trait,\
 User,\
-UserSession = table_name_d.values()
+UserSession,\
+mtmTraitAgent,\
+mtmTraitTask = table_name_d.values()
 ###<< init models
 
 msg_type_err_fmt = 'table <{0}>, column <{1}>: cannot convert <{2}> to type <{3}> from type <{4}>'
@@ -154,7 +156,7 @@ def put_item(table, pkf, pkfvs, value_json):
         tbl = table_name_d[table]
 
         if pkf == tbl.metainf.pk_field:
-            bres, maybe_val = parse_field_value(tbl, pkf, pkvfs)
+            bres, maybe_val = parse_field_value(tbl, pkf, pkfvs)
             if not bres:
                 return maybe_val
             
@@ -291,19 +293,7 @@ def table_filter_put(table, value_json):
     else:
         return api_400(msg_put_invalid_input)
 
-### MtM ###
-
-@app.route('/data/mtm/<table>', methods=['GET'])
-def view_mtm_get(table):
-    value = get_url_parameter('value')
-    return get_mtm(table, value)
-
-@app.route('/data/mtm/<table>', methods=['DELETE'])
-def view_mtm_delete(table):
-    value = get_url_parameter('value')
-    return delete_mtm(table, value)
-
-### Filtering ###
+### Filtering (or access by compound PK) ###
 
 @app.route('/data/<table>/filter', methods=['GET'])
 def view_filter_item_get(table):
@@ -320,7 +310,7 @@ def view_filter_item_delete(table):
     value_json = get_url_parameter('value')
     return table_filter_delete(table, value_json)
 
-### Normal ###
+### Access by singular PK ###
 
 @app.route('/data/<table>/<column>/<value>', methods=['GET'])
 def view_rest_get_item(table, column, value):
@@ -339,7 +329,7 @@ def view_rest_put_item(table, column, value):
 def view_rest_delete_item(table, column, value):
     return delete_item(table, column, value)
 
-### Both ###
+### Posting ###
 
 @app.route('/data/<table>', methods=['POST'])
 def rest_post_item(table):

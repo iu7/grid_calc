@@ -15,8 +15,8 @@ table_name_d = {}
 mtm_table_name_d = {}
 
 ### Common methods ###
-def fill_object(self, field_d, kwargs_d):
-    for k, v in kwargs_d:
+def fill_object(self, field_d, **kwargs):
+    for k, v in kwargs.items():
         if k in field_d:
             setattr(self, k, v)
         else:
@@ -26,14 +26,14 @@ def fill_object(self, field_d, kwargs_d):
 def user_init(self, **kwargs):
     if len(kwargs) < 4:
         raise Exception('User: not enough parameters')
-    fill_object(self, self.metainf.col_type_d)
+    fill_object(self, self.metainf.col_type_d, **kwargs)
 
 ### UserSesson methods ###
 
 def usersession_init(self, **kwargs):
     if len(kwargs) < 1:
         raise Exception('UserSession: not enough parameters')
-    fill_object(self, self.metainf.col_type_d)
+    fill_object(self, self.metainf.col_type_d, **kwargs)
     self.refresh()
 
 def usersession_refresh(self):
@@ -45,12 +45,12 @@ def usersession_refresh(self):
 def trait_init(self, **kwargs):
     if len(kwargs) < 2:
         raise Exception('Trait: not enough parameters')
-    fill_object(self, self.metainf.col_type_d)
+    fill_object(self, self.metainf.col_type_d, **kwargs)
 
 ### Agent methods ###
 
 def agent_init(self, **kwargs):
-    fill_object(self, self.metainf.col_type_d)
+    fill_object(self, self.metainf.col_type_d, **kwargs)
 
 ### Task methods ###
 
@@ -58,26 +58,26 @@ def task_init(self, **kwargs):
     if len(kwargs) < 2:
         raise Exception('Task: not enough parameters')
     self.max_time = 3600 #seconds
-    fill_object(self, self.metainf.col_type_d)
+    fill_object(self, self.metainf.col_type_d, **kwargs)
 
 ### Subtask methods ###
 
 def subtask_init(self, **kwargs):
     if len(kwargs) < 4:
         raise Exception('Subtask: not enough parameters')
-    fill_object(self, self.metainf.col_type_d)
+    fill_object(self, self.metainf.col_type_d, **kwargs)
 
 ### MTM ###
 
 def mtm_traitagent_init(self, **kwargs):
     if len(kwargs) < 2:
         raise Exception('MTMTraitAgent: not enough parameters')
-    fill_object(self, self.metainf.col_type_d)
+    fill_object(self, self.metainf.col_type_d, **kwargs)
 
 def mtm_traittask_init(self, **kwargs):
     if len(kwargs) < 2:
         raise Exception('MTMTraitTask: not enough parameters')
-    fill_object(self, self.metainf.col_type_d)
+    fill_object(self, self.metainf.col_type_d, **kwargs)
 
 ###
 
@@ -156,17 +156,15 @@ def init_models(Base):
         metainf = type('metainf', (), dict(\
             col_type_d = {\
                 'id'           : int,\
-                'trait_id'     : int,\
             },\
             col_type_parsers = {},\
             pk_field = 'id',\
         )),\
 \
         id = Column(Integer(), primary_key = True, autoincrement = True),\
-        trait_id = Column(ForeignKey("mtm_traitagent.trait_id"), cascade="all, delete-orphan"),\
 \
         subtasks = relationship("Subtask"),\
-        mtmTraits = relationship("mtmTraitAgent", cascade="all, delete-orphan"),\
+        mtmTraits = relationship("mtmTraitAgent"),\
 \
         __init__ = agent_init,\
 \
@@ -183,7 +181,6 @@ def init_models(Base):
         metainf = type ('metainf', (), dict(\
             col_type_d = {\
                 'id'           : int,\
-                'trait_id'     : int,\
                 'max_time'     : int,\
                 'start_script' : str,\
                 'result_files' : str,\
@@ -193,13 +190,12 @@ def init_models(Base):
         )),\
 \
         id = Column(Integer(), primary_key = True, autoincrement = True),\
-        trait_id = Column(ForeignKey("mtm_traittask.trait_id")),\
         max_time = Column(Integer()),\
         start_script = Column(String(200)),\
         result_files = Column(String(4096)),\
 \
         subtasks = relationship("Subtask", cascade="all, delete-orphan"),\
-        mtmTraits = relationship("mtmTraitTask", cascade="all, delete-orphan"),\
+        mtmTraits = relationship("mtmTraitTask"),\
 \
         __init__ = task_init,\
 \
@@ -216,8 +212,6 @@ def init_models(Base):
         metainf = type('metainf', (), dict(\
             col_type_d = {\
                 'id'        : int,\
-                'task_id'   : int,\
-                'agent_id'  : int,\
                 'name'      : str,\
                 'version'   : str\
             },\
@@ -226,8 +220,6 @@ def init_models(Base):
         )),\
 \
         id = Column(Integer(), primary_key = True, autoincrement = True),\
-        task_id = Column(ForeignKey("mtm_traittask.task_id"), cascade="all, delete-orphan"),\
-        agent_id = Column(ForeignKey("mtm_traitagent.agent_id"), cascade="all, delete-orphan"),\
         name = Column(String(200), nullable = False),\
         version = Column(String(200)),\
 \
@@ -285,8 +277,8 @@ def init_models(Base):
             pk_field = None,\
         )),\
 \
-        trait_id = Column(ForeignKey("trait.id"), primary_key = True),\
-        agent_id = Column(ForeignKey("agent.id"), primary_key = True),\
+        trait_id = Column(ForeignKey('trait.id'), primary_key = True),\
+        agent_id = Column(ForeignKey('agent.id'), primary_key = True),\
 \
         traits = relationship("Trait"),\
         agents = relationship("Agent"),\
@@ -310,11 +302,8 @@ def init_models(Base):
             pk_field = None,\
         )),\
 \
-        trait_id = Column(ForeignKey("trait.id"), primary_key = True),\
-        agent_id = Column(ForeignKey("task.id"), primary_key = True),\
-\
-        agents = relationship("Trait"),\
-        tasks = relationship("Task"),\
+        trait_id = Column(ForeignKey('trait.id'), primary_key = True),\
+        task_id = Column(ForeignKey('task.id'), primary_key = True),\
 \
         __init__ = mtm_traittask_init,\
 \
@@ -345,8 +334,8 @@ def init_models(Base):
     })
 
     mtm_table_name_d.update({\
-        'mtm_traitagent' : (,),\
-        'mtm_traittask'  : (,)\
+        'mtm_traitagent' : (),\
+        'mtm_traittask'  : ()\
     })
 
     #mtm_table_name_d.update({\
