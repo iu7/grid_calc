@@ -16,7 +16,7 @@ API:
 <br/>
 <table>
 <tr>
-<td>ENDPOINT</td> <td>DESCRIPTION</td> <td>INPUT</td> <td>RESPONCE</td>
+<td>ENDPOINT</td> <td>DESCRIPTION</td> <td>INPUT</td> <td>RESPONSE</td>
 </tr>
 <tr>
   <td>/data/table</td>
