@@ -64,7 +64,7 @@ API:
     <table>
       <tr><td>METHOD</td> <td>EC</td> <td>JSON</td></tr>
       <tr><td>PUT, DELETE</td> <td>200</td> <td>{"count" : int} -- rows affected</td></tr>
-      <tr><td>GET</td> <td>200</td> <td>{[object1, ... , objectN]]}</td></tr>
+      <tr><td>GET</td> <td>200</td> <td>{"result": [object1, ... , objectN]]}</td></tr>
       <tr><td>ANY</td> <td>400/404/500</td> <td>{"error" : string_message }</td></tr>
     </table>
   </td>
