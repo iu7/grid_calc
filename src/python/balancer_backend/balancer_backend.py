@@ -83,28 +83,36 @@ def nodesSpecificHandler(nid):
 def newTaskHandler():
     if not 'nodeid' in request.form: return '', 422
     nid = request.form['nodeid']
-    
-    
-    #todo
-    
-    return 'test', 200
+    r = request.get(database+'/custom/free_task_by_agent_id', \
+        data = {'agent_id':nid})
+    if (r.status_code == 200):
+        subtask = r.json()
+        sid = subtask['id'] #result_archive
+        tid = task['task_id']
+        task = request.get(database+'/task/'+tid).json()
+        archive_name = task['archive_name']
+        
+        activenodes[nid] = ActiveNode('Was assigned task', tid, sid, nid)
+        
+        return jsenc({'archive_name':archive_name}), 200
+    else:
+        return jsenc({'status':'failure', 'message':'no suitable tasks'}),404
     
 @app.route('/tasks/<string:taskid>', methods=['POST'])
 def submitTaskHandler(taskid):
-    nid = request.form['nodeid'] if 'nodeid' in request.form else ''
-    file = request.files['file']
-    if not (file and allowed_file(file.filename)):
-        return '', 422
-        
-    filename = secure_filename(file.filename)
-    fullpath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-    file.save(fullpath)
-    
-    #todo
-    
-    return r.text, r.status_code
+    if not 'nodeid' in request.form: return '', 422
+    nid = request.form['nodeid']
+    filename = request.form['filename']
+    if nid in activenodes: 
+        sid = activenodes[nid].tid
+        r = request.put(database+'/subtask/'+sid, \
+            data = jsenc({'archive_name':filename, 'status':'finished'}))
+    return jsenc({'status':'success'}), 200
 
+################################
 
+def cleaner():
+    return 0
 
 
 ################################
@@ -241,4 +249,5 @@ if __name__ == '__main__':
     
     beacon_setter()
     beacon_getter()
+    cleaner()
     app.run(host = '0.0.0.0', port = port)
