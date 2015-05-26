@@ -7,6 +7,7 @@ import hashlib, string, random
 from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy import *
 from sqlalchemy.orm import relationship, backref
+from sqlalchemy.dialects.postgresql import BYTEA
 
 def random_string(size):
     return ''.join([random.choice(string.ascii_letters) for i in range(size)])
@@ -183,7 +184,6 @@ def init_models(Base):
                 'id'           : int,\
                 'max_time'     : int,\
                 'start_script' : str,\
-                'result_files' : str,\
             },\
             col_type_parsers = {},\
             pk_field = 'id',\
@@ -192,7 +192,6 @@ def init_models(Base):
         id = Column(Integer(), primary_key = True, autoincrement = True),\
         max_time = Column(Integer()),\
         start_script = Column(String(200)),\
-        result_files = Column(String(4096)),\
 \
         subtasks = relationship("Subtask", cascade="all, delete-orphan"),\
         mtmTraits = relationship("mtmTraitTask"),\
@@ -240,11 +239,11 @@ def init_models(Base):
 \
         metainf = type ('metainf', (), dict(\
             col_type_d = {\
-                'id'             : int,\
-                'agent_id'       : int,\
-                'task_id'        : int,\
-                'status'         : int,\
-                'result_archive' : str\
+                'id'                : int,\
+                'agent_id'          : int,\
+                'task_id'           : int,\
+                'result_archive'    : str,\
+                'status'            : int,\
             },\
             col_type_parsers = {},\
             pk_field = 'id',\
@@ -253,12 +252,12 @@ def init_models(Base):
         id = Column(Integer(), primary_key = True, autoincrement = True),\
         agent_id = Column(ForeignKey("agent.id")),\
         task_id = Column(ForeignKey("task.id")),\
+        result_archive = Column(BYTEA),\
         status = Column(Integer(), nullable = False),\
-        result_archive = Column(String(200)),\
 \
         __init__ = subtask_init,\
 \
-        __repr__ = lambda self :'id: {0}, task_id: {1}, agent_id: {2}, status: {3}, result_archive: {4}'.format(self.id, self.task_id, self.agent_id, self.status, self.result_archive),\
+        __repr__ = lambda self :'id: {0}, task_id: {1}, agent_id: {2}, status: {3}'.format(self.id, self.task_id, self.agent_id, self.status),\
 \
         to_dict = lambda self :{'id': self.id, 'task_id': self.task_id, 'agent_id': self.agent_id, 'status': self.status, 'result_archive': self.result_archive}\
     ))
@@ -312,16 +311,6 @@ def init_models(Base):
         to_dict = lambda self :{'trait_id' : self.trait_id, 'task_id' : self.task_id},\
     ))
 
-    #mtmTraitAgent = Table('mtm_traitagent', Base.metadata,\
-    #    Column('trait_id', Integer, ForeignKey("trait.id"), nullable = False),\
-    #    Column('agent_id', Integer, ForeignKey("agent.id"), nullable = False)\
-    #)
-
-    #mtmTraitTask = Table('mtm_traittask', Base.metadata,\
-    #    Column('trait_id', Integer, ForeignKey("trait.id"), nullable = False),\
-    #    Column('task_id', Integer, ForeignKey("task.id"), nullable = False)\
-    #)
-
     table_name_d.update({\
         'subtask'        : Subtask,\
         'task'           : Task,\
@@ -337,10 +326,5 @@ def init_models(Base):
         'mtm_traitagent' : (),\
         'mtm_traittask'  : ()\
     })
-
-    #mtm_table_name_d.update({\
-    #    'mtm_traitagent': ({'trait_id' : Trait}, {'agent_id' : Agent}, mtmTraitAgent),\
-    #    'mtm_traittask' : ({'trait_id' : Trait}, {'task_id': Task}, mtmTraitTask)\
-    #})
 
 ###

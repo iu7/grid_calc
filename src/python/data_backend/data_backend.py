@@ -64,7 +64,7 @@ msg_col_not_found_fmt = 'table <{0}>: column <{1}> not found'
 msg_tbl_not_found_fmt = 'table <{0}>: not found'
 msg_item_not_found_fmt = 'table <{0}>: <{1}> = <{2}> not found'
 msg_mtm_pk_not_found_fmt = 'MtM table <{0}>: pk <{1}> not found in input'
-msg_mtm_use_another_endpoint_fmt = 'For MtM table use {0} /data/{1}/filter endpoint with required JSON parameters.'
+msg_mtm_use_another_endpoint_fmt = 'For MtM table use {0} /{1}/filter endpoint with required JSON parameters.'
 
 msg_mtm_only = 'Bad request: Only MtM tables supported'
 msg_mtm_not_found = 'MtM relation not found'
@@ -188,7 +188,9 @@ def put_item(table, pkf, pkfvs, value_json):
         return api_404(msg_tbl_not_found_fmt.format(table))
 
 def delete_item(table, pkf, pkfvs):
-    if table in table_name_d:
+    if table in mtm_table_name_d:
+        return api_400(msg_mtm_use_another_endpoint_fmt.format('DELETE', table))
+    elif table in table_name_d:
         tbl = table_name_d[table]
         
         if pkf == tbl.metainf.pk_field:
@@ -222,8 +224,8 @@ def delete_item(table, pkf, pkfvs):
         return api_404(msg_tbl_not_found_fmt.format(table))
 
 def table_filter_get(table, value_json):
-    if table in table_name_d or table in mtm_table_name_d:
-        tbl = table_name_d[table] if table in table_name_d else mtm_table_name_d[table][2]
+    if table in table_name_d:
+        tbl = table_name_d[table]
 
         bres, maybe_kwargs = try_json_to_filter_kwargs(tbl, value_json)
         if not bres:
@@ -293,48 +295,87 @@ def table_filter_put(table, value_json):
     else:
         return api_400(msg_put_invalid_input)
 
+def sync(batch):
+    for json_obj in batch:
+        if all(field in json_obj for field in ['table', 'data']):
+            table = json_obj['table']
+            data = json_obj['data']
+            if table in table_name_d:
+                tbl = table_name_d[table]
+                for jobj in data:
+                    bres, maybe_kwargs = try_json_to_filter_kwargs(tbl, jobj)
+                    if not bres:
+                        return maybe_kwargs
+                    qry = None
+                    if table in mtm_table_name_d:
+                        qry = tbl.query.filter_by(**maybe_kwargs)
+                    else:
+                        qry = tbl.query.filter_by(**{tbl.metainf.pk_field : maybe_kwargs[tbl.metainf.pk_field]})
+                    obj = qry.first()
+                    if obj:
+                        try:
+                            fill_object(obj, tbl.metainf.col_type_d, **maybe_kwargs)
+                        except Exception as e:
+                            return api_400(str(e))
+                    else:
+                        try:
+                            val = tbl(**maybe_kwargs)
+                        except Exception as e:
+                            return api_400(str(e))
+                            db_session.add(val)
+            else:
+                return api_404(msg_tbl_not_found_fmt.format(table))
+        else:
+            return api_400('Bad request: Sync requires {["table":"tablename", "data": [objects]]}')
+
 ### Filtering (or access by compound PK) ###
 
-@app.route('/data/<table>/filter', methods=['GET'])
+@app.route('/<table>/filter', methods=['GET'])
 def view_filter_item_get(table):
-    value_json = get_url_parameter('value')
+    value_json = request.get_json()
     return table_filter_get(table, value_json)
 
-@app.route('/data/<table>/filter', methods=['PUT'])
+@app.route('/<table>/filter', methods=['PUT'])
 def view_filter_item_put(table):
-    value_json = get_url_parameter('value')
+    value_json = request.get_json()
     return table_filter_put(table, value_json)
 
-@app.route('/data/<table>/filter', methods=['DELETE'])
+@app.route('/<table>/filter', methods=['DELETE'])
 def view_filter_item_delete(table):
-    value_json = get_url_parameter('value')
+    value_json = request.get_json()
     return table_filter_delete(table, value_json)
 
 ### Access by singular PK ###
 
-@app.route('/data/<table>/<column>/<value>', methods=['GET'])
+@app.route('/<table>/<column>/<value>', methods=['GET'])
 def view_rest_get_item(table, column, value):
     return get_item(table, column, value)
 
-@app.route('/data/<table>/<int:id>', methods=['GET'])
+@app.route('/<table>/<int:id>', methods=['GET'])
 def view_rest_get_item_by_id(table, id):
     return get_item(table, 'id', id)
 
-@app.route('/data/<table>/<column>/<value>', methods=['PUT'])
+@app.route('/<table>/<column>/<value>', methods=['PUT'])
 def view_rest_put_item(table, column, value):
-    value_json = get_url_parameter('value')
+    value_json = request.get_json()
     return put_item(table, column, value, value_json)
 
-@app.route('/data/<table>/<column>/<value>', methods=['DELETE'])
+@app.route('/<table>/<column>/<value>', methods=['DELETE'])
 def view_rest_delete_item(table, column, value):
     return delete_item(table, column, value)
 
 ### Posting ###
 
-@app.route('/data/<table>', methods=['POST'])
+@app.route('/<table>', methods=['POST'])
 def rest_post_item(table):
-    value = get_url_parameter('value')
+    value = request.get_json()
     return post_item(table, value)
+
+### Sync (with local DB on sharding backend after connection reestablishment) ###
+@app.route('/sync', methods=['POST'])
+def rpc_sync(table):
+    value = request.get_json()
+    return sync(value)
 
 ### Error handlers ###
 @app.errorhandler(400)

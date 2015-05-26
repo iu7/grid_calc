@@ -1,54 +1,196 @@
-#!/bin/bash
-
-set -v
-
 curl localhost:50001/trait                  -X POST   -H "Content-Type: application/json" -d '{"name":"trait1", "version":"1.0"}'; echo
+{
+  "id": 7,
+  "name": "trait1",
+  "version": "1.0"
+}
 curl localhost:50001/trait                  -X POST   -H "Content-Type: application/json" -d '{"name":"trait2", "version":"2.0"}'; echo
+{
+  "id": 8,
+  "name": "trait2",
+  "version": "2.0"
+}
 curl localhost:50001/trait                  -X POST   -H "Content-Type: application/json" -d '{"name":"trait3", "version":"2.0"}'; echo
+{
+  "id": 9,
+  "name": "trait3",
+  "version": "2.0"
+}
 curl localhost:50001/trait                  -X POST   -H "Content-Type: application/json" -d '{"name":"trait4", "version":"4.0"}'; echo
+{
+  "id": 10,
+  "name": "trait4",
+  "version": "4.0"
+}
 curl localhost:50001/trait                  -X POST   -H "Content-Type: application/json" -d '{"name":"trait5", "version":"5.0"}'; echo
+{
+  "id": 11,
+  "name": "trait5",
+  "version": "5.0"
+}
 curl localhost:50001/trait                  -X POST   -H "Content-Type: application/json" -d '{"name":"trait6", "version":"5.0"}'; echo
+{
+  "id": 12,
+  "name": "trait6",
+  "version": "5.0"
+}
 
 curl localhost:50001/trait/id/3             -X PUT    -H "Content-Type: application/json" -d '{"version":"1.0"}'; echo
+{
+  "id": 3,
+  "name": "trait3",
+  "version": "1.0"
+}
 curl localhost:50001/trait/filter           -X PUT    -H "Content-Type: application/json" -d '{"name":"trait3", "changes":{"version":"3.0"}}'; echo
+{
+  "count": 2
+}
 
 curl localhost:50001/trait/id/4             -X DELETE  ; echo
+{
+  "error": "Not found"
+}
 curl localhost:50001/trait/filter           -X DELETE -H "Content-Type: application/json" -d '{"version":"5.0"}'; echo
+{
+  "count": 2
+}
 
 curl localhost:50001/trait/id/1             -X GET     ; echo
+{
+  "id": 1,
+  "name": "trait1",
+  "version": "1.0"
+}
 curl localhost:50001/trait/filter           -X GET    -H "Content-Type: application/json" -d '{"name":"trait2"}'; echo
+{
+  "result": [
+    {
+      "id": 2,
+      "name": "trait2",
+      "version": "2.0"
+    },
+    {
+      "id": 8,
+      "name": "trait2",
+      "version": "2.0"
+    }
+  ]
+}
 curl localhost:50001/trait/filter           -X GET    -H "Content-Type: application/json" -d '{"version":"3.0"}'; echo
+{
+  "result": [
+    {
+      "id": 3,
+      "name": "trait3",
+      "version": "3.0"
+    },
+    {
+      "id": 9,
+      "name": "trait3",
+      "version": "3.0"
+    }
+  ]
+}
 
 curl localhost:50001/agent                  -X POST   -H "Content-Type: application/json" -d '{}'; echo
+{
+  "id": 3
+}
 curl localhost:50001/agent                  -X POST   -H "Content-Type: application/json" -d '{}'; echo
+{
+  "id": 4
+}
 
 curl localhost:50001/mtm_traitagent         -X POST   -H "Content-Type: application/json" -d '{"trait_id":"1", "agent_id":"2"}'; echo
+{
+  "error": "(psycopg2.IntegrityError) duplicate key value violates unique constraint \"mtm_traitagent_pkey\"\nDETAIL:  Key (trait_id, agent_id)=(1, 2) already exists.\n [SQL: 'INSERT INTO mtm_traitagent (trait_id, agent_id) VALUES (%(trait_id)s, %(agent_id)s)'] [parameters: {'agent_id': 2, 'trait_id': 1}]"
+}
 curl localhost:50001/mtm_traitagent         -X POST   -H "Content-Type: application/json" -d '{"agent_id":"2", "trait_id":"3"}'; echo
+{
+  "error": "(psycopg2.IntegrityError) duplicate key value violates unique constraint \"mtm_traitagent_pkey\"\nDETAIL:  Key (trait_id, agent_id)=(3, 2) already exists.\n [SQL: 'INSERT INTO mtm_traitagent (trait_id, agent_id) VALUES (%(trait_id)s, %(agent_id)s)'] [parameters: {'agent_id': 2, 'trait_id': 3}]"
+}
 curl localhost:50001/mtm_traitagent         -X POST   -H "Content-Type: application/json" -d '{"agent_id":"1", "trait_id":"2"}'; echo
+{
+  "agent_id": 1,
+  "trait_id": 2
+}
 
 curl localhost:50001/mtm_traitagent/filter  -X GET    -H "Content-Type: application/json" -d '{"agent_id":"1", "trait_id":"2"}'; echo
+{
+  "result": [
+    {
+      "agent_id": 1,
+      "trait_id": 2
+    }
+  ]
+}
 curl localhost:50001/mtm_traitagent/filter  -X DELETE -H "Content-Type: application/json" -d '{"agent_id":"1", "trait_id":"2"}'; echo
+{
+  "count": 1
+}
 curl localhost:50001/mtm_traitagent/filter  -X GET    -H "Content-Type: application/json" -d '{"agent_id":"1", "trait_id":"2"}'; echo
+{
+  "result": []
+}
 
 ##
 
 curl localhost:50001/trait/filter           -X PUT    -H "Content-Type: application/json" -d '{"name":"trait1", "changes":{}}'; echo
+{
+  "count": 2
+}
 curl localhost:50001/trait/filter           -X PUT    -H "Content-Type: application/json" -d '{"name":"trait", "changes":{"version":"3.0"}}'; echo
+{
+  "error": "Not found"
+}
 
 ##
 
 curl localhost:50001/trait                  -X POST   -H "Content-Type: application/json" -d '{"name":"trait_bad1"}'; echo
+{
+  "error": "Trait: not enough parameters"
+}
 curl localhost:50001/trait                  -X POST   -H "Content-Type: application/json" -d '{"name":"trait_bad2","kdmfds":"kksdlkl"}'; echo
+{
+  "error": "table <trait>: column <kdmfds> not found"
+}
 curl localhost:50001/trait                  -X POST   -H "Content-Type: application/json" -d '{"name":"trait_bad3", "version": "123", "kdmfds":"kksdlkl"}'; echo
+{
+  "error": "table <trait>: column <kdmfds> not found"
+}
 
 curl localhost:50001/trait/id/3             -X PUT    -H "Content-Type: application/json" -d '{"versio":"1.0"}'; echo
+{
+  "error": "table <trait>: column <versio> not found"
+}
 curl localhost:50001/trait/id/100           -X PUT    -H "Content-Type: application/json" -d '{"version":"1.0"}'; echo
+{
+  "error": "Not found"
+}
 
 curl localhost:50001/trait/filter           -X PUT    -H "Content-Type: application/json" -d '{"nam":"trait", "changes":{"version":"3.0"}}'; echo
+{
+  "error": "table <trait>: column <nam> not found"
+}
 curl localhost:50001/trait/filter           -X PUT    -H "Content-Type: application/json" -d '{"name":"trait1"}'; echo
+{
+  "error": "PUT requires additional json field <changes>:[list_of_key-value_pairs]}"
+}
 
 ##
 
 curl localhost:50001/user                   -X POST   -H "Content-Type: application/json" -d '{"username":"123","pw_hash":"1234","mail":"12345","phone":"123456"}'; echo
+{
+  "error": "(psycopg2.IntegrityError) duplicate key value violates unique constraint \"user_username_key\"\nDETAIL:  Key (username)=(123) already exists.\n [SQL: 'INSERT INTO \"user\" (username, pw_hash, mail, phone) VALUES (%(username)s, %(pw_hash)s, %(mail)s, %(phone)s) RETURNING \"user\".id'] [parameters: {'pw_hash': '1234', 'mail': '12345', 'username': '123', 'phone': '123456'}]"
+}
 curl localhost:50001/usersession            -X POST   -H "Content-Type: application/json" -d '{"user_id":"1","timestamp":"21 MAY 15 12:02:31"}'; echo
+{
+  "id": 2,
+  "session_id": "hOJLyUrevIlvrZRtdyRivCnhECMCpDUE",
+  "timestamp": "Tue, 26 May 2015 16:10:03 GMT",
+  "user_id": 1
+}
 curl localhost:50001/usersession            -X POST   -H "Content-Type: application/json" -d '{"user_id":"1","timestamp":"21-MY-15 kl 12:02:31"}'; echo
+{
+  "error": "table <usersession>, column <timestamp>: cannot convert <21-MY-15 kl 12:02:31> to type <datetime> from type <str>"
+}
