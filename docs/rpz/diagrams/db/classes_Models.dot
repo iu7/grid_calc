@@ -12,32 +12,28 @@ digraph "classes_Models" {
 	n5 [label="{models.User|__tablename__ : str\lid : Column.Integer\lmail : Column.String\lphone : Column.String\lpw_hash : Column.String\lusername : Column.String\lsessions : sqlalchemy.qorm.relation\l|__init__()\l__repr__()\lto_dict()\l}", shape="record"];
 	n6 [label="{models.UserSession|__tablename__ : str\lid : Column.Integer\lsession_id : Column.ForeignKey\luser_id : Column.ForeignKey\ltimestamp : Column.String\l|__repr__()\lrefresh()\lsession_expired()\lto_dict()\lusersession_init()\l}", shape="record"];
 	n7 [label="{sqlalchemy.sql.schema.Column|}", shape="record"];
-	{
-		rank=same;
-		n7 -> n1 [arrowhead="diamond", arrowtail="none", fontcolor="green", xlabel="id", style="solid"];
-		n7 -> n2 [arrowhead="diamond", arrowtail="none", fontcolor="green", xlabel="id", style="solid"];
-		n7 -> n2 [arrowhead="diamond", arrowtail="none", fontcolor="green", xlabel="status", style="solid"];
-		n7 -> n2 [arrowhead="diamond", arrowtail="none", fontcolor="green", xlabel="agent_id", style="solid"];
-		n7 -> n2 [arrowhead="diamond", arrowtail="none", fontcolor="green", xlabel="result_archive", style="solid"];
-		n7 -> n2 [arrowhead="diamond", arrowtail="none", fontcolor="green", xlabel="task_id", style="solid"];
-		n7 -> n3 [arrowhead="diamond", arrowtail="none", fontcolor="green", xlabel="result_files", style="solid"];
-		n7 -> n3 [arrowhead="diamond", arrowtail="none", fontcolor="green", xlabel="id", style="solid"];
-		n7 -> n3 [arrowhead="diamond", arrowtail="none", fontcolor="green", xlabel="start_script", style="solid"];
-		n7 -> n3 [arrowhead="diamond", arrowtail="none", fontcolor="green", xlabel="max_time", style="solid"];
-	}
-	{
-		rank=same;
-		n7 -> n4 [arrowhead="diamond", arrowtail="none", fontcolor="green", xlabel="id", style="solid"];
-		n7 -> n4 [arrowhead="diamond", arrowtail="none", fontcolor="green", xlabel="version", style="solid"];
-		n7 -> n4 [arrowhead="diamond", arrowtail="none", fontcolor="green", xlabel="name", style="solid"];
-		n7 -> n5 [arrowhead="diamond", arrowtail="none", fontcolor="green", xlabel="pw_hash", style="solid"];
-		n7 -> n5 [arrowhead="diamond", arrowtail="none", fontcolor="green", xlabel="id", style="solid"];
-		n7 -> n5 [arrowhead="diamond", arrowtail="none", fontcolor="green", xlabel="phone", style="solid"];
-		n7 -> n5 [arrowhead="diamond", arrowtail="none", fontcolor="green", xlabel="username", style="solid"];
-		n7 -> n5 [arrowhead="diamond", arrowtail="none", fontcolor="green", xlabel="mail", style="solid"];
-		n7 -> n6 [arrowhead="diamond", arrowtail="none", fontcolor="green", xlabel="session_id", style="solid"];
-		n7 -> n6 [arrowhead="diamond", arrowtail="none", fontcolor="green", xlabel="id", style="solid"];
-		n7 -> n6 [arrowhead="diamond", arrowtail="none", fontcolor="green", xlabel="user_id", style="solid"];
-		n7 -> n6 [arrowhead="diamond", arrowtail="none", fontcolor="green", xlabel="timestamp", style="solid"];
-	}
+	n7 -> n1 [arrowhead="diamond", arrowtail="none", fontcolor="green", xlabel="id", style="solid"];
+	n7 -> n2 [arrowhead="diamond", arrowtail="none", fontcolor="green", xlabel="id", style="solid"];
+	n7 -> n2 [arrowhead="diamond", arrowtail="none", fontcolor="green", xlabel="status", style="solid"];
+	n7 -> n2 [arrowhead="diamond", arrowtail="none", fontcolor="green", xlabel="agent_id", style="solid"];
+	n7 -> n2 [arrowhead="diamond", arrowtail="none", fontcolor="green", xlabel="result_archive", style="solid"];
+	n7 -> n2 [arrowhead="diamond", arrowtail="none", fontcolor="green", xlabel="task_id", style="solid"];
+	n7 -> n3 [arrowhead="diamond", arrowtail="none", fontcolor="green", xlabel="result_files", style="solid"];
+	n7 -> n3 [arrowhead="diamond", arrowtail="none", fontcolor="green", xlabel="id", style="solid"];
+	n7 -> n3 [arrowhead="diamond", arrowtail="none", fontcolor="green", xlabel="start_script", style="solid"];
+	n7 -> n3 [arrowhead="diamond", arrowtail="none", fontcolor="green", xlabel="max_time", style="solid"];
+	n7 -> n4 [arrowhead="diamond", arrowtail="none", fontcolor="green", xlabel="id", style="solid"];
+	n7 -> n4 [arrowhead="diamond", arrowtail="none", fontcolor="green", xlabel="version", style="solid"];
+	n7 -> n4 [arrowhead="diamond", arrowtail="none", fontcolor="green", xlabel="name", style="solid"];
+	n7 -> n5 [arrowhead="diamond", arrowtail="none", fontcolor="green", xlabel="pw_hash", style="solid"];
+	n7 -> n5 [arrowhead="diamond", arrowtail="none", fontcolor="green", xlabel="id", style="solid"];
+	n7 -> n5 [arrowhead="diamond", arrowtail="none", fontcolor="green", xlabel="phone", style="solid"];
+	n7 -> n5 [arrowhead="diamond", arrowtail="none", fontcolor="green", xlabel="username", style="solid"];
+	n7 -> n5 [arrowhead="diamond", arrowtail="none", fontcolor="green", xlabel="mail", style="solid"];
+	n7 -> n6 [arrowhead="diamond", arrowtail="none", fontcolor="green", xlabel="session_id", style="solid"];
+	n7 -> n6 [arrowhead="diamond", arrowtail="none", fontcolor="green", xlabel="id", style="solid"];
+	n7 -> n6 [arrowhead="diamond", arrowtail="none", fontcolor="green", xlabel="user_id", style="solid"];
+	n7 -> n6 [arrowhead="diamond", arrowtail="none", fontcolor="green", xlabel="timestamp", style="solid"];
+	{rank=same; n1 n2 n3}
+	{rank=source; n4 n5 n6}
 }
