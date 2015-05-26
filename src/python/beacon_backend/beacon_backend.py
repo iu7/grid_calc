@@ -5,7 +5,7 @@ import threading
 import time
 import sys
 
-timeout = 10
+timeout = 60
 defaultport = 666
 collector_cycletime = 3
 

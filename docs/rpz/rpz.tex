@@ -443,7 +443,6 @@ directory/subdirectory_file.extension
     \item[Метод:] PUT
     \item[Параметры:] состояние расчёта
     \item[Результат:] сообщение об успешном обновлении статуса
-    \item[Ошибки:] узел разрегистрирован за неактивностью: HTTP 404
   \end{description}
   \item
   \begin{description}
@@ -451,7 +450,7 @@ directory/subdirectory_file.extension
     \item[Метод:] GET
     \item[Параметры:] идентификатор вычислительного узла
     \item[Результат:] пакет данных, описывающих задачу
-    \item[Ошибки:] подходящих задач нет: HTTP 404
+    \item[Ошибки:] подходящих задач нет: HTTP 404; идентификатор не распознан либо отсутствует: HTTP 422
   \end{description}
   \item
   \begin{description}
@@ -459,6 +458,7 @@ directory/subdirectory_file.extension
     \item[Метод:] POST
     \item[Параметры:] идентификатор вычислительного узла, результат выполнения задачи
     \item[Результат:] сообщение об успешном приёме результата
+    \item[Ошибки:] ошибка идентификатора узла, формата задачи либо идентификатора задачи: HTTP 422
   \end{description}
 \end{itemize}
 
