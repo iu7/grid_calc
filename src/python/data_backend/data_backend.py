@@ -274,6 +274,8 @@ def table_filter_put(table, value_json):
             return api_500(str(e))
 
         return api_200({'count': len(reslo)})
+    else:
+        return api_404()
 
 def sync(batch):
     for json_obj in batch:
