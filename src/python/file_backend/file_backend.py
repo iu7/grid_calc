@@ -1,5 +1,6 @@
 import sys
 import os
+import requests, threading
 
 from flask import *
 from werkzeug.routing import BaseConverter
@@ -78,6 +79,48 @@ def api_404(msg = 'Not found'):
 @app.errorhandler(200)
 def api_200(data = {}):
     return response_builder(data, 200)
+    
+### Other ###
+beacon_adapter_cycletime = 3
+beacon = 'http://127.0.0.1:666'
+stateNormal = 'Operating normally'
+stateNoBeacon = 'Unable to find beacon'
+state = stateNormal
+selfaddress = None
+bcmsg = False
+def beaconDownMsg():
+    global bcmsg
+    if (not bcmsg): 
+        print ('Beacon is down. Waiting to reconnect.')
+        bcmsg = True
+
+def beaconUpMsg():
+    global bcmsg
+    if (bcmsg): 
+        print ('Beacon is back up.')
+        bcmsg = False
+        
+def beacon_setter():
+    messaged = False
+    global selfaddress
+    global port
+    global state
+    while (not messaged):
+        try:
+            if selfaddress == None:
+                selfaddress = requests.post(beacon + '/services/fileserver', data={'port':port, 'state':state}).json()['address']
+            else:
+                requests.put(beacon + '/services/fileserver/' + selfaddress, data={'state':state})
+            
+            thr = threading.Timer(beacon_adapter_cycletime, beacon_setter)
+            thr.daemon = True
+            thr.start()
+            messaged = True
+            state = stateNormal
+            beaconUpMsg()
+        except:
+            state = stateNoBeacon
+            beaconDownMsg()
 
 if __name__ == '__main__':
     host = '0.0.0.0'
@@ -89,4 +132,6 @@ if __name__ == '__main__':
         sys.exit()
 
     print('Starting with settings: self: {0}:{1}'.format(host, port))
+    
+    beacon_setter()
     app.run(host = host, port = port)

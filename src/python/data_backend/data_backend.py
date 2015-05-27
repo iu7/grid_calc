@@ -1,4 +1,5 @@
 import settings
+import requests, threading
 from common import *
 
 from flask import *
@@ -31,7 +32,7 @@ if __name__ == '__main__':
 
     init_conn_string(dbhost, dbport)
 else:
-    init_conn_string('10.0.0.10', 5432)
+    init_conn_string('127.0.0.1', 5432)
 
 ###<< MAIN ##
 
@@ -425,6 +426,50 @@ def api_404(msg = 'Not found'):
 def api_200(data = {}):
     return response_builder(data, 200)
 
+
 ### Other ###
+beacon_adapter_cycletime = 3
+beacon = 'http://127.0.0.1:666'
+stateNormal = 'Operating normally'
+stateNoBeacon = 'Unable to find beacon'
+state = stateNormal
+
+bcmsg = False
+def beaconDownMsg():
+    global bcmsg
+    if (not bcmsg): 
+        print ('Beacon is down. Waiting to reconnect.')
+        bcmsg = True
+
+def beaconUpMsg():
+    global bcmsg
+    if (bcmsg): 
+        print ('Beacon is back up.')
+        bcmsg = False
+        
+def beacon_setter():
+    messaged = False
+    global selfaddress
+    global port
+    global state
+    while (not messaged):
+        try:
+            if selfaddress == None:
+                selfaddress = requests.post(beacon + '/services/database', data={'port':port, 'state':state}).json()['address']
+            else:
+                requests.put(beacon + '/services/database/' + selfaddress, data={'state':state})
+            
+            thr = threading.Timer(beacon_adapter_cycletime, beacon_setter)
+            thr.daemon = True
+            thr.start()
+            messaged = True
+            state = stateNormal
+            beaconUpMsg()
+        except:
+            state = stateNoBeacon
+            beaconDownMsg()
+selfaddress = None
+
 if __name__ == '__main__':
+    beacon_setter()
     app.run(host = host, port = port)
