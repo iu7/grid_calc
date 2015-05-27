@@ -9,13 +9,11 @@ from sqlalchemy import *
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.dialects.postgresql import BYTEA
 
-def random_string(size):
-    return ''.join([random.choice(string.ascii_letters) for i in range(size)])
-
 table_name_d = {}
 mtm_table_name_d = {}
 
 ### Common methods ###
+
 def fill_object(self, field_d, **kwargs):
     for k, v in kwargs.items():
         if k in field_d:
@@ -64,9 +62,10 @@ def task_init(self, **kwargs):
 ### Subtask methods ###
 
 def subtask_init(self, **kwargs):
-    if len(kwargs) < 4:
+    if len(kwargs) < 3:
         raise Exception('Subtask: not enough parameters')
     fill_object(self, self.metainf.col_type_d, **kwargs)
+    self.dateplaced = datetime.utcnow()
 
 ### MTM ###
 
@@ -85,6 +84,8 @@ def mtm_traittask_init(self, **kwargs):
 def init_models(Base):
     ### User ###
 
+    Base.to_dict = lambda self: {f:getattr(self, f) for f in self.metainf.col_type_d.keys()}
+
     User = type('User', (Base,), dict(\
         __tablename__ = "user",\
 \
@@ -97,6 +98,7 @@ def init_models(Base):
                 'phone'   : str\
             },\
             col_type_parsers = {},\
+            filename_fields = [],\
             pk_field = 'id',\
         )),\
 \
@@ -106,13 +108,8 @@ def init_models(Base):
         mail = Column(String(200)),\
         phone = Column(String(11)),\
 \
-        sessions = relationship("UserSession", cascade="all, delete-orphan"),\
-\
         __init__ = user_init,\
-\
-        __repr__ = lambda self :'id: {0}, username: {1}, mail: {2}, phone: {3}'.format(self.id, self.username, self.mail, self.phone),\
-\
-        to_dict = lambda self :{'id': self.id, 'username': self.username, 'password': self.pw_hash, 'mail': self.mail, 'phone': self.phone}\
+        __repr__ = lambda self :', '.join(['{0}: {1}'.format(f, getattr(self, f)) for f in col_type_d.keys()])\
     ))
 
     ### UserSession ###
@@ -130,23 +127,20 @@ def init_models(Base):
             col_type_parsers = {\
                 'timestamp' : dt_parser.parse\
             },\
+            filename_fields = [],\
             pk_field = 'id',\
         )),\
 \
         id = Column(Integer(), primary_key = True, autoincrement = True),\
         session_id = Column(String(32), unique = True),\
         timestamp = Column(DateTime),\
-        user_id = Column(ForeignKey("user.id")),\
+        user_id = Column(Integer()),\
 \
         __init__ = usersession_init,\
-\
-        __repr__ = lambda self :'id: {0}, user_id: {1}, sesson_id: {2}, timestamp: {3}'.format(self.id, self.user_id, self.session_id, self.timestamp),\
+        __repr__ = lambda self :', '.join(['{0}: {1}'.format(f, getattr(self, f)) for f in col_type_d.keys()]),\
 \
         refresh = usersession_refresh,\
-\
-        session_expired = lambda self :(self.timestamp - datetime.utcnow()) >= timedelta(hours = 1),\
-\
-        to_dict = lambda self :{'id' : self.id, 'session_id' : self.session_id, 'timestamp' : self.timestamp, 'user_id' : self.user_id},\
+        session_expired = lambda self :(self.timestamp - datetime.utcnow()) >= timedelta(hours = 1)\
     ))
 
     ### Agent ###
@@ -156,22 +150,17 @@ def init_models(Base):
 \
         metainf = type('metainf', (), dict(\
             col_type_d = {\
-                'id'           : int,\
+                'id' : int,\
             },\
             col_type_parsers = {},\
+            filename_fields = [],\
             pk_field = 'id',\
         )),\
 \
         id = Column(Integer(), primary_key = True, autoincrement = True),\
 \
-        subtasks = relationship("Subtask"),\
-        mtmTraits = relationship("mtmTraitAgent"),\
-\
         __init__ = agent_init,\
-\
-        __repr__ = lambda self : 'id: {0}'.format(self.id),\
-\
-        to_dict = lambda self : {'id' : self.id},\
+        __repr__ = lambda self :', '.join(['{0}: {1}'.format(f, getattr(self, f)) for f in col_type_d.keys()])\
     ))
 
     ### Task ###
@@ -183,24 +172,19 @@ def init_models(Base):
             col_type_d = {\
                 'id'           : int,\
                 'max_time'     : int,\
-                'start_script' : str,\
+                'archive_name' : str,\
             },\
             col_type_parsers = {},\
+            filename_fields = ['archive_name'],\
             pk_field = 'id',\
         )),\
 \
         id = Column(Integer(), primary_key = True, autoincrement = True),\
         max_time = Column(Integer()),\
-        start_script = Column(String(200)),\
-\
-        subtasks = relationship("Subtask", cascade="all, delete-orphan"),\
-        mtmTraits = relationship("mtmTraitTask"),\
+        archive_name = Column(String(200), nullable = False),\
 \
         __init__ = task_init,\
-\
-        __repr__ = lambda self :'id: {0}, max_time: {1}, start_script: {2}, result_files: {3}'.format(self.id, self.max_time, self.start_script, self.result_files),\
-\
-        to_dict = lambda self :{'id': self.id, 'max_time': self.max_time, 'start_script': self.start_script, 'result_files': self.result_files}\
+        __repr__ = lambda self :', '.join(['{0}: {1}'.format(f, getattr(self, f)) for f in col_type_d.keys()])\
     ))
 
     ### Trait ###
@@ -210,26 +194,23 @@ def init_models(Base):
 \
         metainf = type('metainf', (), dict(\
             col_type_d = {\
-                'id'        : int,\
-                'name'      : str,\
-                'version'   : str\
+                'id'      : int,\
+                'name'    : str,\
+                'version' : str\
             },\
             col_type_parsers = {},\
-            pk_field = 'id'\
+            filename_fields = [],\
+            pk_field = 'id',\
         )),\
 \
         id = Column(Integer(), primary_key = True, autoincrement = True),\
         name = Column(String(200), nullable = False),\
         version = Column(String(200)),\
 \
-        mtmAgents = relationship("mtmTraitAgent"),\
-        mtmTasks = relationship("mtmTraitTask"),\
+        __table_args__ = (UniqueConstraint('name', 'version', name='_uc_name_version'),),\
 \
         __init__ = trait_init,\
-\
-        __repr__ = lambda self :'id: {0}, name: {1}, version: {2}'.format(self.id, self.name, self.version),\
-\
-        to_dict = lambda self :{'id' : self.id, 'name' : self.name, 'version' : self.version},\
+        __repr__ = lambda self :', '.join(['{0}: {1}'.format(f, getattr(self, f)) for f in col_type_d.keys()])\
     ))
 
     ### Subtask ###
@@ -239,27 +220,29 @@ def init_models(Base):
 \
         metainf = type ('metainf', (), dict(\
             col_type_d = {\
-                'id'                : int,\
-                'agent_id'          : int,\
-                'task_id'           : int,\
-                'result_archive'    : str,\
-                'status'            : int,\
+                'id'           : int,\
+                'agent_id'     : int,\
+                'task_id'      : int,\
+                'archive_name' : str,\
+                'status'       : str,\
+                'dateplaced'   : datetime
             },\
-            col_type_parsers = {},\
+            col_type_parsers = {\
+                'dateplaced'   : dt_parser.parse,\
+            },\
+            filename_fields = ['archive_name'],\
             pk_field = 'id',\
         )),\
 \
         id = Column(Integer(), primary_key = True, autoincrement = True),\
-        agent_id = Column(ForeignKey("agent.id")),\
-        task_id = Column(ForeignKey("task.id")),\
-        result_archive = Column(BYTEA),\
-        status = Column(Integer(), nullable = False),\
+        agent_id = Column(Integer()),\
+        task_id = Column(Integer()),\
+        archive_name = Column(String(200), nullable = False),\
+        status = Column(String(200)),\
+        dateplaced = Column(DateTime),\
 \
         __init__ = subtask_init,\
-\
-        __repr__ = lambda self :'id: {0}, task_id: {1}, agent_id: {2}, status: {3}'.format(self.id, self.task_id, self.agent_id, self.status),\
-\
-        to_dict = lambda self :{'id': self.id, 'task_id': self.task_id, 'agent_id': self.agent_id, 'status': self.status, 'result_archive': self.result_archive}\
+        __repr__ = lambda self :', '.join(['{0}: {1}'.format(f, getattr(self, f)) for f in col_type_d.keys()])\
     ))
 
     ### MTM ###
@@ -269,24 +252,19 @@ def init_models(Base):
 \
         metainf = type('metainf', (), dict(\
             col_type_d = {\
-                'trait_id'  : int,\
-                'agent_id'  : int\
+                'trait_id' : int,\
+                'agent_id' : int\
             },\
             col_type_parsers = {},\
+            filename_fields = [],\
             pk_field = None,\
         )),\
 \
-        trait_id = Column(ForeignKey('trait.id'), primary_key = True),\
-        agent_id = Column(ForeignKey('agent.id'), primary_key = True),\
-\
-        traits = relationship("Trait"),\
-        agents = relationship("Agent"),\
+        trait_id = Column(Integer(), primary_key = True),\
+        agent_id = Column(Integer(), primary_key = True),\
 \
         __init__ = mtm_traitagent_init,\
-\
-        __repr__ = lambda self :'trait_id: {1}, agent_id: {2}'.format(self.trait_id, self.agent_id),\
-\
-        to_dict = lambda self :{'trait_id' : self.trait_id, 'agent_id' : self.agent_id},\
+        __repr__ = lambda self :', '.join(['{0}: {1}'.format(f, getattr(self, f)) for f in col_type_d.keys()])\
     ))
 
     mtmTraitTask = type('mtmTraitTask', (Base,), dict(\
@@ -294,21 +272,19 @@ def init_models(Base):
 \
         metainf = type('metainf', (), dict(\
             col_type_d = {\
-                'trait_id'  : int,\
-                'task_id'   : int\
+                'trait_id' : int,\
+                'task_id'  : int\
             },\
             col_type_parsers = {},\
+            filename_fields = [],\
             pk_field = None,\
         )),\
 \
-        trait_id = Column(ForeignKey('trait.id'), primary_key = True),\
-        task_id = Column(ForeignKey('task.id'), primary_key = True),\
+        trait_id = Column(Integer(), primary_key = True),\
+        task_id = Column(Integer(), primary_key = True),\
 \
         __init__ = mtm_traittask_init,\
-\
-        __repr__ = lambda self :'trait_id: {1}, task_id: {2}'.format(self.trait_id, self.task_id),\
-\
-        to_dict = lambda self :{'trait_id' : self.trait_id, 'task_id' : self.task_id},\
+        __repr__ = lambda self :', '.join(['{0}: {1}'.format(f, getattr(self, f)) for f in col_type_d.keys()])\
     ))
 
     table_name_d.update({\

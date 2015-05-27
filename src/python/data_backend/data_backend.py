@@ -48,14 +48,6 @@ Base = declarative_base()
 Base.query = db_session.query_property()
 
 init_models(Base)
-Subtask,\
-Task,\
-Agent,\
-Trait,\
-User,\
-UserSession,\
-mtmTraitAgent,\
-mtmTraitTask = table_name_d.values()
 ###<< init models
 
 msg_type_err_fmt = 'table <{0}>, column <{1}>: cannot convert <{2}> to type <{3}> from type <{4}>'
@@ -328,6 +320,28 @@ def sync(batch):
         else:
             return api_400('Bad request: Sync requires {["table":"tablename", "data": [objects]]}')
 
+### Custom ###
+def get_free_task_by_agent_id(agent_id, status = 'queued', newstatus = 'taken'):
+    tblMtmTA = table_name_d['mtm_traitagent']
+    tblMtmTT = table_name_d['mtm_traittask']
+    tblSubtask = table_name_d['subtask']
+
+    trait_ids = tblMtmTA.query.filter_by(agent_id = agent_id).all()
+    subtasks = tblSubtask.query.filter_by(status = status).all()
+    task_ids = (sbtsk.task_id for sbtsk in subtasks)
+    task_id = tblMtmTT.query\
+        .filter(tblMtmTT.task_id.in_(task_ids))\
+        .filter(tblMtmTT.trait_id.in_(trait_ids))\
+        .first()
+    if task_id:
+        res = next(sbtsk for sbtsk in subtasks if sbtsk.task_id == task_id)
+        res.status = newstatus
+        res.agent_id = agent_id
+        db_session.flush()
+        return api_200(res.to_dict())
+    else:
+        return api_404()
+
 ### Filtering (or access by compound PK) ###
 
 @app.route('/<table>/filter', methods=['GET'])
@@ -378,7 +392,7 @@ def rpc_sync(table):
     return sync(value)
 
 ### Error handlers ###
-@app.errorhandler(400)
+@app.errorhandler(500)
 def api_500(msg = 'Internal error'):
     return response_builder({'error': msg}, 500)
 

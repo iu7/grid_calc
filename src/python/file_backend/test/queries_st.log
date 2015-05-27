@@ -1,0 +1,42 @@
+curl @"localhost:50002/static?path=1\2\3\4"  -X POST -F file=@a.out; echo
+{}
+curl @"localhost:50002/static"               -X POST -F file=@a.out; echo
+{}
+
+curl @"localhost:50002/static/1\2\3\4\a.out" -X GET > a_.out       ; echo
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100  8384  100  8384    0     0  4885k      0 --:--:-- --:--:-- --:--:-- 8187k
+
+chmod +x a_.out                                                    ; echo
+
+./a_.out                                                           ; echo
+HELLO WORLD!
+
+
+curl @"localhost:50002/static/a.out"         -X GET > a__.out      ; echo
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100  8384  100  8384    0     0  4047k      0 --:--:-- --:--:-- --:--:-- 8187k
+
+chmod +x a__.out                                                   ; echo
+
+./a__.out                                                          ; echo
+HELLO WORLD!
+
+
+curl @"localhost:50002/static/1\2\3\4\a.out" -X DELETE             ; echo
+{}
+curl @"localhost:50002/static/a.out"         -X DELETE             ; echo
+{}
+
+curl @"localhost:50002/static/1\2\3\4\a.out" -X GET                ; echo
+{
+  "error": "Not found"
+}
+curl @"localhost:50002/static/a.out"         -X GET                ; echo
+{
+  "error": "Not found"
+}
+
+rm a*.out test.cpp
