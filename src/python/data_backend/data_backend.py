@@ -321,20 +321,28 @@ def sync(batch):
             return api_400('Bad request: Sync requires {["table":"tablename", "data": [objects]]}')
 
 ### Custom ###
-def get_free_task_by_agent_id(agent_id, status = 'queued', newstatus = 'taken'):
+def get_free_subtask_by_agent_id(agent_id, status = 'queued', newstatus = 'taken'):
+    bres, maybe_val = parse_field_value(table_name_d['agent'], 'id', agent_id)
+    if not bres:
+        return maybe_val
+    agent_id = maybe_val
+
     tblMtmTA = table_name_d['mtm_traitagent']
     tblMtmTT = table_name_d['mtm_traittask']
     tblSubtask = table_name_d['subtask']
 
-    trait_ids = tblMtmTA.query.filter_by(agent_id = agent_id).all()
+    trait_idc = tblMtmTA.query.filter_by(agent_id = agent_id).all()
+    trait_ids = (mtmtr.trait_id for mtmtr in trait_idc)
+
     subtasks = tblSubtask.query.filter_by(status = status).all()
     task_ids = (sbtsk.task_id for sbtsk in subtasks)
-    task_id = tblMtmTT.query\
+
+    mtmtto = tblMtmTT.query\
         .filter(tblMtmTT.task_id.in_(task_ids))\
         .filter(tblMtmTT.trait_id.in_(trait_ids))\
         .first()
-    if task_id:
-        res = next(sbtsk for sbtsk in subtasks if sbtsk.task_id == task_id)
+    if mtmtto:
+        res = next(sbtsk for sbtsk in subtasks if sbtsk.task_id == mtmtto.task_id)
         res.status = newstatus
         res.agent_id = agent_id
         db_session.flush()
@@ -390,6 +398,15 @@ def rest_post_item(table):
 def rpc_sync(table):
     value = request.get_json()
     return sync(value)
+
+### Custom ###
+@app.route('/custom/get_free_subtask_by_agent_id', methods = ['GET'])
+def hnd_get_free_subtask_by_agent_id():
+    if has_url_parameter('agent_id'):
+        agent_id = get_url_parameter('agent_id')
+        return get_free_subtask_by_agent_id(agent_id)
+    else:
+        return api_400('Bad request: Required <agent_id> parameter')
 
 ### Error handlers ###
 @app.errorhandler(500)

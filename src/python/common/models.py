@@ -109,7 +109,7 @@ def init_models(Base):
         phone = Column(String(11)),\
 \
         __init__ = user_init,\
-        __repr__ = lambda self :', '.join(['{0}: {1}'.format(f, getattr(self, f)) for f in col_type_d.keys()])\
+        __repr__ = lambda self :', '.join(['{0}: {1}'.format(f, getattr(self, f)) for f in self.metainf.col_type_d.keys()])\
     ))
 
     ### UserSession ###
@@ -137,7 +137,7 @@ def init_models(Base):
         user_id = Column(Integer()),\
 \
         __init__ = usersession_init,\
-        __repr__ = lambda self :', '.join(['{0}: {1}'.format(f, getattr(self, f)) for f in col_type_d.keys()]),\
+        __repr__ = lambda self :', '.join(['{0}: {1}'.format(f, getattr(self, f)) for f in self.metainf.col_type_d.keys()]),\
 \
         refresh = usersession_refresh,\
         session_expired = lambda self :(self.timestamp - datetime.utcnow()) >= timedelta(hours = 1)\
@@ -160,7 +160,7 @@ def init_models(Base):
         id = Column(Integer(), primary_key = True, autoincrement = True),\
 \
         __init__ = agent_init,\
-        __repr__ = lambda self :', '.join(['{0}: {1}'.format(f, getattr(self, f)) for f in col_type_d.keys()])\
+        __repr__ = lambda self :', '.join(['{0}: {1}'.format(f, getattr(self, f)) for f in self.metainf.col_type_d.keys()])\
     ))
 
     ### Task ###
@@ -184,7 +184,7 @@ def init_models(Base):
         archive_name = Column(String(200), nullable = False),\
 \
         __init__ = task_init,\
-        __repr__ = lambda self :', '.join(['{0}: {1}'.format(f, getattr(self, f)) for f in col_type_d.keys()])\
+        __repr__ = lambda self :', '.join(['{0}: {1}'.format(f, getattr(self, f)) for f in self.metainf.col_type_d.keys()])\
     ))
 
     ### Trait ###
@@ -210,7 +210,7 @@ def init_models(Base):
         __table_args__ = (UniqueConstraint('name', 'version', name='_uc_name_version'),),\
 \
         __init__ = trait_init,\
-        __repr__ = lambda self :', '.join(['{0}: {1}'.format(f, getattr(self, f)) for f in col_type_d.keys()])\
+        __repr__ = lambda self :', '.join(['{0}: {1}'.format(f, getattr(self, f)) for f in self.metainf.col_type_d.keys()])\
     ))
 
     ### Subtask ###
@@ -242,7 +242,7 @@ def init_models(Base):
         dateplaced = Column(DateTime),\
 \
         __init__ = subtask_init,\
-        __repr__ = lambda self :', '.join(['{0}: {1}'.format(f, getattr(self, f)) for f in col_type_d.keys()])\
+        __repr__ = lambda self :', '.join(['{0}: {1}'.format(f, getattr(self, f)) for f in self.metainf.col_type_d.keys()])\
     ))
 
     ### MTM ###
@@ -264,7 +264,7 @@ def init_models(Base):
         agent_id = Column(Integer(), primary_key = True),\
 \
         __init__ = mtm_traitagent_init,\
-        __repr__ = lambda self :', '.join(['{0}: {1}'.format(f, getattr(self, f)) for f in col_type_d.keys()])\
+        __repr__ = lambda self :', '.join(['{0}: {1}'.format(f, getattr(self, f)) for f in self.metainf.col_type_d.keys()])\
     ))
 
     mtmTraitTask = type('mtmTraitTask', (Base,), dict(\
@@ -284,7 +284,7 @@ def init_models(Base):
         task_id = Column(Integer(), primary_key = True),\
 \
         __init__ = mtm_traittask_init,\
-        __repr__ = lambda self :', '.join(['{0}: {1}'.format(f, getattr(self, f)) for f in col_type_d.keys()])\
+        __repr__ = lambda self :', '.join(['{0}: {1}'.format(f, getattr(self, f)) for f in self.metainf.col_type_d.keys()])\
     ))
 
     table_name_d.update({\

@@ -1,0 +1,182 @@
+{
+  "id": 1,
+  "name": "trait1",
+  "version": "1.0"
+}
+{
+  "id": 2,
+  "name": "trait2",
+  "version": "2.0"
+}
+{
+  "id": 3,
+  "name": "trait3",
+  "version": "3.0"
+}
+{
+  "id": 4,
+  "name": "trait4",
+  "version": "4.0"
+}
+{
+  "id": 1
+}
+{
+  "id": 2
+}
+{
+  "archive_name": "cocoque",
+  "id": 1,
+  "max_time": 160
+}
+{
+  "archive_name": "kukareque",
+  "id": 2,
+  "max_time": 260
+}
+{
+  "agent_id": null,
+  "archive_name": "cocoque0",
+  "dateplaced": "Wed, 27 May 2015 00:35:44 GMT",
+  "id": 1,
+  "status": "queued",
+  "task_id": 1
+}
+{
+  "agent_id": null,
+  "archive_name": "cocoque1",
+  "dateplaced": "Wed, 27 May 2015 00:35:44 GMT",
+  "id": 2,
+  "status": "queued",
+  "task_id": 2
+}
+{
+  "agent_id": null,
+  "archive_name": "cocoque2",
+  "dateplaced": "Wed, 27 May 2015 00:35:44 GMT",
+  "id": 3,
+  "status": "queued",
+  "task_id": 1
+}
+{
+  "agent_id": null,
+  "archive_name": "cocoque3",
+  "dateplaced": "Wed, 27 May 2015 00:35:44 GMT",
+  "id": 4,
+  "status": "queued",
+  "task_id": 2
+}
+{
+  "agent_id": null,
+  "archive_name": "cocoque4",
+  "dateplaced": "Wed, 27 May 2015 00:35:44 GMT",
+  "id": 5,
+  "status": "queued",
+  "task_id": 1
+}
+{
+  "agent_id": 2,
+  "trait_id": 1
+}
+{
+  "agent_id": 3,
+  "trait_id": 2
+}
+{
+  "agent_id": 4,
+  "trait_id": 3
+}
+{
+  "agent_id": 1,
+  "trait_id": 4
+}
+{
+  "agent_id": 2,
+  "trait_id": 2
+}
+{
+  "agent_id": 4,
+  "trait_id": 4
+}
+{
+  "task_id": 1,
+  "trait_id": 1
+}
+{
+  "task_id": 1,
+  "trait_id": 2
+}
+{
+  "task_id": 1,
+  "trait_id": 3
+}
+{
+  "task_id": 2,
+  "trait_id": 2
+}
+{
+  "task_id": 2,
+  "trait_id": 4
+}
+{
+  "task_id": 2,
+  "trait_id": 1
+}
+{
+  "agent_id": 1,
+  "archive_name": "cocoque1",
+  "dateplaced": "Wed, 27 May 2015 00:35:44 GMT",
+  "id": 2,
+  "status": "taken",
+  "task_id": 2
+}
+{
+  "agent_id": 1,
+  "archive_name": "cocoque3",
+  "dateplaced": "Wed, 27 May 2015 00:35:44 GMT",
+  "id": 4,
+  "status": "taken",
+  "task_id": 2
+}
+{
+  "error": "Not found"
+}
+{
+  "agent_id": 2,
+  "archive_name": "cocoque0",
+  "dateplaced": "Wed, 27 May 2015 00:35:44 GMT",
+  "id": 1,
+  "status": "taken",
+  "task_id": 1
+}
+{
+  "agent_id": 2,
+  "archive_name": "cocoque2",
+  "dateplaced": "Wed, 27 May 2015 00:35:44 GMT",
+  "id": 3,
+  "status": "taken",
+  "task_id": 1
+}
+{
+  "agent_id": 2,
+  "archive_name": "cocoque4",
+  "dateplaced": "Wed, 27 May 2015 00:35:44 GMT",
+  "id": 5,
+  "status": "taken",
+  "task_id": 1
+}
+{
+  "error": "Not found"
+}
+{
+  "error": "Not found"
+}
+{
+  "error": "table <agent>, column <id>: cannot convert <lkkl> to type <int> from type <str>"
+}
+{
+  "error": "Bad request: Required <agent_id> parameter"
+}
+{
+  "error": "Bad request: Required <agent_id> parameter"
+}
