@@ -39,7 +39,7 @@ def nodesHandler():
         data = jsenc({}), \
         headers = {'content-type':'application/json'}).json()['id']
     
-    for trait in traits.items()
+    for trait in traits.items():
         jstrait = jsenc(trait)
         existing = request.get(database + '/trait/filter', \
             data = jstrait, \
@@ -133,7 +133,7 @@ class ActiveNode:
         self.nid = nid
     def __getstate__(self):
         state = self.__dict__.copy()
-        for key in state
+        for key in state:
             state[key] = str(state[key])
         return state
     def update(self, state):

@@ -108,6 +108,7 @@ def beacon_setter():
     messaged = False
     global selfaddress
     global port
+    global state
     while (not messaged):
         try:
             if selfaddress == None:
@@ -121,6 +122,7 @@ def beacon_setter():
             messaged = True
             beaconUpMsg()
         except:
+            state = stateNoBeacon
             beaconDownMsg()
 
 bdmsg = False

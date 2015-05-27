@@ -1,4 +1,6 @@
 import settings
+import threading
+import requests as pyrequests
 
 from common import *
 
@@ -17,22 +19,25 @@ def init_conn_string(dbhost, dbport = 5432):
 if __name__ == '__main__':
     dbhost = None
     dbport = None
+    beacon_host = None
+    beacon_port = None
     host = '0.0.0.0'
     port = 50001
     try:
-        dbhost, sdbport = sys.argv[1].split(':')
+        beacon_host, beacon_port = sys.argv[1].split(':')
+        dbhost, sdbport = sys.argv[2].split(':')
         dbport = int(sdbport)
-        if len(sys.argv) > 2:
-            port = int(sys.argv[2])
+        if len(sys.argv) > 3:
+            port = int(sys.argv[3])
     except Exception as e:
         print('Usage: {0} dbhost:dbport [port]'.format(sys.argv[0]))
         sys.exit()
 
-    print('Starting with settings: DB: {0}:{1}, self: {2}:{3}'.format(dbhost, dbport, host, port))
+    print('Starting with settings: Beacon: {0}:{1} DB: {2}:{3}, self: {4}:{5}'.format(beacon_host, beacon_port, dbhost, dbport, host, port))
 
     init_conn_string(dbhost, dbport)
 else:
-    init_conn_string('10.0.0.10', 5432)
+    init_conn_string('127.0.0.1', 5432)
 
 ###<< MAIN ##
 
@@ -48,7 +53,7 @@ db_session = scoped_session(sessionmaker(autocommit=True, autoflush=True, bind=e
 Base = declarative_base()
 Base.query = db_session.query_property()
 
-models.init_models(Base)
+init_models(Base)
 ###<< init models
 
 msg_type_err_fmt = 'table <{0}>, column <{1}>: cannot convert <{2}> to type <{3}> from type <{4}>'
@@ -97,20 +102,19 @@ def try_json_to_filter_kwargs(tbl, value_json, exclude_lst = []):
     return True, kwargs
 
 def get_item(table, column, value):
-    tbl = models.table_name_d[table]
+    tbl = table_name_d[table]
 
     bres, maybe_val = parse_field_value(tbl, column, value)
     if not bres:
         return maybe_val
+    res = tbl.query.filter_by(**{column : maybe_val}).first()
+    if res:
+        return api_200(res.to_dict())
     else:
-        res = tbl.query.filter_by(**{column : maybe_val}).first()
-        if res:
-            return api_200(res.to_dict())
-        else:
-            return api_404()
+        return api_404()
 
 def post_item(table, value_json):
-    tbl = models.table_name_d[table]
+    tbl = table_name_d[table]
     
     bres, maybe_kwargs = try_json_to_filter_kwargs(tbl, value_json)
     if not bres:
@@ -132,7 +136,7 @@ def post_item(table, value_json):
     return api_200(val.to_dict())
 
 def put_item(table, pkf, pkfvs, value_json):
-    tbl = models.table_name_d[table]
+    tbl = table_name_d[table]
 
     if pkf == tbl.metainf.pk_field:
         bres, maybe_val = parse_field_value(tbl, pkf, pkfvs)
@@ -165,7 +169,7 @@ def put_item(table, pkf, pkfvs, value_json):
         return api_400(msg_pk_invalid_fmt.format(table, pkf))
 
 def delete_item(table, pkf, pkfvs):
-    tbl = models.table_name_d[table]
+    tbl = table_name_d[table]
     
     if pkf == tbl.metainf.pk_field:
         pkft = tbl.metainf.col_type_d[pkf]
@@ -196,8 +200,7 @@ def delete_item(table, pkf, pkfvs):
         return api_400(msg_pk_invalid_fmt.format(table, pkf))
 
 def table_filter_get(table, value_json):
-    tbl = models.table_name_d[table]
-
+    tbl = table_name_d[table]
     bres, maybe_kwargs = try_json_to_filter_kwargs(tbl, value_json)
     if not bres:
         return maybe_kwargs
@@ -207,7 +210,7 @@ def table_filter_get(table, value_json):
     return api_200({'result': resld})
 
 def table_arrayfilter_get(table, value_json):
-    tbl = models.table_name_d[table]
+    tbl = table_name_d[table]
 
     qry = tbl.query
     for f, vl in value_json.items():
@@ -227,7 +230,7 @@ def table_arrayfilter_get(table, value_json):
     return api_200({'result': resld})
 
 def table_filter_delete(table, value_json):
-    tbl = models.table_name_d[table]
+    tbl = table_name_d[table]
 
     bres, maybe_kwargs = try_json_to_filter_kwargs(tbl, value_json)
     if not bres:
@@ -249,7 +252,7 @@ def table_filter_delete(table, value_json):
         return api_404()
 
 def table_filter_put(table, value_json):
-    tbl = models.table_name_d[table]
+    tbl = table_name_d[table]
 
     bres, maybe_filter_kwargs = try_json_to_filter_kwargs(tbl, value_json, ['changes'])
     if not bres:
@@ -277,14 +280,14 @@ def sync(batch):
         if all(field in json_obj for field in ['table', 'data']):
             table = json_obj['table']
             data = json_obj['data']
-            if table in models.table_name_d:
-                tbl = models.table_name_d[table]
+            if table in table_name_d:
+                tbl = table_name_d[table]
                 for jobj in data:
                     bres, maybe_kwargs = try_json_to_filter_kwargs(tbl, jobj)
                     if not bres:
                         return maybe_kwargs
                     qry = None
-                    if table in models.mtm_table_name_d:
+                    if table in mtm_table_name_d:
                         qry = tbl.query.filter_by(**maybe_kwargs)
                     else:
                         qry = tbl.query.filter_by(**{tbl.metainf.pk_field : maybe_kwargs[tbl.metainf.pk_field]})
@@ -307,14 +310,14 @@ def sync(batch):
 
 ### Custom ###
 def get_free_subtask_by_agent_id(agent_id, status = 'queued', newstatus = 'taken'):
-    bres, maybe_val = parse_field_value(models.table_name_d['agent'], 'id', agent_id)
+    bres, maybe_val = parse_field_value(table_name_d['agent'], 'id', agent_id)
     if not bres:
         return maybe_val
     agent_id = maybe_val
 
-    tblMtmTA = models.table_name_d['mtm_traitagent']
-    tblMtmTT = models.table_name_d['mtm_traittask']
-    tblSubtask = models.table_name_d['subtask']
+    tblMtmTA = table_name_d['mtm_traitagent']
+    tblMtmTT = table_name_d['mtm_traittask']
+    tblSubtask = table_name_d['subtask']
 
     trait_idc = tblMtmTA.query.filter_by(agent_id = agent_id).all()
     trait_ids = (mtmtr.trait_id for mtmtr in trait_idc)
@@ -351,13 +354,6 @@ def view_filter_item_put(table):
 def view_filter_item_delete(table):
     value_json = request.get_json()
     return table_filter_delete(table, value_json)
-
-### Array filtering ###
-
-@app.route('/<table>/arrayfilter', methods=['GET'])
-def view_arrayfilter_item_get(table):
-    value_json = request.get_json()
-    return table_arrayfilter_get(table, value_json)
 
 ### Access by singular PK ###
 
@@ -417,6 +413,50 @@ def api_404(msg = 'Not found'):
 def api_200(data = {}):
     return response_builder(data, 200)
 
+
 ### Other ###
+beacon_adapter_cycletime = 3
+beacon_fmt = 'http://{0}:{1}'
+stateNormal = 'Operating normally'
+stateNoBeacon = 'Unable to find beacon'
+state = stateNormal
+
+bcmsg = False
+def beaconDownMsg():
+    global bcmsg
+    if (not bcmsg): 
+        print ('Beacon is down. Waiting to reconnect.')
+        bcmsg = True
+
+def beaconUpMsg():
+    global bcmsg
+    if (bcmsg): 
+        print ('Beacon is back up.')
+        bcmsg = False
+        
+def beacon_setter():
+    beacon = beacon_fmt.format(beacon_host, beacon_port)
+    messaged = False
+    global selfaddress
+    global state
+    while (not messaged):
+        try:
+            if selfaddress == None:
+                selfaddress = pyrequests.post(beacon + '/services/database', data={'port':beacon_port, 'state':state}).json()['address']
+            else:
+                pyrequests.put(beacon + '/services/database/' + selfaddress, data={'state':state})
+            
+            thr = threading.Timer(beacon_adapter_cycletime, beacon_setter)
+            thr.daemon = True
+            thr.start()
+            messaged = True
+            state = stateNormal
+            beaconUpMsg()
+        except:
+            state = stateNoBeacon
+            beaconDownMsg()
+selfaddress = None
+
 if __name__ == '__main__':
+    beacon_setter()
     app.run(host = host, port = port)

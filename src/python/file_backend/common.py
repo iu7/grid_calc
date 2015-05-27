@@ -26,5 +26,3 @@ def has_url_parameter(name):
 
 def api_func(addr, f):
     return '/'.join([addr, f])
-
-### Beacon-related ###

@@ -1,4 +1,8 @@
-import settings.python.settings as gs
+
+DATABASE_USER = 'pg_user'
+DATABASE_PW = 'pg_password'
+DATABASE_NAME = 'grid_calc_db'
+DATABASE_ENGINE = 'postgresql'
 
 DATABASE_URIS = [\
   'pg_shd0_master',\
@@ -11,4 +15,4 @@ DATABASE_PORTS = [\
 ]
 
 def get_connection_string(host, port):
-    return '{0}://{1}:{2}@{3}:{4}/{5}'.format(gs.DATABASE_ENGINE, gs.DATABASE_USER, gs.DATABASE_PW, host, port, gs.DATABASE_NAME)
+    return '{0}://{1}:{2}@{3}:{4}/{5}'.format(DATABASE_ENGINE, DATABASE_USER, DATABASE_PW, host, port, DATABASE_NAME)
