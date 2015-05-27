@@ -1,6 +1,6 @@
-from python.data_backend.settings import get_connection_string
+import settings
 
-import python.common.common as common
+from common import *
 
 from flask import *
 from werkzeug.routing import BaseConverter
@@ -12,7 +12,7 @@ app.config.update(DEBUG = True)
 import sys
 
 def init_conn_string(dbhost, dbport = 5432):
-    app.config.update(dict(SQLALCHEMY_DATABASE_URI=get_connection_string(dbhost, dbport)))
+    app.config.update(dict(SQLALCHEMY_DATABASE_URI=settings.get_connection_string(dbhost, dbport)))
 
 if __name__ == '__main__':
     dbhost = None
@@ -37,7 +37,7 @@ else:
 ###<< MAIN ##
 
 ###>> init models
-import python.common.models as models
+from models import *
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
@@ -97,219 +97,180 @@ def try_json_to_filter_kwargs(tbl, value_json, exclude_lst = []):
     return True, kwargs
 
 def get_item(table, column, value):
-    if table in models.mtm_table_name_d:
-        return api_400(msg_mtm_use_another_endpoint_fmt.format('GET', table))
-    elif table in models.table_name_d:
-        tbl = models.table_name_d[table]
-        res = None
-        if column in tbl.metainf.col_type_d:
-            bres, maybe_val = parse_field_value(tbl, column, value)
-            if not bres:
-                return maybe_val
-            else:
-                res = tbl.query.filter_by(**{column : maybe_val}).first()
-                if res:
-                    return api_200(res.to_dict())
-                else:
-                    return api_404()
-        else:
-            return api_404(msg_col_not_found_fmt.format(table, column))
+    tbl = models.table_name_d[table]
+
+    bres, maybe_val = parse_field_value(tbl, column, value)
+    if not bres:
+        return maybe_val
     else:
-        return api_404(msg_tbl_not_found_fmt.format(table))
+        res = tbl.query.filter_by(**{column : maybe_val}).first()
+        if res:
+            return api_200(res.to_dict())
+        else:
+            return api_404()
 
 def post_item(table, value_json):
-    if table in models.table_name_d:
-        tbl = models.table_name_d[table]
+    tbl = models.table_name_d[table]
+    
+    bres, maybe_kwargs = try_json_to_filter_kwargs(tbl, value_json)
+    if not bres:
+        return maybe_kwargs
+
+    val = None
+    try:
+        val = tbl(**maybe_kwargs)
+    except Exception as e:
+        return api_400(str(e))
+    
+    try:
+        db_session.add(val)
+        db_session.flush()
+    except IntegrityError as e:
+        db_session.rollback()
+        return api_500(str(e))
+    
+    return api_200(val.to_dict())
+
+def put_item(table, pkf, pkfvs, value_json):
+    tbl = models.table_name_d[table]
+
+    if pkf == tbl.metainf.pk_field:
+        bres, maybe_val = parse_field_value(tbl, pkf, pkfvs)
+        if not bres:
+            return maybe_val
         
+        item = None
+        try:
+            item = tbl.query.filter_by(**{pkf : maybe_val}).first()
+        except Exception as e:
+            return api_404(msg_col_not_found_fmt.format(table, pkf))
+        
+        if not item:
+            return api_404()
+
         bres, maybe_kwargs = try_json_to_filter_kwargs(tbl, value_json)
         if not bres:
             return maybe_kwargs
 
-        val = None
+        db_session.begin()
         try:
-            val = tbl(**maybe_kwargs)
-        except Exception as e:
-            return api_400(str(e))
-        
-        try:
-            db_session.add(val)
-            db_session.flush()
+            update_table_object(item, **maybe_kwargs)
+            db_session.commit()
         except IntegrityError as e:
             db_session.rollback()
             return api_500(str(e))
         
-        return api_200(val.to_dict())
+        return api_200(item.to_dict())
     else:
-        return api_404(msg_tbl_not_found_fmt.format(table))
-
-def put_item(table, pkf, pkfvs, value_json):
-    if table in models.mtm_table_name_d:
-        return api_400(msg_mtm_use_another_endpoint_fmt.format('PUT', table))
-    elif table in models.table_name_d:
-        tbl = models.table_name_d[table]
-
-        if pkf == tbl.metainf.pk_field:
-            bres, maybe_val = parse_field_value(tbl, pkf, pkfvs)
-            if not bres:
-                return maybe_val
-            
-            item = None
-            try:
-                item = tbl.query.filter_by(**{pkf : maybe_val}).first()
-            except Exception as e:
-                return api_404(msg_col_not_found_fmt.format(table, pkf))
-            
-            if not item:
-                return api_404()
-
-            bres, maybe_kwargs = try_json_to_filter_kwargs(tbl, value_json)
-            if not bres:
-                return maybe_kwargs
-
-            db_session.begin()
-            try:
-                update_table_object(item, **maybe_kwargs)
-                db_session.commit()
-            except IntegrityError as e:
-                db_session.rollback()
-                return api_500(str(e))
-            
-            return api_200(item.to_dict())
-        else:
-            return api_400(msg_pk_invalid_fmt.format(table, pkf))
-    else:
-        return api_404(msg_tbl_not_found_fmt.format(table))
+        return api_400(msg_pk_invalid_fmt.format(table, pkf))
 
 def delete_item(table, pkf, pkfvs):
-    if table in models.mtm_table_name_d:
-        return api_400(msg_mtm_use_another_endpoint_fmt.format('DELETE', table))
-    elif table in models.table_name_d:
-        tbl = models.table_name_d[table]
+    tbl = models.table_name_d[table]
+    
+    if pkf == tbl.metainf.pk_field:
+        pkft = tbl.metainf.col_type_d[pkf]
+        pkftpsr = tbl.metainf.col_type_parsers[pkf] if pkf in tbl.metainf.col_type_parsers else pkft
+        pkfv = None
+        try:
+            pkfv = pkftpsr(pkfvs)
+        except Exception as e:
+            return api_400(msg_type_err_fmt.format(table, pkf, pkfvs, pkft, pkf, type(pkfvs)))
         
-        if pkf == tbl.metainf.pk_field:
-            pkft = tbl.metainf.col_type_d[pkf]
-            pkftpsr = tbl.metainf.col_type_parsers[pkf] if pkf in tbl.metainf.col_type_parsers else pkft
-            pkfv = None
-            try:
-                pkfv = pkftpsr(pkfvs)
-            except Exception as e:
-                return api_400(msg_type_err_fmt.format(table, pkf, pkfvs, pkft, pkf, type(pkfvs)))
-            
-            item = None
-            try:
-                item = tbl.query.filter_by(**{pkf : pkfv}).first()
-            except Exception as e:
-                return api_404(msg_col_not_found_fmt.format(table, pkf))
-            
-            if not item:
-                return api_404()
+        item = None
+        try:
+            item = tbl.query.filter_by(**{pkf : pkfv}).first()
+        except Exception as e:
+            return api_404(msg_col_not_found_fmt.format(table, pkf))
+        
+        if not item:
+            return api_404()
 
-            try:
-                db_session.delete(item)
-            except IntegrityError as e:
-                db_session.rollback()
-                return api_500(str(e))
-            
-            return api_200()
-        else:
-            return api_400(msg_pk_invalid_fmt.format(table, pkf))
+        try:
+            db_session.delete(item)
+        except IntegrityError as e:
+            db_session.rollback()
+            return api_500(str(e))
+        
+        return api_200()
     else:
-        return api_404(msg_tbl_not_found_fmt.format(table))
+        return api_400(msg_pk_invalid_fmt.format(table, pkf))
 
 def table_filter_get(table, value_json):
-    if table in models.table_name_d:
-        tbl = models.table_name_d[table]
+    tbl = models.table_name_d[table]
 
-        bres, maybe_kwargs = try_json_to_filter_kwargs(tbl, value_json)
-        if not bres:
-            return maybe_kwargs
+    bres, maybe_kwargs = try_json_to_filter_kwargs(tbl, value_json)
+    if not bres:
+        return maybe_kwargs
 
-        reslo = tbl.query.filter_by(**maybe_kwargs).all()
-        resld = list(map(lambda x: x.to_dict(), reslo))
-        return api_200({'result': resld})
-    else:
-        return api_404(msg_tbl_not_found_fmt.format(table))
+    reslo = tbl.query.filter_by(**maybe_kwargs).all()
+    resld = list(map(lambda x: x.to_dict(), reslo))
+    return api_200({'result': resld})
 
 def table_arrayfilter_get(table, value_json):
-    if table in models.table_name_d:
-        tbl = models.table_name_d[table]
+    tbl = models.table_name_d[table]
 
-        qry = tbl.query
-        for f, vl in value_json.items():
-            if f in tbl.metainf.col_type_d:
-                pvl = []
-                for v in vl:
-                    bres, maybe_val = parse_field_value(tbl, f, v)
-                    if not bres:
-                        return maybe_val
-                    pvl += [maybe_val]
-                qry = qry.filter(getattr(tbl, f).in_(pvl))
-            else:
-                return msg_col_not_found_fmt.format(table, f)
-        qres = qry.all()
+    qry = tbl.query
+    for f, vl in value_json.items():
+        if f in tbl.metainf.col_type_d:
+            pvl = []
+            for v in vl:
+                bres, maybe_val = parse_field_value(tbl, f, v)
+                if not bres:
+                    return maybe_val
+                pvl += [maybe_val]
+            qry = qry.filter(getattr(tbl, f).in_(pvl))
+        else:
+            return msg_col_not_found_fmt.format(table, f)
+    qres = qry.all()
 
-        resld = list(map(lambda x: x.to_dict(), qres))
-        return api_200({'result': resld})
-    else:
-        return api_404(msg_tbl_not_found_fmt.format(table))
+    resld = list(map(lambda x: x.to_dict(), qres))
+    return api_200({'result': resld})
 
 def table_filter_delete(table, value_json):
-    if table in models.table_name_d:
-        tbl = models.table_name_d[table]
+    tbl = models.table_name_d[table]
 
-        bres, maybe_kwargs = try_json_to_filter_kwargs(tbl, value_json)
-        if not bres:
-            return maybe_kwargs
-        bres, 
+    bres, maybe_kwargs = try_json_to_filter_kwargs(tbl, value_json)
+    if not bres:
+        return maybe_kwargs
 
-        reslo = tbl.query.filter_by(**maybe_kwargs).all()
-        if reslo:
-            db_session.begin()
-            try:
-                for obj in reslo:
-                    db_session.delete(obj)
-                db_session.commit()
-            except Exception as e:
-                db_session.rollback()
-                return api_500(str(e))
-            
-            return api_200({'count': len(reslo)})
-        else:
-            return api_404()
+    reslo = tbl.query.filter_by(**maybe_kwargs).all()
+    if reslo:
+        db_session.begin()
+        try:
+            for obj in reslo:
+                db_session.delete(obj)
+            db_session.commit()
+        except Exception as e:
+            db_session.rollback()
+            return api_500(str(e))
+        
+        return api_200({'count': len(reslo)})
     else:
-        return api_404(msg_tbl_not_found_fmt.format(table))
+        return api_404()
 
 def table_filter_put(table, value_json):
-    if 'changes' in value_json:
-        if table in models.table_name_d:
-            tbl = models.table_name_d[table]
+    tbl = models.table_name_d[table]
 
-            bres, maybe_filter_kwargs = try_json_to_filter_kwargs(tbl, value_json, ['changes'])
-            if not bres:
-                return maybe_filter_kwargs
+    bres, maybe_filter_kwargs = try_json_to_filter_kwargs(tbl, value_json, ['changes'])
+    if not bres:
+        return maybe_filter_kwargs
 
-            bres, maybe_changes_kwargs = try_json_to_filter_kwargs(tbl, value_json['changes'])
-            if not bres:
-                return maybe_changes_kwargs
+    bres, maybe_changes_kwargs = try_json_to_filter_kwargs(tbl, value_json['changes'])
+    if not bres:
+        return maybe_changes_kwargs
 
-            reslo = tbl.query.filter_by(**maybe_filter_kwargs).all()
-            if reslo:
-                db_session.begin()
-                try:
-                    for obj in reslo:
-                        update_table_object(obj, **maybe_changes_kwargs)
-                    db_session.commit()
-                except Exception as e:
-                    db_session.rollback()
-                    return api_500(str(e))
+    reslo = tbl.query.filter_by(**maybe_filter_kwargs).all()
+    if reslo:
+        db_session.begin()
+        try:
+            for obj in reslo:
+                update_table_object(obj, **maybe_changes_kwargs)
+            db_session.commit()
+        except Exception as e:
+            db_session.rollback()
+            return api_500(str(e))
 
-                return api_200({'count': len(reslo)})
-            else:
-                return api_404()
-        else:
-            return api_404(msg_tbl_not_found_fmt.format(table))
-    else:
-        return api_400(msg_put_invalid_input)
+        return api_200({'count': len(reslo)})
 
 def sync(batch):
     for json_obj in batch:
