@@ -1,6 +1,6 @@
 *.aux
-*.log
-*.out
+#*.out
+#*.log
 *.gz
 *.gz(busy)
 *.toc
