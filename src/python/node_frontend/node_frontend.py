@@ -15,7 +15,7 @@ ALLOWED_EXTENSIONS = set(['zip'])
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-defaultbeacon = '127.0.0.1:666'
+defaultbeacon = 'http://127.0.0.1:666'
 defaultport = 670
 beacon_adapter_cycletime = 3
 
@@ -80,9 +80,9 @@ def beacon_getter():
             nobeacon = True
             nobalancer = True
             
-            r = requests.get('http://'+beacon + '/services/balancer')
+            r = requests.get(beacon + '/services/balancer')
             nobeacon = False
-            balancer = list(r.json().keys())[0]
+            balancer = 'http://'+list(r.json().keys())[0]
             nobalancer = False
             if (balancer != oldadr):
                 print ('Balancer address set to ' + str(balancer))
@@ -111,9 +111,9 @@ def beacon_setter():
     while (not messaged):
         try:
             if selfaddress == None:
-                selfaddress = requests.post('http://'+beacon + '/services/node_frontend', data={'port':port, 'state':state}).json()['address']
+                selfaddress = requests.post(beacon + '/services/node_frontend', data={'port':port, 'state':state}).json()['address']
             else:
-                requests.put('http://'+beacon + '/services/node_frontend/' + selfaddress, data={'state':state})
+                requests.put(beacon + '/services/node_frontend/' + selfaddress, data={'state':state})
             
             thr = threading.Timer(beacon_adapter_cycletime, beacon_setter)
             thr.daemon = True
@@ -158,11 +158,11 @@ if __name__ == '__main__':
         print ('Beacon address defaulted to ' + str(beacon))
         print ('Port number defaulted to ' + str(port))
     elif len(sys.argv) == 2:
-        beacon = sys.argv[1]
+        beacon = 'http://'+sys.argv[1]
         print ('Beacon address set to ' + str(beacon))
         print ('Port number defaulted to ' + str(port))
     elif len(sys.argv) == 3:
-        beacon = sys.argv[1]
+        beacon = 'http://'+sys.argv[1]
         port = int(sys.argv[2])
         print ('Beacon address set to ' + str(beacon))
         print ('Port number set to ' + str(port))
