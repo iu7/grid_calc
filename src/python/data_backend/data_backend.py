@@ -1,6 +1,5 @@
-from python.data_backend.settings import get_connection_string
-
-import python.common.common as common
+import settings
+from common import *
 
 from flask import *
 from werkzeug.routing import BaseConverter
@@ -12,7 +11,7 @@ app.config.update(DEBUG = True)
 import sys
 
 def init_conn_string(dbhost, dbport = 5432):
-    app.config.update(dict(SQLALCHEMY_DATABASE_URI=get_connection_string(dbhost, dbport)))
+    app.config.update(dict(SQLALCHEMY_DATABASE_URI=settings.get_connection_string(dbhost, dbport)))
 
 if __name__ == '__main__':
     dbhost = None
@@ -37,7 +36,7 @@ else:
 ###<< MAIN ##
 
 ###>> init models
-import python.common.models as models
+from models import *
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
@@ -48,7 +47,7 @@ db_session = scoped_session(sessionmaker(autocommit=True, autoflush=True, bind=e
 Base = declarative_base()
 Base.query = db_session.query_property()
 
-models.init_models(Base)
+init_models(Base)
 ###<< init models
 
 msg_type_err_fmt = 'table <{0}>, column <{1}>: cannot convert <{2}> to type <{3}> from type <{4}>'
@@ -97,10 +96,10 @@ def try_json_to_filter_kwargs(tbl, value_json, exclude_lst = []):
     return True, kwargs
 
 def get_item(table, column, value):
-    if table in models.mtm_table_name_d:
+    if table in mtm_table_name_d:
         return api_400(msg_mtm_use_another_endpoint_fmt.format('GET', table))
-    elif table in models.table_name_d:
-        tbl = models.table_name_d[table]
+    elif table in table_name_d:
+        tbl = table_name_d[table]
         res = None
         if column in tbl.metainf.col_type_d:
             bres, maybe_val = parse_field_value(tbl, column, value)
@@ -118,8 +117,8 @@ def get_item(table, column, value):
         return api_404(msg_tbl_not_found_fmt.format(table))
 
 def post_item(table, value_json):
-    if table in models.table_name_d:
-        tbl = models.table_name_d[table]
+    if table in table_name_d:
+        tbl = table_name_d[table]
         
         bres, maybe_kwargs = try_json_to_filter_kwargs(tbl, value_json)
         if not bres:
@@ -143,10 +142,10 @@ def post_item(table, value_json):
         return api_404(msg_tbl_not_found_fmt.format(table))
 
 def put_item(table, pkf, pkfvs, value_json):
-    if table in models.mtm_table_name_d:
+    if table in mtm_table_name_d:
         return api_400(msg_mtm_use_another_endpoint_fmt.format('PUT', table))
-    elif table in models.table_name_d:
-        tbl = models.table_name_d[table]
+    elif table in table_name_d:
+        tbl = table_name_d[table]
 
         if pkf == tbl.metainf.pk_field:
             bres, maybe_val = parse_field_value(tbl, pkf, pkfvs)
@@ -181,10 +180,10 @@ def put_item(table, pkf, pkfvs, value_json):
         return api_404(msg_tbl_not_found_fmt.format(table))
 
 def delete_item(table, pkf, pkfvs):
-    if table in models.mtm_table_name_d:
+    if table in mtm_table_name_d:
         return api_400(msg_mtm_use_another_endpoint_fmt.format('DELETE', table))
-    elif table in models.table_name_d:
-        tbl = models.table_name_d[table]
+    elif table in table_name_d:
+        tbl = table_name_d[table]
         
         if pkf == tbl.metainf.pk_field:
             pkft = tbl.metainf.col_type_d[pkf]
@@ -217,8 +216,8 @@ def delete_item(table, pkf, pkfvs):
         return api_404(msg_tbl_not_found_fmt.format(table))
 
 def table_filter_get(table, value_json):
-    if table in models.table_name_d:
-        tbl = models.table_name_d[table]
+    if table in table_name_d:
+        tbl = table_name_d[table]
 
         bres, maybe_kwargs = try_json_to_filter_kwargs(tbl, value_json)
         if not bres:
@@ -230,32 +229,9 @@ def table_filter_get(table, value_json):
     else:
         return api_404(msg_tbl_not_found_fmt.format(table))
 
-def table_arrayfilter_get(table, value_json):
-    if table in models.table_name_d:
-        tbl = models.table_name_d[table]
-
-        qry = tbl.query
-        for f, vl in value_json.items():
-            if f in tbl.metainf.col_type_d:
-                pvl = []
-                for v in vl:
-                    bres, maybe_val = parse_field_value(tbl, f, v)
-                    if not bres:
-                        return maybe_val
-                    pvl += [maybe_val]
-                qry = qry.filter(getattr(tbl, f).in_(pvl))
-            else:
-                return msg_col_not_found_fmt.format(table, f)
-        qres = qry.all()
-
-        resld = list(map(lambda x: x.to_dict(), qres))
-        return api_200({'result': resld})
-    else:
-        return api_404(msg_tbl_not_found_fmt.format(table))
-
 def table_filter_delete(table, value_json):
-    if table in models.table_name_d:
-        tbl = models.table_name_d[table]
+    if table in table_name_d:
+        tbl = table_name_d[table]
 
         bres, maybe_kwargs = try_json_to_filter_kwargs(tbl, value_json)
         if not bres:
@@ -281,8 +257,8 @@ def table_filter_delete(table, value_json):
 
 def table_filter_put(table, value_json):
     if 'changes' in value_json:
-        if table in models.table_name_d:
-            tbl = models.table_name_d[table]
+        if table in table_name_d:
+            tbl = table_name_d[table]
 
             bres, maybe_filter_kwargs = try_json_to_filter_kwargs(tbl, value_json, ['changes'])
             if not bres:
@@ -316,14 +292,14 @@ def sync(batch):
         if all(field in json_obj for field in ['table', 'data']):
             table = json_obj['table']
             data = json_obj['data']
-            if table in models.table_name_d:
-                tbl = models.table_name_d[table]
+            if table in table_name_d:
+                tbl = table_name_d[table]
                 for jobj in data:
                     bres, maybe_kwargs = try_json_to_filter_kwargs(tbl, jobj)
                     if not bres:
                         return maybe_kwargs
                     qry = None
-                    if table in models.mtm_table_name_d:
+                    if table in mtm_table_name_d:
                         qry = tbl.query.filter_by(**maybe_kwargs)
                     else:
                         qry = tbl.query.filter_by(**{tbl.metainf.pk_field : maybe_kwargs[tbl.metainf.pk_field]})
@@ -346,14 +322,14 @@ def sync(batch):
 
 ### Custom ###
 def get_free_subtask_by_agent_id(agent_id, status = 'queued', newstatus = 'taken'):
-    bres, maybe_val = parse_field_value(models.table_name_d['agent'], 'id', agent_id)
+    bres, maybe_val = parse_field_value(table_name_d['agent'], 'id', agent_id)
     if not bres:
         return maybe_val
     agent_id = maybe_val
 
-    tblMtmTA = models.table_name_d['mtm_traitagent']
-    tblMtmTT = models.table_name_d['mtm_traittask']
-    tblSubtask = models.table_name_d['subtask']
+    tblMtmTA = table_name_d['mtm_traitagent']
+    tblMtmTT = table_name_d['mtm_traittask']
+    tblSubtask = table_name_d['subtask']
 
     trait_idc = tblMtmTA.query.filter_by(agent_id = agent_id).all()
     trait_ids = (mtmtr.trait_id for mtmtr in trait_idc)
@@ -390,13 +366,6 @@ def view_filter_item_put(table):
 def view_filter_item_delete(table):
     value_json = request.get_json()
     return table_filter_delete(table, value_json)
-
-### Array filtering ###
-
-@app.route('/<table>/arrayfilter', methods=['GET'])
-def view_arrayfilter_item_get(table):
-    value_json = request.get_json()
-    return table_arrayfilter_get(table, value_json)
 
 ### Access by singular PK ###
 
