@@ -14,6 +14,7 @@ app = Flask(__name__, static_path='/static')
 app.config.update(DEBUG = True, UPLOAD_FOLDER = 'static/')
 
 filename_size = 32
+filename_ext = '.dat'
 
 def random_string(size):
     return ''.join([random.choice(string.ascii_letters) for i in range(size)])
@@ -60,7 +61,7 @@ def hnd_post_file():
     if not err:
         f = request.files['file']
         if f:
-            filename = secure_filename(random_string(filename_size))
+            filename = secure_filename(random_string(filename_size)+filename_ext)
             newpath = os.path.join(app.config['UPLOAD_FOLDER'] + subpath, filename)
             displaypath = os.path.join(subpath, filename)
             f.save(newpath)
@@ -89,12 +90,14 @@ def api_200(data = {}):
     return response_builder(data, 200)
     
 ### Other ###
-beacon_adapter_cycletime = 3
-beacon = 'http://127.0.0.1:666'
+beacon_host = None
+beacon_port = None
+beacon_adapter_cycletime = 10
+beacon_fmt = 'http://{0}:{1}'
 stateNormal = 'Operating normally'
 stateNoBeacon = 'Unable to find beacon'
 state = stateNormal
-selfaddress = None
+
 bcmsg = False
 def beaconDownMsg():
     global bcmsg
@@ -109,14 +112,14 @@ def beaconUpMsg():
         bcmsg = False
         
 def beacon_setter():
+    beacon = beacon_fmt.format(beacon_host, beacon_port)
     messaged = False
     global selfaddress
-    global port
     global state
     while (not messaged):
         try:
             if selfaddress == None:
-                selfaddress = requests.post(beacon + '/services/fileserver', data={'port':port, 'state':state}).json()['address']
+                selfaddress = requests.post(beacon + '/services/fileserver', data={'port':beacon_port, 'state':state}).json()['address']
             else:
                 requests.put(beacon + '/services/fileserver/' + selfaddress, data={'state':state})
             
@@ -129,17 +132,19 @@ def beacon_setter():
         except:
             state = stateNoBeacon
             beaconDownMsg()
+selfaddress = None
 
 if __name__ == '__main__':
     host = '0.0.0.0'
     port = 50001
     try:
-        port = int(sys.argv[1])
+        beacon_host, beacon_port = sys.argv[1].split(':')
+        port = int(sys.argv[2])
     except Exception as e:
-        print('Usage: {0} [port]'.format(sys.argv[0]))
+        print('Usage: {0} beacon_host:beacon_port [port]'.format(sys.argv[0]))
         sys.exit()
 
-    print('Starting with settings: self: {0}:{1}'.format(host, port))
+    print('Starting with settings: beacon:{0}:{1} self: {2}:{3}'.format(beacon_host, beacon_port, host, port))
     
     beacon_setter()
     app.run(host = host, port = port)

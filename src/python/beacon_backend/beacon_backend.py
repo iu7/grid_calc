@@ -4,12 +4,14 @@ import datetime
 import threading
 import time
 import sys
+import atexit
 
 timeout = 60
 defaultport = 666
 collector_cycletime = 3
 
 app = Flask(__name__)
+app.config.update(DEBUG=True)
 
 services = {}
 
@@ -38,6 +40,7 @@ def servicesOfTypeHandler(type):
                 services[type] = {}
             services[type][addr] = ServiceState(state)
             
+            print('Incoming request from {0}: port = {1}, state = {2}'.format(ipaddr, port, state))
             return jsenc({'status':'success', 'address':addr})
             
 @app.route('/services/<string:type>/<string:addr>', methods=['GET', 'PUT'])
@@ -48,8 +51,13 @@ def serviceExactHandler(type, addr):
         else:
             abort(404)
     else:
-        services[type][addr] = ServiceState(
-            request.form['state'] if 'state' in request.form else '')
+        state = request.form['state'] if 'state' in request.form else ''
+        if type not in services:
+            services.update({type:{}})
+        if addr not in services[type]:
+            services[type].update({addr : None})
+        services[type][addr] = ServiceState(state)
+        print('Incoming request from {0}: state = {1}'.format(addr, state))
         return jsenc({'status':'success'})
 
 def collector():

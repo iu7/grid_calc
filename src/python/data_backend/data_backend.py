@@ -30,7 +30,7 @@ if __name__ == '__main__':
         if len(sys.argv) > 3:
             port = int(sys.argv[3])
     except Exception as e:
-        print('Usage: {0} dbhost:dbport [port]'.format(sys.argv[0]))
+        print('Usage: {0} beacon_host:beacon_port dbhost:dbport [port]'.format(sys.argv[0]))
         sys.exit()
 
     print('Starting with settings: Beacon: {0}:{1} DB: {2}:{3}, self: {4}:{5}'.format(beacon_host, beacon_port, dbhost, dbport, host, port))
@@ -417,7 +417,7 @@ def api_200(data = {}):
 
 
 ### Other ###
-beacon_adapter_cycletime = 3
+beacon_adapter_cycletime = 10
 beacon_fmt = 'http://{0}:{1}'
 stateNormal = 'Operating normally'
 stateNoBeacon = 'Unable to find beacon'
