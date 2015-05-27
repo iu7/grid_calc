@@ -7,8 +7,15 @@ from werkzeug import secure_filename
 
 from common import *
 
+import random, string
+
 app = Flask(__name__, static_path='/static')
 app.config.update(DEBUG = True, UPLOAD_FOLDER = 'static/')
+
+filename_size = 32
+
+def random_string(size):
+    return ''.join([random.choice(string.ascii_letters) for i in range(size)])
 
 def make_folder_structure(path):
     cpth = os.path.join(app.config['UPLOAD_FOLDER'])
@@ -19,7 +26,6 @@ def make_folder_structure(path):
     except Exception as e:
         return api_500(str(e))
     return None
-
 
 ### Views ###
 
@@ -53,9 +59,11 @@ def hnd_post_file():
     if not err:
         f = request.files['file']
         if f:
-            filename = secure_filename(f.filename)
-            f.save(os.path.join(app.config['UPLOAD_FOLDER'] + subpath, filename))
-            return api_200()
+            filename = secure_filename(random_string(filename_size))
+            newpath = os.path.join(app.config['UPLOAD_FOLDER'] + subpath, filename)
+            displaypath = os.path.join(subpath, filename)
+            f.save(newpath)
+            return api_200({"name" : displaypath.replace('/', '\\')})
         else:
             return api_400('Bad request: File required')
     else:
