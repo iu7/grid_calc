@@ -6,9 +6,8 @@ import time
 import sys
 import atexit
 
-timeout = 60
-defaultport = 666
-collector_cycletime = 3
+timeout = 20
+collector_cycletime = 10
 
 app = Flask(__name__)
 app.config.update(DEBUG=True)
@@ -17,7 +16,6 @@ services = {}
 
 @app.route('/services', methods=['GET'])
 def servicesHandler():
-    error = None
     return jsenc(services)
     
 @app.route('/services/<string:type>', methods=['GET', 'POST'])
@@ -27,7 +25,7 @@ def servicesOfTypeHandler(type):
             return jsenc(services[type])
         else:
             return jsenc({})
-    else:
+    else:#POST
         if (not 'port' in request.form) or (not isInt (request.form['port'])):
             abort(422)
         else:
@@ -52,10 +50,8 @@ def serviceExactHandler(type, addr):
             abort(404)
     else:
         state = request.form['state'] if 'state' in request.form else ''
-        if type not in services:
-            services.update({type:{}})
-        if addr not in services[type]:
-            services[type].update({addr : None})
+        if not type in services:
+            services[type] = {}
         services[type][addr] = ServiceState(state)
         print('Incoming request from {0}: state = {1}'.format(addr, state))
         return jsenc({'status':'success'})
@@ -99,15 +95,15 @@ class ServiceState:
         return state
 
 if __name__ == '__main__':
-    p = defaultport
-    if len(sys.argv) == 1:
-        print ('Port number defaulted to ' + str(p))
-    else:
-        if sys.argv[1].isdigit():
-            p = int(sys.argv[1])
-        else:
-            print('Unprocessable port number')
-            sys.exit()
+    host = '0.0.0.0'
+    port = None
+    try:
+        port = int(sys.argv[1])
+    except Exception as e:
+        print('Usage: {0} port'.format(sys.argv[0]))
+        sys.exit()
+
+    print('Starting with settings: self: {1}:{0}'.format(host, port))
     
     collector()
-    app.run(host = '0.0.0.0', port = p)
+    app.run(host = host, port = port)

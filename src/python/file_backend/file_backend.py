@@ -1,7 +1,6 @@
 import sys
 import os
 import requests, threading
-
 from flask import *
 from werkzeug.routing import BaseConverter
 from werkzeug import secure_filename
@@ -9,6 +8,14 @@ from werkzeug import secure_filename
 from common import *
 
 import random, string
+
+port = None
+selfaddress = None
+beacon_adapter_cycletime = 10
+beacon = None
+stateNormal = 'Operating normally'
+stateError = 'Connection issues'
+state = stateNormal
 
 app = Flask(__name__, static_path='/static')
 app.config.update(DEBUG = True, UPLOAD_FOLDER = 'static/')
@@ -90,61 +97,48 @@ def api_200(data = {}):
     return response_builder(data, 200)
     
 ### Other ###
-beacon_host = None
-beacon_port = None
-beacon_adapter_cycletime = 10
-beacon_fmt = 'http://{0}:{1}'
-stateNormal = 'Operating normally'
-stateNoBeacon = 'Unable to find beacon'
-state = stateNormal
 
-bcmsg = False
-def beaconDownMsg():
-    global bcmsg
-    if (not bcmsg): 
-        print ('Beacon is down. Waiting to reconnect.')
-        bcmsg = True
-
-def beaconUpMsg():
+def errorBeacon():
+    state = stateError
+    print ('Unable to reach beacon')
     global bcmsg
     if (bcmsg): 
         print ('Beacon is back up.')
         bcmsg = False
         
 def beacon_setter():
-    beacon = beacon_fmt.format(beacon_host, beacon_port)
     messaged = False
     global selfaddress
+    global port
+    global beacon
     global state
     while (not messaged):
         try:
             if selfaddress == None:
-                selfaddress = requests.post(beacon + '/services/fileserver', data={'port':beacon_port, 'state':state}).json()['address']
+                selfaddress = requests.post(beacon + '/services/fileserver', data={'port':port, 'state':state}).json()['address']
             else:
                 requests.put(beacon + '/services/fileserver/' + selfaddress, data={'state':state})
             
             thr = threading.Timer(beacon_adapter_cycletime, beacon_setter)
             thr.daemon = True
             thr.start()
-            messaged = True
+            
             state = stateNormal
-            beaconUpMsg()
+            messaged = True
         except:
-            state = stateNoBeacon
-            beaconDownMsg()
-selfaddress = None
+            errorBeacon()
 
 if __name__ == '__main__':
+    global port
     host = '0.0.0.0'
-    port = 50001
     try:
-        beacon_host, beacon_port = sys.argv[1].split(':')
+        beacon = sys.argv[1]
         port = int(sys.argv[2])
     except Exception as e:
-        print('Usage: {0} beacon_host:beacon_port [port]'.format(sys.argv[0]))
+        print('Usage: {0} beacon_host:beacon_port port'.format(sys.argv[0]))
         sys.exit()
 
-    print('Starting with settings: beacon:{0}:{1} self: {2}:{3}'.format(beacon_host, beacon_port, host, port))
+    print('Starting with settings: beacon:{0} self: {1}:{2}'.format(beacon, host, port))
     
     beacon_setter()
     app.run(host = host, port = port)
