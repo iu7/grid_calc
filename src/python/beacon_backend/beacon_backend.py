@@ -103,7 +103,7 @@ if __name__ == '__main__':
         print('Usage: {0} port'.format(sys.argv[0]))
         sys.exit()
 
-    print('Starting with settings: self: {1}:{0}'.format(host, port))
+    print('Starting with settings: self: {0}:{1}'.format(host, port))
     
     collector()
     app.run(host = host, port = port)

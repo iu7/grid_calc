@@ -1,5 +1,5 @@
 import settings
-import threading
+import threading, time
 import requests as pyrequests
 
 from common import *
@@ -30,9 +30,9 @@ if __name__ == '__main__':
     dbhost = None
     dbport = None
     try:
-        beacon = sys.argv[1]
+        beacon = 'http://'+sys.argv[1]
         dbhost, dbport = sys.argv[2].split(':')
-        dbport = int(sdbport)
+        dbport = int(dbport)
         if len(sys.argv) > 3:
             port = int(sys.argv[3])
     except Exception as e:
@@ -449,6 +449,7 @@ def beacon_setter():
             messaged = True
         except:
             errorBeacon()
+            time.sleep(5)
 
 if __name__ == '__main__':
     beacon_setter()

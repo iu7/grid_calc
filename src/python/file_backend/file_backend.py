@@ -1,6 +1,6 @@
 import sys
 import os
-import requests, threading
+import requests, threading, time
 from flask import *
 from werkzeug.routing import BaseConverter
 from werkzeug import secure_filename
@@ -101,10 +101,6 @@ def api_200(data = {}):
 def errorBeacon():
     state = stateError
     print ('Unable to reach beacon')
-    global bcmsg
-    if (bcmsg): 
-        print ('Beacon is back up.')
-        bcmsg = False
         
 def beacon_setter():
     messaged = False
@@ -127,12 +123,13 @@ def beacon_setter():
             messaged = True
         except:
             errorBeacon()
+            time.sleep(5)
 
 if __name__ == '__main__':
     global port
     host = '0.0.0.0'
     try:
-        beacon = sys.argv[1]
+        beacon = 'http://'+sys.argv[1]
         port = int(sys.argv[2])
     except Exception as e:
         print('Usage: {0} beacon_host:beacon_port port'.format(sys.argv[0]))

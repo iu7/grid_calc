@@ -15,8 +15,7 @@ beacon_adapter_cycletime = 10
 beacon = None
 database = None
 stateNormal = 'Operating normally'
-stateNoBeacon = 'Unable to find beacon'
-stateNoDatabase = 'Unable to find active database'
+stateError = 'Connection issues'
 state = stateNormal
 
 app = Flask(__name__)
@@ -42,13 +41,8 @@ def nodesHandler():
             existing = requests.get(database + '/trait/filter', \
                 data = jstrait, \
                 headers = {'content-type':'application/json'}).json()['result']
-            tid = None
-            if existing:
-                global tid
-                tid = existing[0]['id']
-            else:
-                global tid
-                tid = reqiests.post(database + '/trait', \
+            tid = existing[0]['id'] if existing else \
+                reqiests.post(database + '/trait', \
                     data = jstrait, \
                     headers = {'content-type':'application/json'}).json()['id']
             requests.post(database+'/mtm_traitagent', \
@@ -191,6 +185,7 @@ def beacon_setter():
             messaged = True
         except:
             errorBeacon()
+            time.sleep(5)
 
 def errorBeacon():
     state = stateError
@@ -203,7 +198,7 @@ if __name__ == '__main__':
     global port
     host = '0.0.0.0'
     try:
-        beacon = sys.argv[1]
+        beacon = 'http://'+sys.argv[1]
         port = int(sys.argv[2])
     except Exception as e:
         print('Usage: {0} beacon_host:beacon_port port'.format(sys.argv[0]))

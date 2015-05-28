@@ -44,7 +44,7 @@ def nodesSpecificHandler(nodeid):
 def newTaskHandler():
     r = requests.get(balancer + '/tasks/newtask', \
         data = request.data, \
-        headers = {'content-type':'application/json'}))
+        headers = {'content-type':'application/json'})
     return r.text, r.status_code
     
 @app.route('/tasks/<string:taskid>', methods=['POST'])
@@ -60,7 +60,7 @@ def submitTaskHandler(taskid):
         
         r = requests.post(balancer + '/tasks/'+taskid, \
             data = {'filename':nid}, \
-            headers = {'content-type':'application/json'}))
+            headers = {'content-type':'application/json'})
         return r.text, r.status_code
     else:
         return '', 422
@@ -115,6 +115,7 @@ def beacon_setter():
             messaged = True
         except:
             errorBeacon()
+            time.sleep(5)
 
 def errorBeacon():
     state = stateError
@@ -130,7 +131,7 @@ if __name__ == '__main__':
     global port
     host = '0.0.0.0'
     try:
-        beacon = sys.argv[1]
+        beacon = 'http://'+sys.argv[1]
         port = int(sys.argv[2])
     except Exception as e:
         print('Usage: {0} beacon_host:beacon_port port'.format(sys.argv[0]))
