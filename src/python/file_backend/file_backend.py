@@ -1,5 +1,8 @@
-import sys
-import os
+import os, sys
+PACKAGE_PARENT = '..'
+SCRIPT_DIR = os.path.dirname(os.path.realpath(os.path.join(os.getcwd(), os.path.expanduser(__file__))))
+sys.path.append(os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT)))
+
 import threading, time
 import requests as pypyrequests
 
@@ -7,9 +10,9 @@ from flask import *
 from werkzeug.routing import BaseConverter
 from werkzeug import secure_filename
 
-from common import *
-
 import random, string
+
+from common.common import *
 
 port = None
 selfaddress = None
@@ -98,46 +101,12 @@ def api_404(msg = 'Not found'):
 def api_200(data = {}):
     return response_builder(data, 200)
 
-### Other ###
-
-def errorBeacon():
-    state = stateError
-    print ('Unable to reach beacon')
-        
-def beacon_setter():
-    messaged = False
-    global selfaddress
-    global port
-    global beacon
-    global state
-    while (not messaged):
-        try:
-            if selfaddress == None:
-                selfaddress = pyrequests.post(beacon + '/services/fileserver', data={'port':port, 'state':state}).json()['address']
-            else:
-                pypyrequests.put(beacon + '/services/fileserver/' + selfaddress, data={'state':state})
-            
-            thr = threading.Timer(beacon_adapter_cycletime, beacon_setter)
-            thr.daemon = True
-            thr.start()
-            
-            state = stateNormal
-            messaged = True
-        except:
-            errorBeacon()
-            time.sleep(5)
-
+### Other ###    
 if __name__ == '__main__':
-    global port
     host = '0.0.0.0'
-    try:
-        beacon = 'http://'+sys.argv[1]
-        port = int(sys.argv[2])
-    except Exception as e:
-        print('Usage: {0} beacon_host:beacon_port port'.format(sys.argv[0]))
-        sys.exit()
+    beacon, port = parse_argv(sys.argv)
+    print('Starting with settings: Beacon: {0} self: {1}:{2}'.format(beacon, host, port))
 
-    print('Starting with settings: beacon:{0} self: {1}:{2}'.format(beacon, host, port))
-    
-    beacon_setter()
+    bw = BeaconWrapper(beacon, port, 'services/filesystem')
+    bw.beacon_setter()
     app.run(host = host, port = port)

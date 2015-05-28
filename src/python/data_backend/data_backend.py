@@ -1,55 +1,34 @@
-import settings
-import threading, time
+import os, sys
+PACKAGE_PARENT = '..'
+SCRIPT_DIR = os.path.dirname(os.path.realpath(os.path.join(os.getcwd(), os.path.expanduser(__file__))))
+sys.path.append(os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT)))
+
 import requests as pyrequests
-import atexit
-
-from common import *
-
 from flask import *
 from werkzeug.routing import BaseConverter
 
-port = None
-selfaddress = None
-beacon_adapter_cycletime = 10
-beacon = None
-stateNormal = 'Operating normally'
-stateError = 'Connection issues'
-state = stateNormal
+import settings
+from common.common import get_url_parameter, has_url_parameter, response_builder, BeaconWrapper, parse_db_argv
 
 app = Flask(__name__)
 app.config.update(DEBUG = True)
 
 ###>> MAIN ###
-import sys
-
 def init_conn_string(dbhost, dbport = 5432):
     app.config.update(dict(SQLALCHEMY_DATABASE_URI=settings.get_connection_string(dbhost, dbport)))
 
 if __name__ == '__main__':
-    global port
     host = '0.0.0.0'
-    dbhost = None
-    dbport = None
-    try:
-        beacon = 'http://'+sys.argv[1]
-        dbhost, dbport = sys.argv[2].split(':')
-        dbport = int(dbport)
-        if len(sys.argv) > 3:
-            port = int(sys.argv[3])
-    except Exception as e:
-        print('Usage: {0} beacon_host:beacon_port dbhost:dbport port'.format(sys.argv[0]))
-        sys.exit()
-
+    beacon, dbhost, dbport, port = parse_db_argv(sys.argv)
     print('Starting with settings: Beacon: {0} DB: {1}:{2}, self: {3}:{4}'.format(beacon, dbhost, dbport, host, port))
 
     init_conn_string(dbhost, dbport)
 else:
     init_conn_string('10.0.0.10', 5432)
-
 ###<< MAIN ##
 
 ###>> init models
-from models import *
+from common.models import *
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
@@ -424,33 +403,7 @@ def api_200(data = {}):
 
 ### Other ###
 
-def errorBeacon():
-    state = stateError
-    print ('Unable to reach beacon')
-    
-def beacon_setter():
-    messaged = False
-    global selfaddress
-    global port
-    global beacon
-    global state
-    while (not messaged):
-        try:
-            if selfaddress == None:
-                selfaddress = pyrequests.post(beacon + '/services/database', data={'port':port, 'state':state}).json()['address']
-            else:
-                pyrequests.put(beacon + '/services/database/' + selfaddress, data={'state':state})
-            
-            thr = threading.Timer(beacon_adapter_cycletime, beacon_setter)
-            thr.daemon = True
-            thr.start()
-            
-            state = stateNormal
-            messaged = True
-        except:
-            errorBeacon()
-            time.sleep(5)
-
 if __name__ == '__main__':
-    beacon_setter()
+    bw = BeaconWrapper(beacon, port, 'services/database')
+    bw.beacon_setter()
     app.run(host = host, port = port)

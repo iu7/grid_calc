@@ -1,10 +1,16 @@
+import os, sys
+PACKAGE_PARENT = '..'
+SCRIPT_DIR = os.path.dirname(os.path.realpath(os.path.join(os.getcwd(), os.path.expanduser(__file__))))
+sys.path.append(os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT)))
+
 from flask import *
 import jsonpickle
 import datetime
 import threading
 import time
-import sys
 import atexit
+
+from common.common import parse_beacon_argv
 
 timeout = 20
 collector_cycletime = 10
@@ -96,12 +102,7 @@ class ServiceState:
 
 if __name__ == '__main__':
     host = '0.0.0.0'
-    port = None
-    try:
-        port = int(sys.argv[1])
-    except Exception as e:
-        print('Usage: {0} port'.format(sys.argv[0]))
-        sys.exit()
+    port = parse_beacon_argv(sys.argv)
 
     print('Starting with settings: self: {0}:{1}'.format(host, port))
     

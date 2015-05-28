@@ -1,3 +1,6 @@
+#!/bin/bash
+set -v
+
 curl localhost:50001/trait                  -X POST   -H "Content-Type: application/json" -d '{"name":"trait1","version":"1.0"}'; echo
 curl localhost:50001/trait                  -X POST   -H "Content-Type: application/json" -d '{"name":"trait2","version":"2.0"}'; echo
 curl localhost:50001/trait                  -X POST   -H "Content-Type: application/json" -d '{"name":"trait3","version":"3.0"}'; echo

@@ -1,12 +1,16 @@
+import os, sys
+
+PACKAGE_PARENT = '..'
+SCRIPT_DIR = os.path.dirname(os.path.realpath(os.path.join(os.getcwd(), os.path.expanduser(__file__))))
+sys.path.append(os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT)))
+
 from flask import *
 import jsonpickle
 import datetime
 import threading
 import time
-import sys
 import requests
 from werkzeug import secure_filename
-import os
 
 
 port = None

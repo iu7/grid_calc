@@ -1,8 +1,9 @@
+import os, sys
+PACKAGE_PARENT = '..'
+SCRIPT_DIR = os.path.dirname(os.path.realpath(os.path.join(os.getcwd(), os.path.expanduser(__file__))))
+sys.path.append(os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT)))
 
-DATABASE_USER = 'pg_user'
-DATABASE_PW = 'pg_password'
-DATABASE_NAME = 'grid_calc_db'
-DATABASE_ENGINE = 'postgresql'
+from common.global_settings import *
 
 DATABASE_URIS = [\
   'pg_shd0_master',\

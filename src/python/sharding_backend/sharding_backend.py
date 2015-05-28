@@ -1,19 +1,21 @@
-import settings
-from common import *
+import os, sys
+PACKAGE_PARENT = '..'
+SCRIPT_DIR = os.path.dirname(os.path.realpath(os.path.join(os.getcwd(), os.path.expanduser(__file__))))
+sys.path.append(os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT)))
 
 from flask import *
 from werkzeug.routing import BaseConverter
-
 import requests as pyrequests
 from requests.exceptions import Timeout as TimeoutErr
 import json as pyjson
+
+import settings
+from common.common import get_url_parameter, has_url_parameter, response_builder, BeaconWrapper, parse_db_argv
 
 app = Flask(__name__)
 app.config.update(DEBUG = True)
 
 ###>> MAIN ###
-import sys
-
 def init_conn_string(dbhost, dbport = 5432):
     app.config.update(dict(SQLALCHEMY_DATABASE_URI=settings.get_sqlite_connection_string(dbhost, dbport)))
 
@@ -118,7 +120,7 @@ def get_item(table, pkcolumn, value):
             else:
                 return api_404()
         
-        return from_pyresponce(resp)
+        return from_pyresponse(resp)
     else:
         return api_404(msg_pk_invalid_fmt.format(table, column))
         
@@ -156,7 +158,7 @@ def post_item(table, value_json):
             return api_500(str(e))
         return api_200(val.to_dict())
 
-    return from_pyresponce(resp)
+    return from_pyresponse(resp)
 
 def put_item(table, pkf, pkfvs, value_json):
     if table in mtm_table_name_d:
@@ -202,7 +204,7 @@ def put_item(table, pkf, pkfvs, value_json):
                 return api_500(str(e))
             return api_200(item.to_dict())
 
-        return from_pyresponce(resp)
+        return from_pyresponse(resp)
     else:
         return api_400(msg_pk_invalid_fmt.format(table, pkf))
 
@@ -373,7 +375,7 @@ def cst_free_task_by_agent_id(table):
         return api_400('Bad request: <agent_id> not found in input')
 
 ### Error handlers ###
-def from_pyresponce(pyresp):
+def from_pyresponse(pyresp):
    if pyresp.status_code == 200:
        return api_200(pyresp.json())
    elif pyresp.status_code == 404:
@@ -404,5 +406,10 @@ def api_200(data = {}):
 ### Other ###
         
 if __name__ == '__main__':
+    host = '0.0.0.0'
+    beacon, dbhost, dbport, port = parse_db_argv(argv)
+    print('Starting with settings: Beacon: {0} DB: {1}:{2}, self: {3}:{4}'.format(beacon, dbhost, dbport, host, port))
+
+    bw = BeaconWrapper(beacon, port, 'sevices/sharding')
+    bw.beacon_setter()
     app.run(host = host, port = port)
-    
