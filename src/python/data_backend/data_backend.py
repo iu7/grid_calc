@@ -263,6 +263,13 @@ def table_filter_put(table, value_json):
     else:
         return api_404()
 
+def table_bulk_get(table):
+    tbl = table_name_d[table]
+
+    res = tbl.query.all()
+    resd = [r.to_dict() for r in res]
+    return api_200({'result' : resd})
+
 def sync(batch):
     for json_obj in batch:
         if all(field in json_obj for field in ['table', 'data']):
@@ -325,6 +332,12 @@ def get_free_subtask_by_agent_id(agent_id, status = 'queued', newstatus = 'taken
         return api_200(res.to_dict())
     else:
         return api_404()
+
+### Bulk interface ###
+
+@app.route('/<table>', methods=['GET'])
+def view_bulk_get(table):
+    return table_bulk_get(table)
 
 ### Filtering (or access by compound PK) ###
 
