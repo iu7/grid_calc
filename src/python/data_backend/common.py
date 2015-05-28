@@ -1,8 +1,12 @@
 from flask import *
 
 def response_builder(r, s):
-    resp = jsonify(r)
-    resp.status_code = s
+    resp = None
+    try:
+        resp = jsonify(r)
+        resp.status_code = s
+    except RuntimeError as e:
+        resp = s
     return resp
 
 def get_url_parameter(name, request = request):
@@ -26,5 +30,3 @@ def has_url_parameter(name):
 
 def api_func(addr, f):
     return '/'.join([addr, f])
-
-### Beacon-related ###

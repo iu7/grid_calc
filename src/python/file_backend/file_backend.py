@@ -1,6 +1,7 @@
 import sys
 import os
-import requests, threading
+import threading
+import requests as pyrequests
 
 from flask import *
 from werkzeug.routing import BaseConverter
@@ -88,7 +89,7 @@ def api_404(msg = 'Not found'):
 @app.errorhandler(200)
 def api_200(data = {}):
     return response_builder(data, 200)
-    
+
 ### Other ###
 beacon_host = None
 beacon_port = None
@@ -119,9 +120,9 @@ def beacon_setter():
     while (not messaged):
         try:
             if selfaddress == None:
-                selfaddress = requests.post(beacon + '/services/fileserver', data={'port':beacon_port, 'state':state}).json()['address']
+                selfaddress = pyrequests.post(beacon + '/services/fileserver', data={'port':beacon_port, 'state':state}).json()['address']
             else:
-                requests.put(beacon + '/services/fileserver/' + selfaddress, data={'state':state})
+                pyrequests.put(beacon + '/services/fileserver/' + selfaddress, data={'state':state})
             
             thr = threading.Timer(beacon_adapter_cycletime, beacon_setter)
             thr.daemon = True

@@ -1,6 +1,7 @@
 import settings
 import threading
 import requests as pyrequests
+import atexit
 
 from common import *
 
@@ -37,7 +38,7 @@ if __name__ == '__main__':
 
     init_conn_string(dbhost, dbport)
 else:
-    init_conn_string('127.0.0.1', 5432)
+    init_conn_string('10.0.0.10', 5432)
 
 ###<< MAIN ##
 
@@ -414,7 +415,6 @@ def api_404(msg = 'Not found'):
 @app.errorhandler(200)
 def api_200(data = {}):
     return response_builder(data, 200)
-
 
 ### Other ###
 beacon_adapter_cycletime = 10
