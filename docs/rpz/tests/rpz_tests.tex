@@ -22,6 +22,10 @@
 \usepackage{xcolor} % colors!
 \usepackage{enumitem} % for unboxed description labels (long ones)
 \usepackage{caption}
+\usepackage{array}
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
 
 \defaultfontfeatures{Mapping=tex-text} % for converting "--" and "---"
 \setmainfont{CMU Serif}
@@ -116,17 +120,96 @@
 
 
 \subsection{Системное тестирование}
-Производится системное тестирования файлового сервера.
-
-
+Производится системное тестирования файлового сервера (методом чёрного ящика).
 Тест покрывает $100\%$ АПИ файлового сервера.
-Тест самостоятельно генерирует входные данные.
 
+Входными данными всех тестов являются адрес и порт сервера.
+При проведении тестирования сервер был запущен по адресу \url{localhost:50002}
+
+Все тесты были пройдены успешно.
+
+Список тестов:
+
+\begin{itemize}
+  \item Сохранение файла в корневой директории сервера
+  \begin{description}
+    \item[Ресурс:] \url{/static}
+    \item[HTTP-метод:] POST
+    \item[Параметры запроса:] file: a.out, headers: "Content-type"="multipart/form-data"
+    \item[Код, содержимое ответа:] 200, пустой JSON-объект "\{\}"
+  \end{description}
+  
+  \item Сохранение файла в произвольной директории сервера
+  \begin{description}
+    \item[Ресурс:] \url{/static}
+    \item[HTTP-метод:] POST
+    \item[Параметры запроса:] query: "path=1\textbackslash 2\textbackslash 3\textbackslash4", file: a.out, headers: "Content-type"="multipart/form-data"
+    \item[Код, содержимое ответа:] 200, пустой JSON-объект "\{\}"
+  \end{description}
+  
+  \item Доступ к существующему файлу в корневой директории сервера
+  \begin{description}
+    \item[Ресурс:] \url{/static/a.out}
+    \item[HTTP-метод:] GET
+    \item[Код, содержимое ответа:] 200, содержимое файла a.out
+    \item[Замечание:] содержимое ответа перенаправлено в файл a\_.out
+  \end{description}
+  
+  \item Доступ к существующему файлу в произвольной директории сервера
+  \begin{description}
+    \item[Ресурс:] \url{/static/1\ 2\ 3\ 4\ a.out}
+    \item[HTTP-метод:] GET
+    \item[Код, содержимое ответа:] 200, содержимое файла a.out
+  \end{description}
+  
+  \item Удаление существующего файла
+  \begin{description}
+    \item[Ресурс:] \url{/static/a.out}
+    \item[HTTP-метод:] DELETE
+    \item[Код, содержимое ответа:] 200, пустой JSON-объект "\{\}"
+  \end{description}
+  
+  \item Удаление существующего файла в произвольной директории сервера
+  \begin{description}
+    \item[Ресурс:] \url{/static/1\ 2\ 3\ 4\ a.out}
+    \item[HTTP-метод:] DELETE
+    \item[Код, содержимое ответа:] 200, пустой JSON-объект "\{\}"
+  \end{description}
+  
+  \item Удаление несуществующего файла
+  \begin{description}
+    \item[Ресурс:] \url{/static/a.out}
+    \item[HTTP-метод:] DELETE
+    \item[Код, содержимое ответа:] 404, JSON-объект "\{"error":"Not Found"\}"
+    \item[Замечание:] файл "a.out" удалён с сервера в ходе предыдущих тестов
+  \end{description}
+  
+  \item Удаление несуществующего файла в произвольной директории сервера
+  \begin{description}
+    \item[Ресурс:] \url{/static/1\ 2\ 3\ 4\ a.out}
+    \item[HTTP-метод:] DELETE
+    \item[Код, содержимое ответа:] 404, JSON-объект "\{"error":"Not Found"\}"
+  \end{description}
+  
+  \item Доступ к несуществующему файлу в корневой директории сервера
+  \begin{description}
+    \item[Ресурс:] \url{/static/a.out}
+    \item[HTTP-метод:] GET
+    \item[Код, содержимое ответа:] 404, JSON-объект "\{"error":"Not Found"\}"
+  \end{description}
+  
+  \item Доступ к несуществующему файлу в произвольной директории сервера
+  \begin{description}
+    \item[Ресурс:] \url{/static/1\ 2\ 3\ 4\ a.out}
+    \item[HTTP-метод:] GET
+    \item[Код, содержимое ответа:] 404, JSON-объект "\{"error":"Not Found"\}"
+  \end{description}
+\end{itemize}
 
 \subsubsection{Код теста}
 \lstinputlisting[language=bash]{src/queries_st.sh}
 
-\subsubsection{Выходные данные}
+\subsubsection{Выход терминала в ходе тестов}
 \lstinputlisting{src/queries_st.log}
 
 
@@ -141,7 +224,7 @@
 \subsubsection{Код теста}
 \lstinputlisting[language=bash]{src/beacon_data_file_it.sh}
 
-\subsubsection{Выходные данные}
+\subsubsection{Выход терминала в ходе тестов}
 \lstinputlisting{src/beacon_data_file_it.log}
 
 \end{document}
