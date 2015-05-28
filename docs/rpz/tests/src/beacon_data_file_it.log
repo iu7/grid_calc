@@ -1,0 +1,52 @@
+ * Running on http://0.0.0.0:50003/ (Press CTRL+C to quit)
+ * Restarting with stat
+Starting with settings: beacon:localhost:50003 self: 0.0.0.0:50002
+Starting with settings: Beacon: localhost:50003 DB: 10.0.0.10:5432, self: 0.0.0.0:50001
+Beacon is down. Waiting to reconnect.
+Incoming request from 127.0.0.1: port = 50003, state = Unable to find beacon
+127.0.0.1 - - [28/May/2015 02:23:31] "POST /services/fileserver HTTP/1.1" 200 -
+Beacon is back up.
+ * Running on http://0.0.0.0:50002/ (Press CTRL+C to quit)
+ * Restarting with stat
+Incoming request from 127.0.0.1: port = 50003, state = Operating normally
+127.0.0.1 - - [28/May/2015 02:23:31] "POST /services/database HTTP/1.1" 200 -
+ * Running on http://0.0.0.0:50001/ (Press CTRL+C to quit)
+ * Restarting with stat
+Starting with settings: beacon:localhost:50003 self: 0.0.0.0:50002
+Incoming request from 127.0.0.1: port = 50003, state = Operating normally
+127.0.0.1 - - [28/May/2015 02:23:32] "POST /services/fileserver HTTP/1.1" 200 -
+Starting with settings: Beacon: localhost:50003 DB: 10.0.0.10:5432, self: 0.0.0.0:50001
+Incoming request from 127.0.0.1: port = 50003, state = Operating normally
+127.0.0.1 - - [28/May/2015 02:23:32] "POST /services/database HTTP/1.1" 200 -
+Incoming request from 127.0.0.1:50003: state = Operating normally
+127.0.0.1 - - [28/May/2015 02:23:41] "PUT /services/fileserver/127.0.0.1:50003 HTTP/1.1" 200 -
+Incoming request from 127.0.0.1:50003: state = Operating normally
+127.0.0.1 - - [28/May/2015 02:23:41] "PUT /services/database/127.0.0.1:50003 HTTP/1.1" 200 -
+Incoming request from 127.0.0.1:50003: state = Operating normally
+127.0.0.1 - - [28/May/2015 02:23:42] "PUT /services/fileserver/127.0.0.1:50003 HTTP/1.1" 200 -
+Incoming request from 127.0.0.1:50003: state = Operating normally
+127.0.0.1 - - [28/May/2015 02:23:42] "PUT /services/database/127.0.0.1:50003 HTTP/1.1" 200 -
+Incoming request from 127.0.0.1:50003: state = Operating normally
+127.0.0.1 - - [28/May/2015 02:23:51] "PUT /services/fileserver/127.0.0.1:50003 HTTP/1.1" 200 -
+Incoming request from 127.0.0.1:50003: state = Operating normally
+127.0.0.1 - - [28/May/2015 02:23:51] "PUT /services/database/127.0.0.1:50003 HTTP/1.1" 200 -
+Incoming request from 127.0.0.1:50003: state = Operating normally
+127.0.0.1 - - [28/May/2015 02:23:52] "PUT /services/fileserver/127.0.0.1:50003 HTTP/1.1" 200 -
+Incoming request from 127.0.0.1:50003: state = Operating normally
+127.0.0.1 - - [28/May/2015 02:23:52] "PUT /services/database/127.0.0.1:50003 HTTP/1.1" 200 -
+Incoming request from 127.0.0.1:50003: state = Operating normally
+127.0.0.1 - - [28/May/2015 02:24:01] "PUT /services/fileserver/127.0.0.1:50003 HTTP/1.1" 200 -
+Incoming request from 127.0.0.1:50003: state = Operating normally
+127.0.0.1 - - [28/May/2015 02:24:01] "PUT /services/database/127.0.0.1:50003 HTTP/1.1" 200 -
+Incoming request from 127.0.0.1:50003: state = Operating normally
+127.0.0.1 - - [28/May/2015 02:24:02] "PUT /services/fileserver/127.0.0.1:50003 HTTP/1.1" 200 -
+Incoming request from 127.0.0.1:50003: state = Operating normally
+127.0.0.1 - - [28/May/2015 02:24:02] "PUT /services/database/127.0.0.1:50003 HTTP/1.1" 200 -
+Incoming request from 127.0.0.1:50003: state = Operating normally
+127.0.0.1 - - [28/May/2015 02:24:11] "PUT /services/fileserver/127.0.0.1:50003 HTTP/1.1" 200 -
+Incoming request from 127.0.0.1:50003: state = Operating normally
+127.0.0.1 - - [28/May/2015 02:24:11] "PUT /services/database/127.0.0.1:50003 HTTP/1.1" 200 -
+Incoming request from 127.0.0.1:50003: state = Operating normally
+127.0.0.1 - - [28/May/2015 02:24:12] "PUT /services/fileserver/127.0.0.1:50003 HTTP/1.1" 200 -
+Incoming request from 127.0.0.1:50003: state = Operating normally
+127.0.0.1 - - [28/May/2015 02:24:12] "PUT /services/database/127.0.0.1:50003 HTTP/1.1" 200 -
