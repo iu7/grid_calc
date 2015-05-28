@@ -1,5 +1,5 @@
 import settings
-import threading
+import threading, time
 import requests as pyrequests
 import atexit
 
@@ -7,6 +7,14 @@ from common import *
 
 from flask import *
 from werkzeug.routing import BaseConverter
+
+port = None
+selfaddress = None
+beacon_adapter_cycletime = 10
+beacon = None
+stateNormal = 'Operating normally'
+stateError = 'Connection issues'
+state = stateNormal
 
 app = Flask(__name__)
 app.config.update(DEBUG = True)
@@ -18,23 +26,21 @@ def init_conn_string(dbhost, dbport = 5432):
     app.config.update(dict(SQLALCHEMY_DATABASE_URI=settings.get_connection_string(dbhost, dbport)))
 
 if __name__ == '__main__':
+    global port
+    host = '0.0.0.0'
     dbhost = None
     dbport = None
-    beacon_host = None
-    beacon_port = None
-    host = '0.0.0.0'
-    port = 50001
     try:
-        beacon_host, beacon_port = sys.argv[1].split(':')
-        dbhost, sdbport = sys.argv[2].split(':')
-        dbport = int(sdbport)
+        beacon = 'http://'+sys.argv[1]
+        dbhost, dbport = sys.argv[2].split(':')
+        dbport = int(dbport)
         if len(sys.argv) > 3:
             port = int(sys.argv[3])
     except Exception as e:
-        print('Usage: {0} beacon_host:beacon_port dbhost:dbport [port]'.format(sys.argv[0]))
+        print('Usage: {0} beacon_host:beacon_port dbhost:dbport port'.format(sys.argv[0]))
         sys.exit()
 
-    print('Starting with settings: Beacon: {0}:{1} DB: {2}:{3}, self: {4}:{5}'.format(beacon_host, beacon_port, dbhost, dbport, host, port))
+    print('Starting with settings: Beacon: {0} DB: {1}:{2}, self: {3}:{4}'.format(beacon, dbhost, dbport, host, port))
 
     init_conn_string(dbhost, dbport)
 else:
@@ -417,47 +423,33 @@ def api_200(data = {}):
     return response_builder(data, 200)
 
 ### Other ###
-beacon_adapter_cycletime = 10
-beacon_fmt = 'http://{0}:{1}'
-stateNormal = 'Operating normally'
-stateNoBeacon = 'Unable to find beacon'
-state = stateNormal
 
-bcmsg = False
-def beaconDownMsg():
-    global bcmsg
-    if (not bcmsg): 
-        print ('Beacon is down. Waiting to reconnect.')
-        bcmsg = True
-
-def beaconUpMsg():
-    global bcmsg
-    if (bcmsg): 
-        print ('Beacon is back up.')
-        bcmsg = False
-        
+def errorBeacon():
+    state = stateError
+    print ('Unable to reach beacon')
+    
 def beacon_setter():
-    beacon = beacon_fmt.format(beacon_host, beacon_port)
     messaged = False
     global selfaddress
+    global port
+    global beacon
     global state
     while (not messaged):
         try:
             if selfaddress == None:
-                selfaddress = pyrequests.post(beacon + '/services/database', data={'port':beacon_port, 'state':state}).json()['address']
+                selfaddress = pyrequests.post(beacon + '/services/database', data={'port':port, 'state':state}).json()['address']
             else:
                 pyrequests.put(beacon + '/services/database/' + selfaddress, data={'state':state})
             
             thr = threading.Timer(beacon_adapter_cycletime, beacon_setter)
             thr.daemon = True
             thr.start()
-            messaged = True
+            
             state = stateNormal
-            beaconUpMsg()
+            messaged = True
         except:
-            state = stateNoBeacon
-            beaconDownMsg()
-selfaddress = None
+            errorBeacon()
+            time.sleep(5)
 
 if __name__ == '__main__':
     beacon_setter()
