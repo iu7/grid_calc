@@ -106,11 +106,30 @@
 \subsection{Модульное тестирование}
 Производится модульное тестирование модуля сервера данных, отвечающего за работу комплексного запроса get\_free\_subtask\_by\_agent\_id.
 
-
 Тестрирование производится при помощи библиотеки unittest в автоматическом режиме.
 Тест самостоятельно геренирует входные данные.
 Тест не генерирует дополнительного вывода в случае корректной работы, кроме унифицированного библиотекой unittest.
 
+Все тесты были пройдены успешно.
+
+Типовые тесты:
+
+\begin{table}[h]
+  \begin{tabu}{|L{3.5cm}|X[c]|L{5cm}|}
+  	\hline
+  	Тестируемый метод                  & Входные данные                                                             & Выходные данные \\ \hline
+  	post\_item                         & 'trait', \{"name":"trait1", "verison":"1.0"\}                              & 200 OK          \\ \hline
+  	post\_item                         & 'agent', \{\}                                                              & 200 OK          \\ \hline
+  	post\_item                         & 'agent', \{\}                                                              & 200 OK          \\ \hline
+  	post\_item                         & 'task', \{"max\_time":160, "archive\_name":"cocoque"\}                     & 200 OK          \\ \hline
+  	post\_item                         & 'subtask', \{"task\_id":1, "status":"queued", "archive\_name":"cocoque0"\} & 200 OK          \\ \hline
+  	post\_item                         & 'mtm\_traitagent', \{"trait\_id":1,"agent\_id":1\}                         & 200 OK          \\ \hline
+  	post\_item                         & 'mtm\_traittask', \{"trait\_id":1,"task\_id":1\}                           & 200 OK          \\ \hline
+  	get\_free\_subtask \_by\_agent\_id & 1                                                                          & 200 OK          \\ \hline
+  	get\_free\_subtask \_by\_agent\_id & 2                                                                          & 404 NOT FOUND   \\ \hline
+  	get\_free\_subtask \_by\_agent\_id & 'text'                                                                     & 400 BAD REQUEST \\ \hline
+  \end{tabu}
+\end{table}
 
 \subsubsection{Код теста}
 \lstinputlisting[language=Python]{src/data_backend_ut.py}

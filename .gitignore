@@ -1,8 +1,10 @@
 *.aux
 *tz.out
 *tz.log
-rpz.out
-rpz.log
+*rpz.out
+*rpz.log
+*rpz_tests.out
+*rpz_tests.log
 *.gz
 *.gz(busy)
 *.toc
