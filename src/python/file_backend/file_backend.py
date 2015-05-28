@@ -14,14 +14,6 @@ import random, string
 
 from common.common import *
 
-port = None
-selfaddress = None
-beacon_adapter_cycletime = 10
-beacon = None
-stateNormal = 'Operating normally'
-stateError = 'Connection issues'
-state = stateNormal
-
 app = Flask(__name__, static_path='/static')
 app.config.update(DEBUG = True, UPLOAD_FOLDER = 'static/')
 

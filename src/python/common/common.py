@@ -74,17 +74,25 @@ class BeaconWrapper:
     stateNormal = 'Operating normally'
     stateError = 'Connection issues'
     setterEndpoint = None
-
-    def __init__(self, beacon, backend_port, endpoint):
+    
+    addresses = {}
+    
+    def __init__(self, beacon, backend_port, endpoint, targets = None):
         self.beacon = beacon
         self.state = self.stateNormal
         self.backend_port = backend_port
         self.setterEndpoint = endpoint
+        for target in (targets if targets != None else {}):
+            self.addresses[target] = None
 
     def errorBeacon(self):
         self.state = self.stateError
         print ('Unable to reach beacon')
-        
+    
+    def errorGeneric(self, service):
+        self.state = self.stateError
+        print ('No ' + service + ' found') 
+    
     def beacon_setter(self):
         self.messaged = False
         while (not self.messaged):
@@ -103,3 +111,26 @@ class BeaconWrapper:
             except:
                 self.errorBeacon()
                 time.sleep(5)
+                
+    def beacon_getter(self):
+        gotadr = False
+        errorOccured = False
+        while (not gotadr):
+            try:
+                for sname in self.addresses.keys():
+                    r = pyrequests.get(self.beacon + '/services/' + sname)
+                    try: self.addresses[sname] = 'http://'+list(r.json().keys())[0]
+                    except:
+                        errorOccured = True
+                        self.errorGeneric(sname)
+                
+                thr = threading.Timer(self.beacon_adapter_cycletime, self.beacon_getter)
+                thr.daemon = True
+                thr.start()
+                gotadr = True
+                if not errorOccured:
+                    self.state = self.stateNormal
+            except:
+                self.errorBeacon()
+                time.sleep(5)
+        

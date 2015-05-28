@@ -11,15 +11,9 @@ import threading
 import time
 import requests
 from werkzeug import secure_filename
+from common.common import *
 
-port = None
-selfaddress = None
-beacon_adapter_cycletime = 10
-beacon = None
-database = None
-stateNormal = 'Operating normally'
-stateError = 'Connection issues'
-state = stateNormal
+bw = None
 
 app = Flask(__name__)
 
@@ -146,70 +140,15 @@ def jsdec(o):
 def jsenc(o):
     return jsonpickle.encode(o, unpicklable=False)
 
-def beacon_getter():
-    global database
-    global beacon
-    global state
-    gotadr = False
-    
-    while (not gotadr):
-        try:
-            r = requests.get(beacon + '/services/database')
-            try: database = 'http://'+list(r.json().keys())[0]
-            except: errorDatabase()
-            
-            thr = threading.Timer(beacon_adapter_cycletime, beacon_getter)
-            thr.daemon = True
-            thr.start()
-            gotadr = True
-            state = stateNormal
-        except:
-            errorBeacon()
-            time.sleep(5)
-
-def beacon_setter():
-    messaged = False
-    global selfaddress
-    global port
-    global beacon
-    global state
-    while (not messaged):
-        try:
-            if selfaddress == None:
-                selfaddress = requests.post(beacon + '/services/balancer', data={'port':port, 'state':state}).json()['address']
-            else:
-                requests.put(beacon + '/services/balancer/' + selfaddress, data={'state':state})
-            
-            thr = threading.Timer(beacon_adapter_cycletime, beacon_setter)
-            thr.daemon = True
-            thr.start()
-            
-            state = stateNormal
-            messaged = True
-        except:
-            errorBeacon()
-            time.sleep(5)
-
-def errorBeacon():
-    state = stateError
-    print ('Unable to reach beacon')
-def errorDatabase():
-    state = stateError
-    print ('No database found')
-
 if __name__ == '__main__':
     global port
     host = '0.0.0.0'
-    try:
-        beacon = 'http://'+sys.argv[1]
-        port = int(sys.argv[2])
-    except Exception as e:
-        print('Usage: {0} beacon_host:beacon_port port'.format(sys.argv[0]))
-        sys.exit()
-
+    beacon, port = parse_argv(sys.argv)
     print('Starting with settings: beacon:{0} self: {1}:{2}'.format(beacon, host, port))
     
-    beacon_setter()
-    beacon_getter()
+    global bw
+    bw = BeaconWrapper(beacon, port, 'services/balancer', {'database'})
+    bw.beacon_setter()
+    bw.beacon_getter()
     cleaner()
     app.run(host = host, port = port)
