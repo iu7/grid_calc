@@ -13,6 +13,8 @@ table_name_d = {}
 mtm_table_name_d = {}
 
 ### Common methods ###
+def random_string(size):
+    return ''.join([random.choice(string.ascii_letters) for i in range(size)])
 
 def fill_object(self, field_d, **kwargs):
     for k, v in kwargs.items():
@@ -100,6 +102,7 @@ def init_models(Base):
             col_type_parsers = {},\
             filename_fields = [],\
             pk_field = 'id',\
+            fk_fields = [],\
         )),\
 \
         id = Column(Integer(), primary_key = True, autoincrement = True),\
@@ -129,6 +132,7 @@ def init_models(Base):
             },\
             filename_fields = [],\
             pk_field = 'id',\
+            fk_fields = ['user_id'],\
         )),\
 \
         id = Column(Integer(), primary_key = True, autoincrement = True),\
@@ -155,6 +159,7 @@ def init_models(Base):
             col_type_parsers = {},\
             filename_fields = [],\
             pk_field = 'id',\
+            fk_fields = [],\
         )),\
 \
         id = Column(Integer(), primary_key = True, autoincrement = True),\
@@ -177,6 +182,7 @@ def init_models(Base):
             col_type_parsers = {},\
             filename_fields = ['archive_name'],\
             pk_field = 'id',\
+            fk_fields = [],\
         )),\
 \
         id = Column(Integer(), primary_key = True, autoincrement = True),\
@@ -201,6 +207,7 @@ def init_models(Base):
             col_type_parsers = {},\
             filename_fields = [],\
             pk_field = 'id',\
+            fk_fields = [],\
         )),\
 \
         id = Column(Integer(), primary_key = True, autoincrement = True),\
@@ -232,6 +239,7 @@ def init_models(Base):
             },\
             filename_fields = ['archive_name'],\
             pk_field = 'id',\
+            fk_fields = ['agent_id', 'task_id'],\
         )),\
 \
         id = Column(Integer(), primary_key = True, autoincrement = True),\
@@ -258,6 +266,7 @@ def init_models(Base):
             col_type_parsers = {},\
             filename_fields = [],\
             pk_field = None,\
+            fk_fields = ['trait_id', 'agent_id'],\
         )),\
 \
         trait_id = Column(Integer(), primary_key = True),\
@@ -278,6 +287,7 @@ def init_models(Base):
             col_type_parsers = {},\
             filename_fields = [],\
             pk_field = None,\
+            fk_fields = ['trait_id', 'task_id'],\
         )),\
 \
         trait_id = Column(Integer(), primary_key = True),\

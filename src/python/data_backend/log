@@ -1,0 +1,334 @@
+{
+  "error": "(psycopg2.IntegrityError) duplicate key value violates unique constraint \"_uc_name_version\"\nDETAIL:  Key (name, version)=(trait1, 1.0) already exists.\n [SQL: 'INSERT INTO trait (name, version) VALUES (%(name)s, %(version)s) RETURNING trait.id'] [parameters: {'version': '1.0', 'name': 'trait1'}]",
+  "shard": 0
+}
+{
+  "error": "(psycopg2.IntegrityError) duplicate key value violates unique constraint \"_uc_name_version\"\nDETAIL:  Key (name, version)=(trait2, 2.0) already exists.\n [SQL: 'INSERT INTO trait (name, version) VALUES (%(name)s, %(version)s) RETURNING trait.id'] [parameters: {'version': '2.0', 'name': 'trait2'}]",
+  "shard": 0
+}
+{
+  "id": 9,
+  "name": "trait3",
+  "version": "2.0"
+}
+{
+  "id": 10,
+  "name": "trait4",
+  "version": "4.0"
+}
+{
+  "id": 11,
+  "name": "trait5",
+  "version": "5.0"
+}
+{
+  "id": 12,
+  "name": "trait6",
+  "version": "5.0"
+}
+{
+  "id": 3,
+  "name": "trait3",
+  "version": "1.0"
+}
+{
+  "error": "(psycopg2.IntegrityError) duplicate key value violates unique constraint \"_uc_name_version\"\nDETAIL:  Key (name, version)=(trait3, 3.0) already exists.\n [SQL: 'UPDATE trait SET version=%(version)s WHERE trait.id = %(trait_id)s'] [parameters: ({'version': '3.0', 'trait_id': 3}, {'version': '3.0', 'trait_id': 9})]",
+  "shard": 0
+}
+{
+  "error": "Not found",
+  "shard": 0
+}
+{
+  "count": 2
+}
+{
+  "id": 1,
+  "name": "trait1",
+  "version": "1.0"
+}
+{
+  "result": [
+    {
+      "id": 2,
+      "name": "trait2",
+      "version": "2.0"
+    }
+  ]
+}
+{
+  "result": []
+}
+{
+  "id": 3
+}
+{
+  "id": 4
+}
+{
+  "error": "(psycopg2.IntegrityError) duplicate key value violates unique constraint \"mtm_traitagent_pkey\"\nDETAIL:  Key (trait_id, agent_id)=(1, 2) already exists.\n [SQL: 'INSERT INTO mtm_traitagent (trait_id, agent_id) VALUES (%(trait_id)s, %(agent_id)s)'] [parameters: {'agent_id': 2, 'trait_id': 1}]",
+  "shard": 0
+}
+{
+  "error": "(psycopg2.IntegrityError) duplicate key value violates unique constraint \"mtm_traitagent_pkey\"\nDETAIL:  Key (trait_id, agent_id)=(3, 2) already exists.\n [SQL: 'INSERT INTO mtm_traitagent (trait_id, agent_id) VALUES (%(trait_id)s, %(agent_id)s)'] [parameters: {'agent_id': 2, 'trait_id': 3}]",
+  "shard": 0
+}
+{
+  "agent_id": 1,
+  "trait_id": 2
+}
+{
+  "result": [
+    {
+      "agent_id": 1,
+      "trait_id": 2
+    }
+  ]
+}
+{
+  "count": 1
+}
+{
+  "result": []
+}
+{
+  "count": 1
+}
+{
+  "error": "Not found",
+  "shard": 0
+}
+{
+  "error": "Trait: not enough parameters",
+  "shard": 0
+}
+{
+  "error": "table <trait>: column <kdmfds> not found",
+  "shard": 0
+}
+{
+  "error": "table <trait>: column <kdmfds> not found",
+  "shard": 0
+}
+{
+  "error": "table <trait>: column <versio> not found",
+  "shard": 0
+}
+{
+  "error": "Not found",
+  "shard": 0
+}
+{
+  "error": "table <trait>: column <nam> not found",
+  "shard": 0
+}
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+  "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+  <head>
+    <title>KeyError: 'changes' // Werkzeug Debugger</title>
+    <link rel="stylesheet" href="?__debugger__=yes&amp;cmd=resource&amp;f=style.css" type="text/css">
+    <!-- We need to make sure this has a favicon so that the debugger does not by
+         accident trigger a request to /favicon.ico which might change the application
+         state. -->
+    <link rel="shortcut icon" href="?__debugger__=yes&amp;cmd=resource&amp;f=console.png">
+    <script type="text/javascript" src="?__debugger__=yes&amp;cmd=resource&amp;f=jquery.js"></script>
+    <script type="text/javascript" src="?__debugger__=yes&amp;cmd=resource&amp;f=debugger.js"></script>
+    <script type="text/javascript">
+      var TRACEBACK = 140676107656328,
+          CONSOLE_MODE = false,
+          EVALEX = true,
+          SECRET = "a9BhB1Rg5aNGWaYcFc2T";
+    </script>
+  </head>
+  <body>
+    <div class="debugger">
+<h1>builtins.KeyError</h1>
+<div class="detail">
+  <p class="errormsg">KeyError: 'changes'</p>
+</div>
+<h2 class="traceback">Traceback <em>(most recent call last)</em></h2>
+<div class="traceback">
+  
+  <ul><li><div class="frame" id="frame-140676107656216">
+  <h4>File <cite class="filename">"/usr/lib/python3.4/site-packages/flask/app.py"</cite>,
+      line <em class="line">1836</em>,
+      in <code class="function">__call__</code></h4>
+  <pre>return self.wsgi_app(environ, start_response)</pre>
+</div>
+
+<li><div class="frame" id="frame-140676107656832">
+  <h4>File <cite class="filename">"/usr/lib/python3.4/site-packages/flask/app.py"</cite>,
+      line <em class="line">1820</em>,
+      in <code class="function">wsgi_app</code></h4>
+  <pre>response = self.make_response(self.handle_exception(e))</pre>
+</div>
+
+<li><div class="frame" id="frame-140676107657168">
+  <h4>File <cite class="filename">"/usr/lib/python3.4/site-packages/flask/app.py"</cite>,
+      line <em class="line">1403</em>,
+      in <code class="function">handle_exception</code></h4>
+  <pre>reraise(exc_type, exc_value, tb)</pre>
+</div>
+
+<li><div class="frame" id="frame-140676107656272">
+  <h4>File <cite class="filename">"/usr/lib/python3.4/site-packages/flask/_compat.py"</cite>,
+      line <em class="line">33</em>,
+      in <code class="function">reraise</code></h4>
+  <pre>raise value</pre>
+</div>
+
+<li><div class="frame" id="frame-140676107657112">
+  <h4>File <cite class="filename">"/usr/lib/python3.4/site-packages/flask/app.py"</cite>,
+      line <em class="line">1817</em>,
+      in <code class="function">wsgi_app</code></h4>
+  <pre>response = self.full_dispatch_request()</pre>
+</div>
+
+<li><div class="frame" id="frame-140676107656720">
+  <h4>File <cite class="filename">"/usr/lib/python3.4/site-packages/flask/app.py"</cite>,
+      line <em class="line">1477</em>,
+      in <code class="function">full_dispatch_request</code></h4>
+  <pre>rv = self.handle_user_exception(e)</pre>
+</div>
+
+<li><div class="frame" id="frame-140676107656888">
+  <h4>File <cite class="filename">"/usr/lib/python3.4/site-packages/flask/app.py"</cite>,
+      line <em class="line">1381</em>,
+      in <code class="function">handle_user_exception</code></h4>
+  <pre>reraise(exc_type, exc_value, tb)</pre>
+</div>
+
+<li><div class="frame" id="frame-140676107656944">
+  <h4>File <cite class="filename">"/usr/lib/python3.4/site-packages/flask/_compat.py"</cite>,
+      line <em class="line">33</em>,
+      in <code class="function">reraise</code></h4>
+  <pre>raise value</pre>
+</div>
+
+<li><div class="frame" id="frame-140676107656384">
+  <h4>File <cite class="filename">"/usr/lib/python3.4/site-packages/flask/app.py"</cite>,
+      line <em class="line">1475</em>,
+      in <code class="function">full_dispatch_request</code></h4>
+  <pre>rv = self.dispatch_request()</pre>
+</div>
+
+<li><div class="frame" id="frame-140676107656776">
+  <h4>File <cite class="filename">"/usr/lib/python3.4/site-packages/flask/app.py"</cite>,
+      line <em class="line">1461</em>,
+      in <code class="function">dispatch_request</code></h4>
+  <pre>return self.view_functions[rule.endpoint](**req.view_args)</pre>
+</div>
+
+<li><div class="frame" id="frame-140676107656552">
+  <h4>File <cite class="filename">"/home/amadeus/grid_calc/src/python/data_backend/data_backend.py"</cite>,
+      line <em class="line">328</em>,
+      in <code class="function">view_filter_item_put</code></h4>
+  <pre>return table_filter_put(table, value_json)</pre>
+</div>
+
+<li><div class="frame" id="frame-140676107656664">
+  <h4>File <cite class="filename">"/home/amadeus/grid_calc/src/python/data_backend/data_backend.py"</cite>,
+      line <em class="line">279</em>,
+      in <code class="function">table_filter_put</code></h4>
+  <pre>bres, maybe_changes_kwargs = try_json_to_filter_kwargs(tbl, value_json['changes'])</pre>
+</div>
+</ul>
+  <blockquote>KeyError: 'changes'</blockquote>
+</div>
+
+<div class="plain">
+  <form action="/?__debugger__=yes&amp;cmd=paste" method="post">
+    <p>
+      <input type="hidden" name="language" value="pytb">
+      This is the Copy/Paste friendly version of the traceback.  <span
+      class="pastemessage">You can also paste this traceback into
+      a <a href="https://gist.github.com/">gist</a>:
+      <input type="submit" value="create paste"></span>
+    </p>
+    <textarea cols="50" rows="10" name="code" readonly>Traceback (most recent call last):
+  File "/usr/lib/python3.4/site-packages/flask/app.py", line 1836, in __call__
+    return self.wsgi_app(environ, start_response)
+  File "/usr/lib/python3.4/site-packages/flask/app.py", line 1820, in wsgi_app
+    response = self.make_response(self.handle_exception(e))
+  File "/usr/lib/python3.4/site-packages/flask/app.py", line 1403, in handle_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/lib/python3.4/site-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/lib/python3.4/site-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/lib/python3.4/site-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/lib/python3.4/site-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/lib/python3.4/site-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/lib/python3.4/site-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/lib/python3.4/site-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/home/amadeus/grid_calc/src/python/data_backend/data_backend.py", line 328, in view_filter_item_put
+    return table_filter_put(table, value_json)
+  File "/home/amadeus/grid_calc/src/python/data_backend/data_backend.py", line 279, in table_filter_put
+    bres, maybe_changes_kwargs = try_json_to_filter_kwargs(tbl, value_json['changes'])
+KeyError: 'changes'</textarea>
+  </form>
+</div>
+<div class="explanation">
+  The debugger caught an exception in your WSGI application.  You can now
+  look at the traceback which led to the error.  <span class="nojavascript">
+  If you enable JavaScript you can also use additional features such as code
+  execution (if the evalex feature is enabled), automatic pasting of the
+  exceptions and much more.</span>
+</div>
+      <div class="footer">
+        Brought to you by <strong class="arthur">DON'T PANIC</strong>, your
+        friendly Werkzeug powered traceback interpreter.
+      </div>
+    </div>
+  </body>
+</html>
+
+<!--
+
+Traceback (most recent call last):
+  File "/usr/lib/python3.4/site-packages/flask/app.py", line 1836, in __call__
+    return self.wsgi_app(environ, start_response)
+  File "/usr/lib/python3.4/site-packages/flask/app.py", line 1820, in wsgi_app
+    response = self.make_response(self.handle_exception(e))
+  File "/usr/lib/python3.4/site-packages/flask/app.py", line 1403, in handle_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/lib/python3.4/site-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/lib/python3.4/site-packages/flask/app.py", line 1817, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/lib/python3.4/site-packages/flask/app.py", line 1477, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/lib/python3.4/site-packages/flask/app.py", line 1381, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/lib/python3.4/site-packages/flask/_compat.py", line 33, in reraise
+    raise value
+  File "/usr/lib/python3.4/site-packages/flask/app.py", line 1475, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/lib/python3.4/site-packages/flask/app.py", line 1461, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/home/amadeus/grid_calc/src/python/data_backend/data_backend.py", line 328, in view_filter_item_put
+    return table_filter_put(table, value_json)
+  File "/home/amadeus/grid_calc/src/python/data_backend/data_backend.py", line 279, in table_filter_put
+    bres, maybe_changes_kwargs = try_json_to_filter_kwargs(tbl, value_json['changes'])
+KeyError: 'changes'
+
+-->
+
+{
+  "error": "(psycopg2.IntegrityError) duplicate key value violates unique constraint \"user_username_key\"\nDETAIL:  Key (username)=(123) already exists.\n [SQL: 'INSERT INTO \"user\" (username, pw_hash, mail, phone) VALUES (%(username)s, %(pw_hash)s, %(mail)s, %(phone)s) RETURNING \"user\".id'] [parameters: {'phone': '123456', 'username': '123', 'mail': '12345', 'pw_hash': '1234'}]",
+  "shard": 0
+}
+{
+  "error": "name 'random_string' is not defined",
+  "shard": 0
+}
+{
+  "error": "table <usersession>, column <timestamp>: cannot convert <21-MY-15 kl 12:02:31> to type <datetime> from type <str>",
+  "shard": 0
+}

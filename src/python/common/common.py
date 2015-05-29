@@ -2,6 +2,7 @@ from flask import *
 import requests as pyrequests
 import threading, time
 import sys
+import jsonpickle
 
 def response_builder(r, s):
     resp = None
@@ -35,31 +36,32 @@ def api_func(addr, f):
     return '/'.join([addr, f])
 
 ### Startup related ###
-def parse_db_argv(argv):
+def parse_db_argv(argv, custmom_msg = ''):
     try:
-        beacon = 'http://'+sys.argv[1]
-        dbhost, dbport = sys.argv[2].split(':')
+        shard_number = int(sys.argv[1])
+        beacon = 'http://'+sys.argv[2]
+        dbhost, dbport = sys.argv[3].split(':')
         dbport = int(dbport)
-        port = int(sys.argv[3])
+        port = int(sys.argv[4])
     except Exception as e:
-        print('Usage: {0} beacon_host:beacon_port dbhost:dbport port'.format(sys.argv[0]))
+        print('Usage: {0} SHARD_NUMBER beacon_host:beacon_port dbhost:dbport port {1}'.format(sys.argv[0], custmom_msg))
         sys.exit()
-    return beacon, dbhost, dbport, port
+    return shard_number, beacon, dbhost, dbport, port
 
-def parse_argv(argv):
+def parse_argv(argv, custmom_msg = ''):
     try:
         beacon = 'http://'+sys.argv[1]
         port = int(sys.argv[2])
     except Exception as e:
-        print('Usage: {0} beacon_host:beacon_port port'.format(sys.argv[0]))
+        print('Usage: {0} beacon_host:beacon_port port {1}'.format(sys.argv[0], custmom_msg))
         sys.exit()
     return beacon, port
 
-def parse_beacon_argv(argv):
+def parse_beacon_argv(argv, custmom_msg = ''):
     try:
         port = int(sys.argv[1])
     except Exception as e:
-        print('Usage: {0} port'.format(sys.argv[0]))
+        print('Usage: {0} port {1}'.format(sys.argv[0], custmom_msg))
         sys.exit()
     return port
 

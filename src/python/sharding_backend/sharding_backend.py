@@ -8,58 +8,48 @@ from werkzeug.routing import BaseConverter
 import requests as pyrequests
 from requests.exceptions import Timeout as TimeoutErr
 import json as pyjson
+import threading
+from functools import reduce
 
 import settings
-from common.common import get_url_parameter, has_url_parameter, response_builder, BeaconWrapper, parse_db_argv
+from common.common import get_url_parameter, has_url_parameter, response_builder, BeaconWrapper, parse_argv
 
 app = Flask(__name__)
 app.config.update(DEBUG = True)
+app.config.update(DATA_BACKENDS = None)
+app.config.update(ROUND_ROBIN = 0)
 
-###>> MAIN ###
-def init_conn_string(dbhost, dbport = 5432):
-    app.config.update(dict(SQLALCHEMY_DATABASE_URI=settings.get_sqlite_connection_string(dbhost, dbport)))
-
-init_conn_string()
-###<< MAIN ##
-
-###>> init models
-from models import *
-from sqlalchemy import create_engine
-from sqlalchemy.orm import scoped_session, sessionmaker
+from common.models import *
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.exc import IntegrityError
+init_models(declarative_base())
 
-engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'], convert_unicode=True)
-db_session = scoped_session(sessionmaker(autocommit=True, autoflush=True, bind=engine))
-Base = declarative_base()
-Base.query = db_session.query_property()
-
-init_models(Base)
-###<< init models
-
-msg_type_err_fmt = 'table <{0}>, column <{1}>: cannot convert <{2}> to type <{3}> from type <{4}>'
-msg_pk_invalid_fmt = 'table <{0}>: invalid primary key field <{1}> specified'
-msg_col_not_found_fmt = 'table <{0}>: column <{1}> not found'
 msg_tbl_not_found_fmt = 'table <{0}>: not found'
-msg_item_not_found_fmt = 'table <{0}>: <{1}> = <{2}> not found'
-msg_mtm_pk_not_found_fmt = 'MtM table <{0}>: pk <{1}> not found in input'
+msg_col_not_found_fmt = 'table <{0}>: column <{1}> not found'
+msg_type_err_fmt = 'table <{0}>, column <{1}>: cannot convert <{2}> to type <{3}> from type <{4}>'
+
 msg_mtm_use_another_endpoint_fmt = 'For MtM table use {0} /{1}/filter endpoint with required JSON parameters.'
 
-msg_mtm_only = 'Bad request: Only MtM tables supported'
-msg_mtm_not_found = 'MtM relation not found'
-msg_put_invalid_input = 'PUT requires additional json field <changes>:[list_of_key-value_pairs]}'
-msg_mtm_put_unsupported = 'Unsupported for MtM tables. Perform a chain Delete -> Insert.'
+wrn_timed_out_shd_fmt = 'WARNING: Timed out connecting to shard {0}!'
 
-wrn_timed_out_shd_fmt = 'WARNING: Timed out connecting to shard {0}'
-wrn_local_write       = 'WARNING: Writing to local database'
+msg_timed_out_shard_fmt = 'Timed out connecting to shard {0}'
 
-###>> SHARDING ###
-shards_cnt = 2
-shard_name_fmt = 'http://pg_shd{0}_master/'
-shards = [shard_name_fmt.format(i) for i in range(shards_cnt)]
-def shard_addr_by_pk(pk, shd_cnt):
-    return shard_name_fmt.format(pk % shards_cnt)
-###<< SHARDING ###
+###>> Sharding ###
+from common.sharding_settings import get_shd_num, SHARDS_COUNT
+shard_name_fmt = 'http://{0}'
+shards = None
+
+def to_shd_addr(shd_num):
+    return shard_name_fmt.format(app.config['DATA_BACKENDS'][shd_num])
+
+def shard_addr_by_pk(pk):
+    shd_num = get_shd_num(pk, SHARDS_COUNT)
+    return shd_num, to_shd_addr(shd_num)
+
+def round_robin_next():
+    retv = (app.config['ROUND_ROBIN'] + 1) % SHARDS_COUNT
+    app.config['ROUND_ROBIN'] = retv
+    return retv
+###<< Sharding ###
 
 def update_table_object(obj, **kwargs):
     for k, v in kwargs.items():
@@ -89,7 +79,7 @@ def try_json_to_filter_kwargs(tbl, value_json, exclude_lst = []):
             return False, api_404(msg_col_not_found_fmt.format(tbl.__tablename__, field))
     return True, kwargs
 
-###
+### Simple requests processing ###
 
 def get_item(table, pkcolumn, value):
     if table in mtm_table_name_d:
@@ -100,26 +90,18 @@ def get_item(table, pkcolumn, value):
     tbl = table_name_d[table]
     res = None
     if pkcolumn == tbl.metainf.pk_field:
-        bres, maybe_val = parse_field_value(tbl, column, value)
+        bres, maybe_val = parse_field_value(tbl, pkcolumn, value)
         if not bres:
             return maybe_val
-        
-        shd_addr = shard_addr_by_id(maybe_val)
+
+        shd_num, shd_addr = shard_addr_by_pk(maybe_val)
         resp = None
         try:
-            resp = pyrequests.get(shard_addr_by_id + '/{0}/{1}/{2}'.format(table, pkcolumn, value),\
-                data = pyjson.dumps({'post_ids': [p['id'] for p in posts]}),\
-                headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}\
-            )
-        except TimeoutErr as e:
+            resp = pyrequests.get(shd_addr + '/{0}/{1}/{2}'.format(table, pkcolumn, value))
+        except Exception as e:
             print(wrn_timed_out_shd_fmt.format(shd_addr))
-            
-            res = tbl.query.filter_by(**{column : maybe_val}).first()
-            if res:
-                return api_200(res.to_dict())
-            else:
-                return api_404()
-        
+            return api_456(msg_timed_out_shard_fmt.format(shd_addr))
+
         return from_pyresponse(resp)
     else:
         return api_404(msg_pk_invalid_fmt.format(table, column))
@@ -133,30 +115,17 @@ def post_item(table, value_json):
     bres, maybe_kwargs = try_json_to_filter_kwargs(tbl, value_json)
     if not bres:
         return maybe_kwargs
-
-    val = None
-    try:
-        val = tbl(**maybe_kwargs)
-    except Exception as e:
-        return api_400(str(e))
     
-    shd_addr = shard_addr_by_id(val[tbl.metainf.pk_field])
+    shd_addr = to_shd_addr(round_robin_next())
     resp = None
     try:
-        resp = pyrequests.get(shard_addr_by_id + '/{0}/{1}/{2}'.format(table, pkcolumn, value),\
-            data = pyjson.dumps({'post_ids': [p['id'] for p in posts]}),\
+        resp = pyrequests.post(shd_addr + '/{0}'.format(table),\
+            data = pyjson.dumps(value_json),\
             headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}\
         )
-    except TimeoutErr as e:
+    except Exception as e:
         print(wrn_timed_out_shd_fmt.format(shd_addr))
-        print(wrn_local_write)
-        try:
-            db_session.add(val)
-            db_session.flush()
-        except IntegrityError as e:
-            db_session.rollback()
-            return api_500(str(e))
-        return api_200(val.to_dict())
+        return api_456(msg_timed_out_shard_fmt.format(shd_addr))
 
     return from_pyresponse(resp)
 
@@ -172,37 +141,16 @@ def put_item(table, pkf, pkfvs, value_json):
         if not bres:
             return maybe_val
         
-        shd_addr = shard_addr_by_id(val[tbl.metainf.pk_field])
+        shd_num, shd_addr = shard_addr_by_pk(maybe_val)
         resp = None
         try:
-            resp = pyrequests.get(shard_addr_by_id + '/{0}/{1}/{2}'.format(table, pkcolumn, value),\
-                data = pyjson.dumps({'post_ids': [p['id'] for p in posts]}),\
+            resp = pyrequests.put(shd_addr + '/{0}/{1}/{2}'.format(table, pkf, pkfvs),\
+                data = pyjson.dumps(value_json),\
                 headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}\
             )
-        except TimeoutErr as e:
+        except Exception as e:
             print(wrn_timed_out_shd_fmt.format(shd_addr))
-
-            item = None
-            try:
-                item = tbl.query.filter_by(**{pkf : maybe_val}).first()
-            except Exception as e:
-                return api_404(msg_col_not_found_fmt.format(table, pkf))
-            
-            if not item:
-                return api_404()
-
-            bres, maybe_kwargs = try_json_to_filter_kwargs(tbl, value_json)
-            if not bres:
-                return maybe_kwargs
-
-            db_session.begin()
-            try:
-                update_table_object(item, **maybe_kwargs)
-                db_session.commit()
-            except IntegrityError as e:
-                db_session.rollback()
-                return api_500(str(e))
-            return api_200(item.to_dict())
+            return api_456(msg_timed_out_shard_fmt.format(shd_addr))
 
         return from_pyresponse(resp)
     else:
@@ -216,122 +164,191 @@ def delete_item(table, pkf, pkfvs):
     
     tbl = table_name_d[table]
     if pkf == tbl.metainf.pk_field:
-        pkft = tbl.metainf.col_type_d[pkf]
-        pkftpsr = tbl.metainf.col_type_parsers[pkf] if pkf in tbl.metainf.col_type_parsers else pkft
-        pkfv = None
-        try:
-            pkfv = pkftpsr(pkfvs)
-        except Exception as e:
-            return api_400(msg_type_err_fmt.format(table, pkf, pkfvs, pkft, pkf, type(pkfvs)))
+        bres, maybe_val = parse_field_value(tbl, pkf, pkfvs)
+        if not bres:
+            return maybe_val
         
-        item = None
+        shd_num, shd_addr = shard_addr_by_pk(maybe_val)
+        resp = None
         try:
-            item = tbl.query.filter_by(**{pkf : pkfv}).first()
+            resp = pyrequests.delete(shd_addr + '/{0}/{1}/{2}'.format(table, pkf, pkfvs))
         except Exception as e:
-            return api_404(msg_col_not_found_fmt.format(table, pkf))
-        
-        if not item:
-            return api_404()
+            print(wrn_timed_out_shd_fmt.format(shd_addr))
+            return api_456(msg_timed_out_shard_fmt.format(shd_addr))
 
-        try:
-            db_session.delete(item)
-        except IntegrityError as e:
-            db_session.rollback()
-            return api_500(str(e))
-        
-        return api_200()
+        return from_pyresponse(resp)
     else:
         return api_400(msg_pk_invalid_fmt.format(table, pkf))
 
+### Filer requests processing ###
+
+class FakeResponse:
+    status_code = None
+    json_ = None
+    def __init__(self, status_code, json):
+        self.status_code = status_code
+        self.json_ = json
+    def json(self): return self.json_
+    def __repr__(self): return '{0}: code {1}'.format(FakeResponse.__name__, self.status_code)
+
+def try_request(reqf, shd_addr, json, endpoint, resp):
+    try:
+        resp.append(reqf(shd_addr + endpoint, data = pyjson.dumps(json), headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}))
+    except Exception as e:
+        resp.append(FakeResponse(408, {"error": msg_timed_out_shard_fmt.format(shd_addr)}))
+
+def dict_sum(d1, d2):
+    s = {}
+    for k in d1.keys():
+        if isinstance(d1[k], dict):
+            s[k] = dict_sum(d1[k], d2[k])
+        else:
+            return {k: d1[k] + d2[k]}
+    return s
+
+def process_filter_request(bind_try_request):
+    resps = [[] for _ in shards]
+    thds = [threading.Thread(target=bind_try_request(shd_addr=shd_addr, resp=resp)) for shd_addr, resp in zip(shards, resps)]
+    for th in thds:
+        th.start()
+
+    for th in thds:
+        if th.is_alive():
+            th.join()
+
+    resps = [x[0] for x in resps]
+    toresps = list(filter(lambda rs: rs[0].status_code == 408, zip(resps, shards)))
+    if not toresps:
+        errorresps = list(filter(lambda rs: rs[0].status_code not in [200, 404], zip(resps, shards)))
+        if errorresps:
+            res = [errorresps[0][0].json()]
+            res[0].update({'shard': errorresps[0][1], 'code' : errorresps[0][0].status_code})
+            for r, s in errorresps[1:]:
+                d = r.json()
+                d.update({'shard': s, 'code': r.status_code})
+                res += d
+            return 456, {'multiple_errors' : res}
+
+        validresps = list(filter(lambda r: r.status_code == 200, resps))
+        if validresps:
+            res = validresps[0].json()
+            for r in validresps[1:]:
+                res = dict_sum(res, r.json())
+            return 200, res
+        else:
+            return 404, 'Not found'
+    else:
+        toshds = []
+        for tor in toresps:
+            print(wrn_timed_out_shd_fmt.format(tor[1]))
+            d = tor[0].json()
+            d.update({'shard': tor[1], 'code' : tor[0].status_code})
+            toshds += [d]
+        return 456, {'multiple_errors' : toshds}
+
 def table_filter_get(table, value_json):
+    def bind_try_request(**kwargs):
+        return lambda : try_request(pyrequests.get, kwargs['shd_addr'], value_json, '/{0}/filter'.format(table), kwargs['resp'])
     if table not in table_name_d:
-        return api_404(msg_tbl_not_found_fmt.format(table))
-    
-    tbl = table_name_d[table]
-
-    bres, maybe_kwargs = try_json_to_filter_kwargs(tbl, value_json)
-    if not bres:
-        return maybe_kwargs
-
-    reslo = tbl.query.filter_by(**maybe_kwargs).all()
-    resld = list(map(lambda x: x.to_dict(), reslo))
-    return api_200({'result': resld})
+        return 400, msg_tbl_not_found_fmt.format(table)
+    return process_filter_request(bind_try_request)
 
 def table_filter_delete(table, value_json):
+    def bind_try_request(**kwargs):
+        return lambda : try_request(pyrequests.delete, kwargs['shd_addr'], value_json, '/{0}/filter'.format(table), kwargs['resp'])
     if table not in table_name_d:
-        return api_404(msg_tbl_not_found_fmt.format(table))
-
-    tbl = table_name_d[table]
-    bres, maybe_kwargs = try_json_to_filter_kwargs(tbl, value_json)
-    if not bres:
-        return maybe_kwargs
-
-    reslo = tbl.query.filter_by(**maybe_kwargs).all()
-    if reslo:
-        db_session.begin()
-        try:
-            for obj in reslo:
-                db_session.delete(obj)
-            db_session.commit()
-        except Exception as e:
-            db_session.rollback()
-            return api_500(str(e))
-        
-        return api_200({'count': len(reslo)})
-    else:
-        return api_404()
+        return 400, msg_tbl_not_found_fmt.format(table)
+    return process_filter_request(bind_try_request)
 
 def table_filter_put(table, value_json):
+    def bind_try_request(**kwargs):
+        return lambda : try_request(pyrequests.put, kwargs['shd_addr'], value_json, '/{0}/filter'.format(table), kwargs['resp'])
     if 'changes' not in value_json:
-        return api_400(msg_put_invalid_input)
+        return 400, msg_put_invalid_input
     if table not in table_name_d:
-        return api_404(msg_tbl_not_found_fmt.format(table))
-    
-    tbl = table_name_d[table]
-    bres, maybe_filter_kwargs = try_json_to_filter_kwargs(tbl, value_json, ['changes'])
-    if not bres:
-        return maybe_filter_kwargs
-
-    bres, maybe_changes_kwargs = try_json_to_filter_kwargs(tbl, value_json['changes'])
-    if not bres:
-        return maybe_changes_kwargs
-
-    reslo = tbl.query.filter_by(**maybe_filter_kwargs).all()
-    if reslo:
-        db_session.begin()
-        try:
-            for obj in reslo:
-                update_table_object(obj, **maybe_changes_kwargs)
-            db_session.commit()
-        except Exception as e:
-            db_session.rollback()
-            return api_500(str(e))
-
-        return api_200({'count': len(reslo)})
-    else:
-        return api_404()
+        return 400, msg_tbl_not_found_fmt.format(table)
+    return process_filter_request(bind_try_request)
         
+def table_arrayfilter_get(table, value_json):
+    def bind_try_request(**kwargs):
+        return lambda : try_request(pyrequests.get, kwargs['shd_addr'], value_json, '/{0}/arrayfilter'.format(table), kwargs['resp'])
+    if table not in table_name_d:
+        return 400, msg_tbl_not_found_fmt.format(table)
+    return process_filter_request(bind_try_request)
+
+def table_bulk_get(table):
+    def bind_try_request(**kwargs):
+        return lambda : try_request(pyrequests.get, kwargs['shd_addr'], {}, '/{0}'.format(table), kwargs['resp'])
+    if table not in table_name_d:
+        return 400, msg_tbl_not_found_fmt.format(table)
+    return process_filter_request(bind_try_request)
 
 ### Custom ###
-def get_free_task_by_agent_id(agent_id):
-    pass
+def get_free_subtask_by_agent_id(agent_id, status = 'queued', newstatus = 'taken'):
+    bres, maybe_val = parse_field_value(table_name_d['agent'], 'id', agent_id)
+    if not bres:
+        return maybe_val
+    agent_id = maybe_val
+
+    ec, trait_idsq = table_filter_get('mtm_traitagent', dict(agent_id = agent_id))
+    if ec != 200:
+        return api_xxx(ec, trait_idsq)
+
+    ec, subtasksq = table_filter_get('subtask', dict(status = status))
+    if ec != 200:
+        return api_xxx(ec, subtasksq)
+
+    trait_ids = (mtmtr['trait_id'] for mtmtr in trait_idsq['result'])
+    task_ids = (sbtsk['task_id'] for sbtsk in subtasksq['result'])
+
+    ec, mtmttq = table_arrayfilter_get('mtm_traittask', dict(task_id = list(task_ids), trait_id = list(trait_ids)))
+    if ec != 200:
+        return api_xxx(ec, mtmttq)
+        
+    mtmtts = mtmttq['result']
+    if mtmtts:
+        mtmtto = mtmtts[0]
+        subtasks = subtasksq['result']
+        stsk = next(sbtsk for sbtsk in subtasks if sbtsk['task_id'] == mtmtto['task_id'])
+
+        changes = {'status' : newstatus, 'agent_id' : agent_id}
+        return put_item('subtask', 'id', stsk['id'], changes)
+    else:
+        return api_404()
+
+### Bulk interface ###
+
+@app.route('/<table>', methods=['GET'])
+def view_bulk_get(table):
+    code, res = table_bulk_get(table)
+    return api_xxx(code, res)
+
+### Array filtering ###
+@app.route('/<table>/arrayfilter', methods=['GET'])
+def view_arrayfilter_item_get(table):
+    value_json = request.get_json()
+    code, res = table_arrayfilter_get(table, value_json)
+    return api_xxx(code, res)
 
 ### Filtering (or access by compound PK) ###
 
 @app.route('/<table>/filter', methods=['GET'])
 def view_filter_item_get(table):
     value_json = request.get_json()
-    return table_filter_get(table, value_json)
+    code, res = table_filter_get(table, value_json)
+    return api_xxx(code, res)
 
 @app.route('/<table>/filter', methods=['PUT'])
 def view_filter_item_put(table):
     value_json = request.get_json()
-    return table_filter_put(table, value_json)
+    code, res = table_filter_put(table, value_json)
+    return api_xxx(code, res)
 
 @app.route('/<table>/filter', methods=['DELETE'])
 def view_filter_item_delete(table):
     value_json = request.get_json()
-    return table_filter_delete(table, value_json)
+    code, res = table_filter_delete(table, value_json)
+    return api_xxx(code, res)
 
 ### Access by singular PK ###
 
@@ -359,35 +376,38 @@ def rest_post_item(table):
     value = request.get_json()
     return post_item(table, value)
 
-### Sync ###
-
-@app.route('/sync', methods=['GET'])
-def rpc_sync(table):
-    value = request.get_json()
-    return sync(value)
-
 ### Custom ###
-@app.route('/custom/free_task_by_agent_id', methods=['GET'])
-def cst_free_task_by_agent_id(table):
+@app.route('/custom/get_free_subtask_by_agent_id', methods=['GET'])
+def cst_get_free_subtask_by_agent_id():
     if has_url_parameter('agent_id'):
-        return get_free_task_by_agent_id(get_url_parameter('agent_id'))
+        return get_free_subtask_by_agent_id(get_url_parameter('agent_id'))
     else:
         return api_400('Bad request: <agent_id> not found in input')
 
 ### Error handlers ###
+def api_xxx(code, msg):
+    if code == 200:
+        return api_200(msg)
+    elif code == 400:
+        return api_400(msg)
+    elif code == 404:
+        return api_404(msg)
+    elif code == 408:
+        return api_408(msg)
+    elif code == 456:
+        return api_456(msg)
+    elif code == 500:
+        return api_500(msg)
+
 def from_pyresponse(pyresp):
    if pyresp.status_code == 200:
        return api_200(pyresp.json())
-   elif pyresp.status_code == 404:
-       return api_404(pyresp.json()['error'])
-   elif pyresp.status_code == 400:
-       return api_403(pyresp.json()['error'])
-   elif pyresp.status_code == 500:
-       return api_401(pyresp.json()['error'])
+   elif pyresp.status_code in [400, 404, 408, 456, 500]:
+       return api_xxx(pyresp.status_code, pyresp.json()['error'])
    else:
        return pyresp
 
-@app.errorhandler(400)
+@app.errorhandler(500)
 def api_500(msg = 'Internal error'):
     return response_builder({'error': msg}, 500)
 
@@ -399,6 +419,14 @@ def api_400(msg = 'Bad request'):
 def api_404(msg = 'Not found'):
     return response_builder({'error': msg}, 404)
 
+@app.errorhandler(408)
+def api_408(msg = 'Timed out'):
+    return response_builder({'error': msg}, 408)
+
+@app.errorhandler(456)
+def api_456(msg = 'Unrecoverable error'):
+    return response_builder({'error': msg}, 456)
+
 @app.errorhandler(200)
 def api_200(data = {}):
     return response_builder(data, 200)
@@ -407,9 +435,13 @@ def api_200(data = {}):
         
 if __name__ == '__main__':
     host = '0.0.0.0'
-    beacon, dbhost, dbport, port = parse_db_argv(argv)
-    print('Starting with settings: Beacon: {0} DB: {1}:{2}, self: {3}:{4}'.format(beacon, dbhost, dbport, host, port))
+    beacon, port = parse_argv(sys.argv, 'data_backend:port[,data_backend:port]')
+    dbcss = sys.argv[3]
+    ss = dbcss.split(',')
+    app.config.update(DATA_BACKENDS = ss)
+    print('Starting with settings: Beacon: {0} self: {1}:{2} data_backends: {3}'.format(beacon, host, port, ss))
 
-    bw = BeaconWrapper(beacon, port, 'sevices/sharding')
+    bw = BeaconWrapper(beacon, port, 'services/sharding')
     bw.beacon_setter()
+    shards = list(map(lambda x: shard_name_fmt.format(x), app.config['DATA_BACKENDS'][:SHARDS_COUNT]))
     app.run(host = host, port = port)
