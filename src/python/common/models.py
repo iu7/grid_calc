@@ -103,6 +103,7 @@ def init_models(Base):
             filename_fields = [],\
             pk_field = 'id',\
             fk_fields = [],\
+            duplicatable = False,\
         )),\
 \
         id = Column(Integer(), primary_key = True, autoincrement = True),\
@@ -133,6 +134,7 @@ def init_models(Base):
             filename_fields = [],\
             pk_field = 'id',\
             fk_fields = ['user_id'],\
+            duplicatable = False,\
         )),\
 \
         id = Column(Integer(), primary_key = True, autoincrement = True),\
@@ -160,6 +162,7 @@ def init_models(Base):
             filename_fields = [],\
             pk_field = 'id',\
             fk_fields = [],\
+            duplicatable = False,\
         )),\
 \
         id = Column(Integer(), primary_key = True, autoincrement = True),\
@@ -183,6 +186,7 @@ def init_models(Base):
             filename_fields = ['archive_name'],\
             pk_field = 'id',\
             fk_fields = [],\
+            duplicatable = False,\
         )),\
 \
         id = Column(Integer(), primary_key = True, autoincrement = True),\
@@ -208,6 +212,7 @@ def init_models(Base):
             filename_fields = [],\
             pk_field = 'id',\
             fk_fields = [],\
+            duplicatable = False,\
         )),\
 \
         id = Column(Integer(), primary_key = True, autoincrement = True),\
@@ -240,6 +245,7 @@ def init_models(Base):
             filename_fields = ['archive_name'],\
             pk_field = 'id',\
             fk_fields = ['agent_id', 'task_id'],\
+            duplicatable = True,\
         )),\
 \
         id = Column(Integer(), primary_key = True, autoincrement = True),\
@@ -267,6 +273,7 @@ def init_models(Base):
             filename_fields = [],\
             pk_field = None,\
             fk_fields = ['trait_id', 'agent_id'],\
+            duplicatable = False,\
         )),\
 \
         trait_id = Column(Integer(), primary_key = True),\
@@ -288,6 +295,7 @@ def init_models(Base):
             filename_fields = [],\
             pk_field = None,\
             fk_fields = ['trait_id', 'task_id'],\
+            duplicatable = False,\
         )),\
 \
         trait_id = Column(Integer(), primary_key = True),\

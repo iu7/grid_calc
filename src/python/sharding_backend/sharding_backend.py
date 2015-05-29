@@ -116,6 +116,13 @@ def post_item(table, value_json):
     if not bres:
         return maybe_kwargs
     
+    ec, resp = table_filter_get(table, value_json)
+    if ec in [408, 456]:
+        return api_xxx(ec, resp)
+    if ec == 200:
+        if not tbl.metainf.duplicatable:
+            return api_500('Entry already exists')
+
     shd_addr = to_shd_addr(round_robin_next())
     resp = None
     try:
@@ -125,7 +132,7 @@ def post_item(table, value_json):
         )
     except Exception as e:
         print(wrn_timed_out_shd_fmt.format(shd_addr))
-        return api_456(msg_timed_out_shard_fmt.format(shd_addr))
+        return api_408(msg_timed_out_shard_fmt.format(shd_addr))
 
     return from_pyresponse(resp)
 
@@ -150,7 +157,7 @@ def put_item(table, pkf, pkfvs, value_json):
             )
         except Exception as e:
             print(wrn_timed_out_shd_fmt.format(shd_addr))
-            return api_456(msg_timed_out_shard_fmt.format(shd_addr))
+            return api_408(msg_timed_out_shard_fmt.format(shd_addr))
 
         return from_pyresponse(resp)
     else:
@@ -174,7 +181,7 @@ def delete_item(table, pkf, pkfvs):
             resp = pyrequests.delete(shd_addr + '/{0}/{1}/{2}'.format(table, pkf, pkfvs))
         except Exception as e:
             print(wrn_timed_out_shd_fmt.format(shd_addr))
-            return api_456(msg_timed_out_shard_fmt.format(shd_addr))
+            return api_408(msg_timed_out_shard_fmt.format(shd_addr))
 
         return from_pyresponse(resp)
     else:
