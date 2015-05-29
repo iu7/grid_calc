@@ -24,21 +24,21 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 @app.route('/nodes', methods=['POST'])
 def nodesHandler():
-    r = requests.post(bw.addresses['balancer'] + '/nodes', \
+    r = requests.post(bw['balancer'] + '/nodes', \
         data = request.data, \
         headers = {'content-type':'application/json'})
     return r.text, r.status_code
     
 @app.route('/nodes/<string:nodeid>', methods=['PUT'])
 def nodesSpecificHandler(nodeid):
-    r = requests.put(bw.addresses['balancer'] + '/nodes/' + nodeid, \
+    r = requests.put(bw['balancer'] + '/nodes/' + nodeid, \
         data = request.data, \
         headers = {'content-type':'application/json'})
     return r.text, r.status_code
     
 @app.route('/tasks/newtask', methods=['GET'])
 def newTaskHandler():
-    r = requests.get(bw.addresses['balancer'] + '/tasks/newtask', \
+    r = requests.get(bw['balancer'] + '/tasks/newtask', \
         data = request.data, \
         headers = {'content-type':'application/json'})
     return r.text, r.status_code
@@ -51,10 +51,10 @@ def submitTaskHandler(taskid):
         fullpath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(fullpath)
         
-        r = requests.post(bw.addresses['fileserver'] + '/static',
+        r = requests.post(bw['fileserver'] + '/static',
             files = {'file':open(fullpath, 'rb')})
         
-        r = requests.post(bw.addresses['balancer'] + '/tasks/'+taskid, \
+        r = requests.post(bw['balancer'] + '/tasks/'+taskid, \
             data = {'filename':nid}, \
             headers = {'content-type':'application/json'})
         return r.text, r.status_code

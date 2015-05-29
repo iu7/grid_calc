@@ -171,6 +171,7 @@ def init_models(Base):
         metainf = type ('metainf', (), dict(\
             col_type_d = {\
                 'id'           : int,\
+                'user_id'      : int,\
                 'max_time'     : int,\
                 'archive_name' : str,\
             },\
@@ -180,6 +181,7 @@ def init_models(Base):
         )),\
 \
         id = Column(Integer(), primary_key = True, autoincrement = True),\
+        user_id = Column(Integer()),\
         max_time = Column(Integer()),\
         archive_name = Column(String(200), nullable = False),\
 \
