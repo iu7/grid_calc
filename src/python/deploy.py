@@ -43,7 +43,7 @@ def auto_adjust_port_run(run_cmd_fmt, port_from, port_to, beacon_address = None)
 
     raise Exception('Unable to run in specified range {0} - {1}!'.format(port_from, port_to))
 
-def auto_port_deploy_beacon(beacon_run_fmt, beacon_address_fmt, port_start = 5554, port_max = 65535):
+def auto_port_deploy_beacon(beacon_run_fmt, beacon_address_fmt, port_start = 5000, port_max = 65535):
     port = auto_adjust_port_run(beacon_run_fmt, port_start, port_max)
     beacon_address = beacon_address_fmt.format(port = port)
     return port, beacon_address
