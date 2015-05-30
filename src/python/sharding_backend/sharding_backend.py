@@ -1,3 +1,5 @@
+#!/bin/env python
+
 import os, sys
 PACKAGE_PARENT = '..'
 SCRIPT_DIR = os.path.dirname(os.path.realpath(os.path.join(os.getcwd(), os.path.expanduser(__file__))))
@@ -16,6 +18,7 @@ from common.common import get_url_parameter, has_url_parameter, response_builder
 
 app = Flask(__name__)
 app.config.update(DEBUG = True)
+app.config.update(GRID_CALC_ROLE = 'SHARDING_BACKEND')
 app.config.update(DATA_BACKENDS = None)
 app.config.update(ROUND_ROBIN = 0)
 
@@ -116,6 +119,13 @@ def post_item(table, value_json):
     if not bres:
         return maybe_kwargs
     
+    ec, resp = table_filter_get(table, value_json)
+    if ec in [408, 456]:
+        return api_xxx(ec, resp)
+    if ec == 200:
+        if not tbl.metainf.duplicatable:
+            return api_500('Entry already exists')
+
     shd_addr = to_shd_addr(round_robin_next())
     resp = None
     try:
@@ -125,7 +135,7 @@ def post_item(table, value_json):
         )
     except Exception as e:
         print(wrn_timed_out_shd_fmt.format(shd_addr))
-        return api_456(msg_timed_out_shard_fmt.format(shd_addr))
+        return api_408(msg_timed_out_shard_fmt.format(shd_addr))
 
     return from_pyresponse(resp)
 
@@ -150,7 +160,7 @@ def put_item(table, pkf, pkfvs, value_json):
             )
         except Exception as e:
             print(wrn_timed_out_shd_fmt.format(shd_addr))
-            return api_456(msg_timed_out_shard_fmt.format(shd_addr))
+            return api_408(msg_timed_out_shard_fmt.format(shd_addr))
 
         return from_pyresponse(resp)
     else:
@@ -174,7 +184,7 @@ def delete_item(table, pkf, pkfvs):
             resp = pyrequests.delete(shd_addr + '/{0}/{1}/{2}'.format(table, pkf, pkfvs))
         except Exception as e:
             print(wrn_timed_out_shd_fmt.format(shd_addr))
-            return api_456(msg_timed_out_shard_fmt.format(shd_addr))
+            return api_408(msg_timed_out_shard_fmt.format(shd_addr))
 
         return from_pyresponse(resp)
     else:
@@ -441,7 +451,8 @@ if __name__ == '__main__':
     app.config.update(DATA_BACKENDS = ss)
     print('Starting with settings: Beacon: {0} self: {1}:{2} data_backends: {3}'.format(beacon, host, port, ss))
 
-    bw = BeaconWrapper(beacon, port, 'services/sharding')
+    bw = BeaconWrapper(beacon, port, 'services/database')
     bw.beacon_setter()
     shards = list(map(lambda x: shard_name_fmt.format(x), app.config['DATA_BACKENDS'][:SHARDS_COUNT]))
+    print(app.config['GRID_CALC_ROLE'])
     app.run(host = host, port = port)

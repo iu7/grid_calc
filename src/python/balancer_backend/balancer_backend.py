@@ -1,3 +1,5 @@
+#!/bin/env python
+
 import os, sys
 PACKAGE_PARENT = '..'
 SCRIPT_DIR = os.path.dirname(os.path.realpath(os.path.join(os.getcwd(), os.path.expanduser(__file__))))
@@ -16,6 +18,7 @@ from common.common import *
 bw = None
 
 app = Flask(__name__)
+app.config.update(GRID_CALC_ROLE = 'BALANCER_BACKEND')
 
 UPLOAD_FOLDER = '/uploads'
 ALLOWED_EXTENSIONS = set(['zip'])
@@ -129,9 +132,9 @@ if __name__ == '__main__':
     beacon, port = parse_argv(sys.argv)
     print('Starting with settings: beacon:{0} self: {1}:{2}'.format(beacon, host, port))
     
-    global bw
     bw = BeaconWrapper(beacon, port, 'services/balancer', {'database'})
     bw.beacon_setter()
     bw.beacon_getter()
     cleaner()
+    print(app.config['GRID_CALC_ROLE'])
     app.run(host = host, port = port)

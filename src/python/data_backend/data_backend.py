@@ -1,3 +1,5 @@
+#!/bin/env python
+
 import os, sys
 PACKAGE_PARENT = '..'
 SCRIPT_DIR = os.path.dirname(os.path.realpath(os.path.join(os.getcwd(), os.path.expanduser(__file__))))
@@ -13,6 +15,7 @@ from common.sharding_settings import encode_pkv as sh_ev, decode_pkv as sh_dv, S
 
 app = Flask(__name__)
 app.config.update(DEBUG = True)
+app.config.update(GRID_CALC_ROLE = 'DATA_BACKEND')
 
 ###>> MAIN ###
 def init_conn_string(dbhost, dbport = 5432):
@@ -25,7 +28,7 @@ if __name__ == '__main__':
 
     init_conn_string(dbhost, dbport)
 else:
-    init_conn_string('10.0.0.10', 5432)
+    init_conn_string('10.0.0.20', 5432)
 ###<< MAIN ##
 
 ###>> init models
@@ -393,8 +396,9 @@ def api_200(data = {}):
 ### Other ###
 
 if __name__ == '__main__':
-    bw = BeaconWrapper(beacon, port, 'services/database')
+    bw = BeaconWrapper(beacon, port, 'services/shard')
     bw.beacon_setter()
+    print(app.config['GRID_CALC_ROLE'])
     print('#' * 80)
     print('IMPORTANT: Acting as shard #{0} of {1}'.format(SHARD_NUMBER, SHARDS_COUNT))
     print('This means that all autoincrement IDs WILL be changed accordingly.')

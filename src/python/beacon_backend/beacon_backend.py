@@ -1,3 +1,5 @@
+#!/bin/env python
+
 import os, sys
 PACKAGE_PARENT = '..'
 SCRIPT_DIR = os.path.dirname(os.path.realpath(os.path.join(os.getcwd(), os.path.expanduser(__file__))))
@@ -17,6 +19,7 @@ collector_cycletime = 10
 
 app = Flask(__name__)
 app.config.update(DEBUG=True)
+app.config.update(GRID_CALC_ROLE = 'BEACON_BACKEND')
 
 services = {}
 
@@ -107,4 +110,5 @@ if __name__ == '__main__':
     print('Starting with settings: self: {0}:{1}'.format(host, port))
     
     collector()
+    print(app.config['GRID_CALC_ROLE'])
     app.run(host = host, port = port)
