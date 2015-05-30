@@ -16,25 +16,29 @@ mtm_table_name_d = {}
 def random_string(size):
     return ''.join([random.choice(string.ascii_letters) for i in range(size)])
 
+def check_input(self, **kwargs):
+    if not all(map(lambda fld: fld in kwargs, self.metainf.required_flds)):
+        raise Exception('{0}: not enough parameters in __init__'.format(type(self).__name__))
+
 def fill_object(self, field_d, **kwargs):
     for k, v in kwargs.items():
         if k in field_d:
             setattr(self, k, v)
         else:
-            raise Exception('{0}: extra parameter <{1}> in __init__!').format(self.__name__, k)
+            raise Exception('{0}: extra parameter <{1}> in __init__!'.format(type(self).__name__, k))
+
+def common_init(self, **kwargs):
+    check_input(self, **kwargs)
+    fill_object(self, self.metainf.col_type_d, **kwargs)
 
 ### User methods ###
 def user_init(self, **kwargs):
-    if len(kwargs) < 4:
-        raise Exception('User: not enough parameters')
-    fill_object(self, self.metainf.col_type_d, **kwargs)
+    common_init(self, **kwargs)
 
 ### UserSesson methods ###
 
 def usersession_init(self, **kwargs):
-    if len(kwargs) < 1:
-        raise Exception('UserSession: not enough parameters')
-    fill_object(self, self.metainf.col_type_d, **kwargs)
+    common_init(self, **kwargs)
     self.refresh()
 
 def usersession_refresh(self):
@@ -44,42 +48,32 @@ def usersession_refresh(self):
 ### Trait methods ###
 
 def trait_init(self, **kwargs):
-    if len(kwargs) < 2:
-        raise Exception('Trait: not enough parameters')
-    fill_object(self, self.metainf.col_type_d, **kwargs)
+    common_init(self, **kwargs)
 
 ### Agent methods ###
 
 def agent_init(self, **kwargs):
-    fill_object(self, self.metainf.col_type_d, **kwargs)
+    common_init(self, **kwargs)
 
 ### Task methods ###
 
 def task_init(self, **kwargs):
-    if len(kwargs) < 2:
-        raise Exception('Task: not enough parameters')
+    common_init(self, **kwargs)
     self.max_time = 3600 #seconds
-    fill_object(self, self.metainf.col_type_d, **kwargs)
 
 ### Subtask methods ###
 
 def subtask_init(self, **kwargs):
-    if len(kwargs) < 3:
-        raise Exception('Subtask: not enough parameters')
-    fill_object(self, self.metainf.col_type_d, **kwargs)
+    common_init(self, **kwargs)
     self.dateplaced = datetime.utcnow()
 
 ### MTM ###
 
 def mtm_traitagent_init(self, **kwargs):
-    if len(kwargs) < 2:
-        raise Exception('MTMTraitAgent: not enough parameters')
-    fill_object(self, self.metainf.col_type_d, **kwargs)
+    common_init(self, **kwargs)
 
 def mtm_traittask_init(self, **kwargs):
-    if len(kwargs) < 2:
-        raise Exception('MTMTraitTask: not enough parameters')
-    fill_object(self, self.metainf.col_type_d, **kwargs)
+    common_init(self, **kwargs)
 
 ###
 
@@ -103,6 +97,7 @@ def init_models(Base):
             filename_fields = [],\
             pk_field = 'id',\
             fk_fields = [],\
+            required_flds = ['username', 'pw_hash'],\
             duplicatable = False,\
         )),\
 \
@@ -134,6 +129,7 @@ def init_models(Base):
             filename_fields = [],\
             pk_field = 'id',\
             fk_fields = ['user_id'],\
+            required_flds = [],\
             duplicatable = False,\
         )),\
 \
@@ -162,7 +158,8 @@ def init_models(Base):
             filename_fields = [],\
             pk_field = 'id',\
             fk_fields = [],\
-            duplicatable = False,\
+            required_flds = [],\
+            duplicatable = True,\
         )),\
 \
         id = Column(Integer(), primary_key = True, autoincrement = True),\
@@ -186,6 +183,7 @@ def init_models(Base):
             filename_fields = ['archive_name'],\
             pk_field = 'id',\
             fk_fields = [],\
+            required_flds = [],\
             duplicatable = False,\
         )),\
 \
@@ -212,6 +210,7 @@ def init_models(Base):
             filename_fields = [],\
             pk_field = 'id',\
             fk_fields = [],\
+            required_flds = ['name', 'version'],\
             duplicatable = False,\
         )),\
 \
@@ -245,6 +244,7 @@ def init_models(Base):
             filename_fields = ['archive_name'],\
             pk_field = 'id',\
             fk_fields = ['agent_id', 'task_id'],\
+            required_flds = ['task_id', 'status'],\
             duplicatable = True,\
         )),\
 \
@@ -273,6 +273,7 @@ def init_models(Base):
             filename_fields = [],\
             pk_field = None,\
             fk_fields = ['trait_id', 'agent_id'],\
+            required_flds = ['trait_id', 'agent_id'],\
             duplicatable = False,\
         )),\
 \
@@ -295,6 +296,7 @@ def init_models(Base):
             filename_fields = [],\
             pk_field = None,\
             fk_fields = ['trait_id', 'task_id'],\
+            required_flds = ['trait_id', 'task_id'],\
             duplicatable = False,\
         )),\
 \
