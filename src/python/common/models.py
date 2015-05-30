@@ -177,6 +177,7 @@ def init_models(Base):
             col_type_d = {\
                 'id'           : int,\
                 'user_id'      : int,\
+                'task_name'    : str,\
                 'max_time'     : int,\
                 'archive_name' : str,\
             },\
@@ -191,6 +192,7 @@ def init_models(Base):
         id = Column(Integer(), primary_key = True, autoincrement = True),\
         user_id = Column(Integer()),\
         max_time = Column(Integer()),\
+        task_name = Column(String(200), nullable = False),\
         archive_name = Column(String(200), nullable = False),\
 \
         __init__ = task_init,\

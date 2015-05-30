@@ -28,12 +28,14 @@ def taskPlacing():
         payload = jsdec(request.data.decode('utf-8'))
         uid = payload['uid']
         traits = payload['traits']
+        task_name = payload['task_name']
         for trait in traits:
             _ = trait['name']
             _ = trait['version']
         
         archive_name = payload['archive_name']
         assert archive_name == secure_filename(archive_name)
+        assert task_name == secure_filename(task_name)
         subtask_count = int(payload['subtask_count'])
         max_time = int(payload['max_time'])
     except:
@@ -43,6 +45,7 @@ def taskPlacing():
         data = jsenc({\
             'user_id':uid, \
             'max_time':max_time, \
+            'task_name':task_name, \
             'archive_name':archive_name}), \
         headers = {'content-type':'application/json'}).json()['id']
     
@@ -69,17 +72,15 @@ def taskViewing():
     except: 
         tasks = []
     
+    taskpars = []
     for task in tasks:
-        try: subtasks = jsr('get', bw['database'] + '/subtask/filter', {'task_id':task['id']}).json()['result']
-        except: subtasks = []
+        subtasks = jsr('get', bw['database'] + '/subtask/filter', {'task_id':task['id']})
         for subtask in subtasks:
-            try: 
-                subtask['agent'] = jsr('get', bw['database'] + '/agent/' + subtask['agent_id']).json()
-            except:
-                subtask['agent'] = None
-            subtask.pop('agent_id', None)
-        task['subtasks'] = subtasks
-    return jsenc({'status':'success', 'tasks':tasks}), 200
+            if (subtask['status'] == 'completed'):
+                taskpars.append({'taskname':task['task_name'], 'result':subtask['archive_name']})
+            else:
+                taskpars.append({'taskname':task['task_name'], 'status':subtask['status']})
+    return jsenc({'status':'success', 'tasks':taskpars}), 200
     
 @app.route('/tasks/<int:tid>', methods=['DELETE'])
 def taskCancelling(tid):
