@@ -1,5 +1,6 @@
-import os, sys
+#!/bin/env python
 
+import os, sys
 PACKAGE_PARENT = '..'
 SCRIPT_DIR = os.path.dirname(os.path.realpath(os.path.join(os.getcwd(), os.path.expanduser(__file__))))
 sys.path.append(os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT)))
@@ -16,6 +17,7 @@ from common.common import *
 bw = None
 
 app = Flask(__name__)
+app.config.update(GRID_CALC_ROLE = 'NODE_FROMTEND')
 
 UPLOAD_FOLDER = '/uploads'
 ALLOWED_EXTENSIONS = set(['zip'])
@@ -69,9 +71,9 @@ if __name__ == '__main__':
     beacon, port = parse_argv(sys.argv)
     print('Starting with settings: beacon:{0} self: {1}:{2}'.format(beacon, host, port))
     
-    global bw
     bw = BeaconWrapper(beacon, port, 'services/node_frontend', {'balancer', 'filesystem'})
     
     bw.beacon_setter()
     bw.beacon_getter()
+    print(app.config['GRID_CALC_ROLE'])
     app.run(host = host, port = port)

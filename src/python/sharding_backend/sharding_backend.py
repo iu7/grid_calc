@@ -1,3 +1,5 @@
+#!/bin/env python
+
 import os, sys
 PACKAGE_PARENT = '..'
 SCRIPT_DIR = os.path.dirname(os.path.realpath(os.path.join(os.getcwd(), os.path.expanduser(__file__))))
@@ -16,6 +18,7 @@ from common.common import get_url_parameter, has_url_parameter, response_builder
 
 app = Flask(__name__)
 app.config.update(DEBUG = True)
+app.config.update(GRID_CALC_ROLE = 'SHARDING_BACKEND')
 app.config.update(DATA_BACKENDS = None)
 app.config.update(ROUND_ROBIN = 0)
 
@@ -448,7 +451,8 @@ if __name__ == '__main__':
     app.config.update(DATA_BACKENDS = ss)
     print('Starting with settings: Beacon: {0} self: {1}:{2} data_backends: {3}'.format(beacon, host, port, ss))
 
-    bw = BeaconWrapper(beacon, port, 'services/sharding')
+    bw = BeaconWrapper(beacon, port, 'services/database')
     bw.beacon_setter()
     shards = list(map(lambda x: shard_name_fmt.format(x), app.config['DATA_BACKENDS'][:SHARDS_COUNT]))
+    print(app.config['GRID_CALC_ROLE'])
     app.run(host = host, port = port)

@@ -1,3 +1,5 @@
+#!/bin/env python
+
 import os, sys
 PACKAGE_PARENT = '..'
 SCRIPT_DIR = os.path.dirname(os.path.realpath(os.path.join(os.getcwd(), os.path.expanduser(__file__))))
@@ -16,6 +18,7 @@ from common.common import *
 
 app = Flask(__name__, static_path='/static')
 app.config.update(DEBUG = True, UPLOAD_FOLDER = 'static/')
+app.config.update(GRID_CALC_ROLE = 'FILE_BACKEND')
 
 filename_size = 32
 filename_ext = '.dat'
@@ -101,4 +104,5 @@ if __name__ == '__main__':
 
     bw = BeaconWrapper(beacon, port, 'services/filesystem')
     bw.beacon_setter()
+    print(app.config['GRID_CALC_ROLE'])
     app.run(host = host, port = port)
