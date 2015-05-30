@@ -26,30 +26,11 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 def nodesHandler():
     traits = jsdec(request.data.decode('utf-8'))['traits']
         
-    nid = requests.post(bw.addresses['database'] + '/agent', \
+    nid = requests.post(bw['database'] + '/agent', \
         data = jsenc({}), \
         headers = {'content-type':'application/json'}).json()['id']
         
-    try:
-        for trait in traits:
-            jstrait = jsenc(trait)
-            existing = requests.get(bw.addresses['database'] + '/trait/filter', \
-                data = jstrait, \
-                headers = {'content-type':'application/json'})
-            existing = existing.json()['result'] if existing.status_code == 200 else []
-            
-            tid = existing[0]['id'] if existing else \
-                requests.post(bw.addresses['database'] + '/trait', \
-                    data = jstrait, \
-                    headers = {'content-type':'application/json'}).json()['id']
-            
-            requests.post(bw.addresses['database']+'/mtm_traitagent', \
-                data = jsenc({'agent_id':nid, 'trait_id':tid}), \
-                headers =  {'content-type':'application/json'}).json()['trait_id']
-    except Exception as e:
-        print (str(e))
-        return jsenc({'status':'failure'}), 422
-    return jsenc({'status':'success', 'nodeid':nid}), 200
+    return place_bulk_traits(traits, 'agent', nid, bw['database'])
     
 @app.route('/nodes/<string:nid>', methods=['PUT'])
 def nodesSpecificHandler(nid):
@@ -61,7 +42,7 @@ def nodesSpecificHandler(nid):
         else:
             activenodes[nid].Update()
     else:
-        subtask = requests.get(bw.addresses['database']+'/subtask/filter', \
+        subtask = requests.get(bw['database']+'/subtask/filter', \
             data = jsenc({'agent_id':nid}), \
             headers = {'content-type':'application/json'}).json()['result'][0]
         sid = subtask['id']
@@ -75,13 +56,13 @@ def nodesSpecificHandler(nid):
 def newTaskHandler():
     if not 'nodeid' in request.form: return '', 422
     nid = request.form['nodeid']
-    r = requests.get(bw.addresses['database']+'/custom/get_free_subtask_by_agent_id', \
+    r = requests.get(bw['database']+'/custom/get_free_subtask_by_agent_id', \
         data = {'agent_id':nid})
     if (r.status_code == 200):
         subtask = r.json()
         sid = subtask['id'] #result_archive
         tid = task['task_id']
-        task = requests.get(bw.addresses['database']+'/task/'+tid).json()
+        task = requests.get(bw['database']+'/task/'+tid).json()
         archive_name = task['archive_name']
         
         activenodes[nid] = ActiveNode('Was assigned task', tid, sid, nid)
@@ -97,7 +78,7 @@ def submitTaskHandler(taskid):
     filename = request.form['filename']
     if nid in activenodes: 
         sid = activenodes[nid].tid
-        r = requests.put(bw.addresses['database']+'/subtask/'+sid, \
+        r = requests.put(bw['database']+'/subtask/'+sid, \
             data = jsenc({'archive_name':filename, 'status':'finished'}))
     return jsenc({'status':'success'}), 200
 

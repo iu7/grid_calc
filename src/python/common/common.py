@@ -4,6 +4,49 @@ import threading, time
 import sys
 import jsonpickle
 
+# [{'name':'tr1', 'version':'v1'}]
+# 'agent' / 'task'
+# 7
+# http://example.com:0123
+
+def jsr(method, address, data):
+    return getattr(pyrequests, method)(data = data, headers = {'content-type':'application/json'})
+
+def place_bulk_traits(arroftraits, itemtype, jsonid, dbadr):
+    traits = jsdec(request.data.decode('utf-8'))['traits']
+        
+    nid = requests.post(dbadr + '/' + itemtype, \
+        data = jsenc({}), \
+        headers = {'content-type':'application/json'}).json()['id']
+        
+    try:
+        for trait in traits:
+            jstrait = jsenc(trait)
+            existing = requests.get(dbadr + '/trait/filter', \
+                data = jstrait, \
+                headers = {'content-type':'application/json'})
+            existing = existing.json()['result'] if existing.status_code == 200 else []
+            
+            tid = existing[0]['id'] if existing else \
+                requests.post(dbadr + '/trait', \
+                    data = jstrait, \
+                    headers = {'content-type':'application/json'}).json()['id']
+            
+            requests.post(dbadr+'/mtm_trait'+itemtype, \
+                data = jsenc({(itemtype + '_id'):nid, 'trait_id':tid}), \
+                headers =  {'content-type':'application/json'}).json()['trait_id']
+    except Exception as e:
+        return jsenc({'status':'failure'}), 422
+    return jsenc({'status':'success', (itemtype + '_id'):nid}), 200
+
+def jsdec(o):
+    return jsonpickle.decode(o)
+
+def jsenc(o):
+    return jsonpickle.encode(o, unpicklable=False)
+
+### flask.request related ###
+
 def response_builder(r, s):
     resp = None
     try:
@@ -68,7 +111,6 @@ def parse_beacon_argv(argv, custmom_msg = ''):
 ### Beacon related ###
 
 class BeaconWrapper:
-    beacon_port = None
     selfaddress = None
     beacon_adapter_cycletime = 10
     beacon = None
@@ -87,6 +129,9 @@ class BeaconWrapper:
         for target in (targets if targets != None else {}):
             self.addresses[target] = None
 
+    def __getitem__(self,index):
+        return self.addresses[index]
+        
     def errorBeacon(self):
         self.state = self.stateError
         print ('Unable to reach beacon')
