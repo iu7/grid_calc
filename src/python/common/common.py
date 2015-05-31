@@ -1,5 +1,6 @@
 from flask import *
 import requests as pyrequests
+import json as pyjson
 import threading, time
 import jsonpickle
 import os, sys, platform
@@ -9,8 +10,8 @@ import os, sys, platform
 # 7
 # http://example.com:0123
 
-def jsr(method, address, data):
-    return getattr(pyrequests, method)(data = data, headers = {'content-type':'application/json'})
+def jsr(method, address, data = {}):
+    return getattr(pyrequests, method)(address, data = pyjson.dumps(data), headers = {'Content-type': 'application/json', 'Accept': 'text/plain'})
 
 def place_bulk_traits(arroftraits, itemtype, jsonid, dbadr):
     traits = jsdec(request.data.decode('utf-8'))['traits']

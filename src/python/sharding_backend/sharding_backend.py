@@ -121,8 +121,9 @@ def post_item(table, value_json):
     if ec in [408, 456]:
         return api_xxx(ec, resp)
     if ec == 200:
-        if not tbl.metainf.duplicatable:
-            return api_500('Entry already exists')
+        if len(resp['result']) != 0:
+            if not tbl.metainf.duplicatable:
+                return api_500('Entry already exists')
 
     shd_addr = to_shd_addr(round_robin_next())
     resp = None
