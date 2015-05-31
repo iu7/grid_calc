@@ -22,10 +22,9 @@
 \usepackage{xcolor} % colors!
 \usepackage{enumitem} % for unboxed description labels (long ones)
 \usepackage{caption}
-\usepackage{array}
-\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
-\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
-\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\usepackage{multirow}
+\usepackage{varwidth}
+\usepackage{longtable}
 
 \defaultfontfeatures{Mapping=tex-text} % for converting "--" and "---"
 \setmainfont{CMU Serif}
@@ -104,40 +103,127 @@
 
 \section{Тестирование}
 \subsection{Модульное тестирование}
-Производится модульное тестирование модуля сервера данных, отвечающего за работу комплексного запроса get\_free\_subtask\_by\_agent\_id.
+Статический класс DataMethods:
 
-Тестрирование производится при помощи библиотеки unittest в автоматическом режиме.
-Тест самостоятельно геренирует входные данные.
-Тест не генерирует дополнительного вывода в случае корректной работы, кроме унифицированного библиотекой unittest.
 
-Все тесты были пройдены успешно.
+Представляет собой интерфейс бекенда данных.
 
-Типовые тесты:
 
-\begin{table}[h]
-  \begin{tabu}{|L{3.5cm}|X[c]|L{5cm}|}
-  	\hline
-  	Тестируемый метод                  & Входные данные                                                             & Выходные данные \\ \hline
-  	post\_item                         & 'trait', \{"name":"trait1", "verison":"1.0"\}                              & 200 OK          \\ \hline
-  	post\_item                         & 'agent', \{\}                                                              & 200 OK          \\ \hline
-  	post\_item                         & 'agent', \{\}                                                              & 200 OK          \\ \hline
-  	post\_item                         & 'task', \{"max\_time":160, "archive\_name":"cocoque"\}                     & 200 OK          \\ \hline
-  	post\_item                         & 'subtask', \{"task\_id":1, "status":"queued", "archive\_name":"cocoque0"\} & 200 OK          \\ \hline
-  	post\_item                         & 'mtm\_traitagent', \{"trait\_id":1,"agent\_id":1\}                         & 200 OK          \\ \hline
-  	post\_item                         & 'mtm\_traittask', \{"trait\_id":1,"task\_id":1\}                           & 200 OK          \\ \hline
-  	get\_free\_subtask \_by\_agent\_id & 1                                                                          & 200 OK          \\ \hline
-  	get\_free\_subtask \_by\_agent\_id & 2                                                                          & 404 NOT FOUND   \\ \hline
-  	get\_free\_subtask \_by\_agent\_id & 'text'                                                                     & 400 BAD REQUEST \\ \hline
-  \end{tabu}
+Производится тестирование класса DataMethods с использованием методики тестирования -- разбиение на уровне класса на категории по функциональности. Категория объединяет в себе методы класса, выполняющие близкую по смыслу функциональность.
+
+
+Методы класса можно разбить на 3 категории по функциональности:
+\begin{itemize}
+  \item методы получения данных;
+  \item методы изменения данных;
+  \item методы удаления данных. 
+\end{itemize}
+
+\begin{table}[h!]
+\caption{Методы класса DataMethodsFilter}
+\begin{tabu} to \textwidth {|c|X|}
+\hline
+Название метода & Примечания \\
+\hline
+\multirow{3}{*}{get\_item} & param: table [ str ] \\
+                           & param: value\_json[ dict ] \\
+                           & Возвращает все элементы таблицы с именем table, удовлетворяющие фильтру value\_json \\
+\hline
+\multirow{3}{*}{put\_item} & param: table [ str ] \\
+                           & param: value\_json [ dict ] \\
+                           & Изменяет все элементы таблицы с именем table, удовлетворяющие фильтру value\_json \\
+\hline
+\multirow{3}{*}{delete\_item} & param: table [ str ] \\
+                           & param: value\_json [ dict ] \\
+                           & Удаляет все элементы таблицы с именем table, удовлетворяющие фильтру value\_json \\
+\hline
+\end{tabu}
 \end{table}
 
-\subsubsection{Код теста}
-\lstinputlisting[language=Python]{src/data_backend_ut.py}
+%%%
+\clearpage
+%%%
 
-\subsubsection{Унифицированный вывод библиотеки unittest}
-\lstinputlisting{src/data_backend_ut.log}
+\begin{table}[h]
+\caption{Категория 1 -- Тестирование метода получения данных}
+\begin{tabu} to \textwidth {|c|X|}
+\hline
+Название теста & TestGetItemEmpty \\ \hline
+Тестируемый метод & get\_item \\ \hline
+Описание теста & Проверка получения данных из БД, пустой таблицы trait \\ \hline
+Ожидаемый результат & Cловарь с пустым списком в ключе ``result'' \\ \hline
+Степень важности & Фатальная \\ \hline
+Результат теста & Тест пройден \\ \hline
+\end{tabu}
+\end{table}
+
+%%%
+
+\begin{table}[h]
+\caption{Категория 1 -- Тестирование метода получения данных}
+\begin{tabu} to \textwidth {|c|X|}
+\hline
+Название теста & TestGetItemGeneral \\ \hline
+Тестируемый метод & get\_item \\ \hline
+\multirow{4}{*}{Описание теста} & Проверка изменения данных в БД, в таблице trait, предварительно наполненной записями \\
+                                & name = ``test\_name'', version = ``1.0'' \\
+                                & name = ``test\_name'', version = ``2.0'', \\
+                                & по фильтру \{``name'':``test\_name''\} \\
+\hline
+\multirow{3}{*}{Ожидаемый результат} & Словарь \{``result'':[\{``name'':``test\_name'', \\
+                                & ``version'':``1.0''\}, \{``name'':``test\_name'',\} \\
+                                & ``version'':``2.0''\}]\} \\
+\hline
+Степень важности & Фатальная \\ \hline
+Результат теста & Тест пройден \\ \hline
+\end{tabu}
+\end{table}
+
+%%%
+\clearpage
+%%%
+
+\begin{table}[h]
+\caption{Категория 2 -- Тестирование метода изменения данных}
+\begin{tabu} to \textwidth {|c|X|}
+\hline
+Название теста & TestPutItem \\ \hline
+Тестируемый метод & put\_item \\ \hline
+\multirow{4}{*}{Описание теста} & Проверка изменения данных в БД, в таблице trait, предварительно наполненной записями \\
+                                & name = ``test\_name'', version = ``1.0'' \\
+                                & name = ``test\_name'', version = ``2.0'', \\
+                                & по фильтру \{``name'':``test\_name'',``changes'': \{``version'':``3.0''\}\} \\
+\hline
+Ожидаемый результат & Словарь \{``count'': 2\}, отражающий наличие двух произведенных изменений в БД \\ \hline
+Степень важности & Фатальная \\ \hline
+Результат теста & Тест пройден \\ \hline
+\end{tabu}
+\end{table}
+
+%%%
+
+\begin{table}[h]
+\caption{Категория 3 -- Тестирование метода удаления данных}
+\begin{tabu} to \textwidth {|c|X|}
+\hline
+Название теста & TestDeleteItem \\ \hline
+Тестируемый метод & delete\_item \\ \hline
+\multirow{4}{*}{Описание теста} & Проверка удаления данных в БД, в таблице trait, предварительно наполненной записями \\
+                                & name = ``test\_name'', version = ``1.0'' \\
+                                & name = ``test\_name'', version = ``2.0'', \\
+                                & по фильтру \{``name'':``test\_name''\} \\
+\hline
+Ожидаемый результат & Словарь \{``count'': 2\}, отражающий наличие двух произведенных удалений в БД \\ \hline
+Степень важности & Фатальная \\ \hline
+Результат теста & Тест пройден \\ \hline
+\end{tabu}
+\end{table}
 
 
+Вывод по результатам тестирования:\\
+Все тесты пройдены успешно, класс готов к использованию.
+
+\clearpage
 \subsection{Системное тестирование}
 Производится системное тестирования файлового сервера (методом чёрного ящика).
 Тест покрывает $100\%$ АПИ файлового сервера.
