@@ -22,20 +22,19 @@ sessions = {}
 @app.route('/register', methods=['POST'])
 def registration():
     try:
-        print(request.form)
         username = request.form['username']
         pw_hash = request.form['pw_hash']
     except:
         return jsenc({'status':'failure', 'message':'malformed syntax'}), 422
     
     try:
-        existing = jsr('get', bw['data_backend'] + '/User/filter', {'username':username}).json()['result'][0]['id']
+        existing = jsr('get', bw['data_backend'] + '/user/filter', {'username':username}).json()['result'][0]['id']
         return jsenc({'status':'failure', 'message':'Username taken'}), 422
     except:
         pass
         
     try:
-        uid = jsr('post', bw['data_backend'] + '/User', {'username':username, 'pw_hash':pw_hash}).json()['id']
+        uid = jsr('post', bw['data_backend'] + '/user', {'username':username, 'pw_hash':pw_hash}).json()['id']
         return jsenc({'status':'success', 'user_id':uid}), 200
     except:
         return jsenc({'status':'failure', 'message':'failed to register'}), 500       
@@ -48,7 +47,7 @@ def login():
     except:
         return jsenc({'status':'failure', 'message':'malformed syntax'}), 422
     try:
-        uid = jsr('get', bw['data_backend'] + '/User/filter', {'username':username, 'pw_hash':pw_hash}).json()['result'][0]['id']
+        uid = jsr('get', bw['data_backend'] + '/user/filter', {'username':username, 'pw_hash':pw_hash}).json()['result'][0]['id']
         if not uid in sessions:
             sessions[uid] = randomword(256)
         return jsenc({'status':'success', 'session_id':sessions[uid]}), 200
