@@ -225,11 +225,8 @@ def table_filter_get(table, value_json):
     ekws = encode_kwargs(tbl, maybe_kwargs)
 
     reslo = tbl.query.filter_by(**ekws).all()
-    if reslo:
-        resld = list(map(lambda x: to_dict(x), reslo))
-        return api_200({'result': resld})
-    else:
-        return api_404()
+    resld = list(map(lambda x: to_dict(x), reslo))
+    return api_200({'result': resld})
 
 def table_arrayfilter_get(table, value_json):
     tbl = table_name_d[table]
@@ -263,19 +260,16 @@ def table_filter_delete(table, value_json):
     ekws = encode_kwargs(tbl, maybe_kwargs)
 
     reslo = tbl.query.filter_by(**ekws).all()
-    if reslo:
-        db_session.begin()
-        try:
-            for obj in reslo:
-                db_session.delete(obj)
-            db_session.commit()
-        except Exception as e:
-            db_session.rollback()
-            return api_500(str(e))
-        
-        return api_200({'count': len(reslo)})
-    else:
-        return api_404()
+    db_session.begin()
+    try:
+        for obj in reslo:
+            db_session.delete(obj)
+        db_session.commit()
+    except Exception as e:
+        db_session.rollback()
+        return api_500(str(e))
+    
+    return api_200({'count': len(reslo)})
 
 def table_filter_put(table, value_json):
     tbl = table_name_d[table]
@@ -291,19 +285,16 @@ def table_filter_put(table, value_json):
     eckws = encode_kwargs(tbl, maybe_changes_kwargs)
 
     reslo = tbl.query.filter_by(**efkws).all()
-    if reslo:
-        db_session.begin()
-        try:
-            for obj in reslo:
-                update_table_object(obj, **eckws)
-            db_session.commit()
-        except Exception as e:
-            db_session.rollback()
-            return api_500(str(e))
+    db_session.begin()
+    try:
+        for obj in reslo:
+            update_table_object(obj, **eckws)
+        db_session.commit()
+    except Exception as e:
+        db_session.rollback()
+        return api_500(str(e))
 
-        return api_200({'count': len(reslo)})
-    else:
-        return api_404()
+    return api_200({'count': len(reslo)})
 
 def table_bulk_get(table):
     tbl = table_name_d[table]

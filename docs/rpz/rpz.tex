@@ -22,6 +22,9 @@
 \usepackage{xcolor} % colors!
 \usepackage{enumitem} % for unboxed description labels (long ones)
 \usepackage{caption}
+\usepackage{multirow}
+\usepackage{varwidth}
+\usepackage{longtable}
 
 \defaultfontfeatures{Mapping=tex-text} % for converting "--" and "---"
 \setmainfont{CMU Serif}
@@ -95,6 +98,12 @@
     }%
 }
 \makeatother
+
+\newcommand\LongMultirow[2]{%
+  \multirow{#1}*{%
+    \begin{varwidth}{5em}% --- or minipage, if you prefer a fixed width
+    \flushright #2%
+    \end{varwidth}}}
 
 \begin{document}
 
@@ -570,17 +579,21 @@ directory/subdirectory_file.extension
 
 \subsubsection{Пассивная часть}
 Исходя из требований к СХД и с учётом REST-методик, она должна предоставлять следующее API:
-
+Условные обозначания:
 \begin{itemize}
-  \item
-  \begin{description}
-    \item[Ресурс:] \url{/foo}
-    \item[Метод:] BAR
-    \item[Параметры:] lorem
-    \item[Результат:] ipsum
-    \item[Ошибки:] dolor
-  \end{description}
+  \item table -- имя таблицы в БД
+  \item PKC -- поле, являющееся (челочисленным) первичным ключом
+  \item GFSbAI -- get\_free\_subtask\_by\_agent\_id
+  \item object -- \{field: value, ...\}, JSON-представление табличного объекта
+  \item object <table> -- JSON-предтавление объекта определенной таблицы <table>
+  \item value <name> -- значение, передаваемое любым возможным способом
+  \item filter object -- object, содержащий не более чем полный набор полей табличного объекта
+  \item filter put object -- \{field:value, ..., ``changes'': filter object\}
+  \item list object -- список объектов
+  \item int -- целое число
 \end{itemize}
+
+\input{tex_api/sharding.tex}
 
 \subsection{Система балансировки нагрузки}
 --- собственно отвечает за координацию задач. имеет всё апи фронтенда вычислительных узлов (который просто редиректит запросы к ней), плюс некоторое апи по которому её опрашивают другие узлы комплекса.

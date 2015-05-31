@@ -1,0 +1,75 @@
+%\begin{table}[h!]
+\begin{longtabu} to \textwidth {*{4}{|c}|X|}
+\hline
+Адрес & Метод & Ввод & Код & Вывод \\
+\hline
+\multirow{5}{*}{/table}                & \multirow{3}{*}{POST}    & \multirow{3}{*}{object} 
+                                                                      & 200 & empty \\
+                                                                      \cline{4-5}
+                                       &                          &   & 400 & error: Incorrect / insufficient input \\
+                                                                      \cline{4-5}
+                                       &                          &   & 500 & error: Postgres error or ``entry already exists'' \\
+                                       \cline{2-5}
+                                       & \multirow{2}{*}{GET}     & \multirow{2}{*}{--}     
+                                                                      & 200 & \{``result'': list object\} \\
+                                                                      \cline{4-5}
+                                       &                          &   & 404 & error: Not found \\
+\hline
+\multirow{6}{*}{/table/filter}         & \multirow{2}{*}{GET}     & \multirow{2}{*}{filter object} 
+                                                                      & 200 & \{``result'': list object\} \\
+                                                                      \cline{4-5}
+                                       &                          &   & 400 & error: Incorrect fields/values specified \\
+                                       \cline{2-5}
+                                       & \multirow{2}{*}{PUT}     & \multirow{2}{*}{filter put object} 
+                                                                      & 200 & \{``count'': int\}\\
+                                                                      \cline{4-5}
+                                       &                          &   & 400 & error: Incorrect fields/values specified \\
+                                       \cline{2-5}
+                                       & \multirow{2}{*}{DELETE}  & \multirow{2}{*}{filter object}
+                                                                      & 200 & \{``count'': int\}\\
+                                                                      \cline{4-5}
+                                       &                          &   & 400 & error: Incorrect fields/values specified \\
+\hline
+\multirow{2}{*}{/table/arrayfilter}    & \multirow{2}{*}{GET}     & \multirow{2}{*}{arrayfilter object} 
+                                                                      & 200 & \{``result'': list object\} \\
+                                                                      \cline{4-5}
+                                       &                          &   & 400 & error: Incorrect fields/values specified \\
+%                                       \cline{2-5}
+%                                       & \multirow{2}{*}{PUT}     & \multirow{2}{*}{filter put object} 
+%                                                                      & 200 & \{``count'': int\}\\
+%                                                                      \cline{4-5}
+%                                       &                          &   & 400 & error: Incorrect fields/values specified \\
+%                                       \cline{2-5}
+%                                       & \multirow{2}{*}{DELETE}  & \multirow{2}{*}{filter object}
+%                                                                      & 200 & \{``count'': int\}\\
+%                                                                      \cline{4-5}
+%                                       &                          &   & 400 & error: Incorrect fields/values specified \\
+\hline
+\multirow{9}{*}{/table/PKC/value}      & \multirow{3}{*}{GET}  & \multirow{2}{*}{object} 
+                                                                      & 200 & object \\
+                                                                      \cline{4-5}
+                                       &                          &   & 400 & error: Incorrect fields/values specified \\
+                                                                      \cline{4-5}
+                                       &                          &   & 404 & error: Not found \\
+                                       \cline{2-5}
+                                       & \multirow{3}{*}{PUT}     & \multirow{2}{*}{object} 
+                                                                      & 200 & object \\
+                                                                      \cline{4-5}
+                                       &                          &   & 400 & error: Incorrect fields/values specified \\
+                                                                      \cline{4-5}
+                                       &                          &   & 404 & error: Not found \\
+                                       \cline{2-5}
+                                       & \multirow{3}{*}{DELETE}  & \multirow{2}{*}{object}
+                                                                      & 200 & object \\
+                                                                      \cline{4-5}
+                                       &                          &   & 400 & error: Incorrect fields/values specified \\
+                                                                      \cline{4-5}
+                                       &                          &   & 404 & error: Not found \\
+\hline
+\multirow{2}{*}{/custom/GFSbAI}        & \multirow{2}{*}{GET}     & \multirow{2}{*}{value agent\_id} 
+                                                                      & 200 & object subtask \\
+                                                                      \cline{4-5}
+                                       &                          &   & 400 & error: Incorrect value specified \\
+\hline
+\end{longtabu}
+%\end{table}
