@@ -10,6 +10,7 @@ import datetime
 import threading
 import time
 import requests
+import hashlib
 from werkzeug import secure_filename
 from common.common import *
 
@@ -25,6 +26,10 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 def unauthorized():
     return render_template('login.html', message='Неавторизованный доступ')
 
+@app.route('/', methods=['GET'])
+def default():
+        return redirect(url_for('loginpage'))
+    
 @app.route('/create', methods=['GET'])
 def create():
     sesid = request.cookies['session_id']
@@ -55,7 +60,7 @@ def getfile():
 #######################################################################
 
 def getuid(sesid):
-    return requests.get(bw['session_backend'], data={'session_id':sesid}).json()['user_id']
+    return requests.get(bw['session_backend']+'/auth', data={'session_id':sesid}).json()['user_id']
     
 @app.route('/logout', methods=['GET'])
 def logout():
@@ -74,7 +79,7 @@ def logout():
 def loginsubmit():
     try:
         login = request.form['login']
-        password = request.form['password']
+        pw_hash = hashlib.md5(request.form['password'].encode())
         button = request.form['button']
     except:
         return '', 400
@@ -82,13 +87,13 @@ def loginsubmit():
     if button == 'register':
         try:
             uid = requests.post(bw['session_backend']+'/register', \
-                data={'username':login, 'password':password})\
+                data={'username':login, 'pw_hash':pw_hash})\
                 .json()['user_id']
         except:
             return render_template('login.html', message='Ошибка регистрации')
     try:
         sid = requests.get(bw['session_backend'] + '/login', \
-            data={'username':login, 'password':password}).json()['session_id']
+            data={'username':login, 'pw_hash':pw_hash}).json()['session_id']
         response = make_response(redirect(url_for('state')))
         response.set_cookie('session_id', sid)
         return response
