@@ -90,8 +90,6 @@ def init_models(Base):
                 'id'      : int,\
                 'username': str,\
                 'pw_hash' : str,\
-                'mail'    : str,\
-                'phone'   : str\
             },\
             col_type_parsers = {},\
             filename_fields = [],\
@@ -104,8 +102,6 @@ def init_models(Base):
         id = Column(Integer(), primary_key = True, autoincrement = True),\
         username = Column(String(100), unique=True),\
         pw_hash = Column(String(256)),\
-        mail = Column(String(200)),\
-        phone = Column(String(11)),\
 \
         __init__ = user_init,\
         __repr__ = lambda self :', '.join(['{0}: {1}'.format(f, getattr(self, f)) for f in self.metainf.col_type_d.keys()])\

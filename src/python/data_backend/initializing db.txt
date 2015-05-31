@@ -1,0 +1,3 @@
+1) in data_backend.py, L31: 10.0.0.20->servadr
+2) from data_backend import *
+3) init_db()

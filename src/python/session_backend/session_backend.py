@@ -22,6 +22,7 @@ sessions = {}
 @app.route('/register', methods=['POST'])
 def registration():
     try:
+        print(request.form)
         username = request.form['username']
         pw_hash = request.form['pw_hash']
     except:
@@ -49,7 +50,7 @@ def login():
     try:
         uid = jsr('get', bw['data_backend'] + '/User/filter', {'username':username, 'pw_hash':pw_hash}).json()['result'][0]['id']
         if not uid in sessions:
-            sessions[uid] = randomword(32)
+            sessions[uid] = randomword(256)
         return jsenc({'status':'success', 'session_id':sessions[uid]}), 200
     except:
         return jsenc({'status':'failure', 'message':'Unauthorized'}), 403
