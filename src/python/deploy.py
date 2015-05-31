@@ -1,4 +1,4 @@
-#!/bin/env python
+
 #
 # Sample usage:
 # ./deploy.py 10.0.0.10:5432,10.0.0.20:5432 2>/dev/null

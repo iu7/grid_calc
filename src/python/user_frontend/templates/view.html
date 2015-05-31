@@ -2,7 +2,7 @@
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <html>
     <head>
-        <title>Состояние системы</title>
+        <title>Просмотр задач</title>
         <style type="text/css">
             body {font-family:Arial, Sans-Serif;}
             #container {width:300px; margin:0 auto;}
@@ -21,21 +21,32 @@
         <div id="container">
             <table class="tg">
                 <tr> 
-                    <th class=\"tg-031e\">Тип сервера</th>
-                    <th class=\"tg-031e\">Адрес сервера</th>
-                    <th class=\"tg-031e\">Состояние сервера</th>
+                    <th class=\"tg-031e\">Название задачи</th>
+                    <th class=\"tg-031e\">Состояние подзадачи</th>
                 </tr>
-                {% for server in servers %}
+                {% for task in tasks %}
                 <tr> 
-                    <td class=\"tg-031e\">{{server['type']}}</td>
-                    <td class=\"tg-031e\">{{server['address']}}</td>
-                    <td class=\"tg-031e\">{{server['state']}}</td>
+                    <td class=\"tg-031e\">{{task['taskname']}}</td>
+                    {% if 'result' in task %}
+                    <td class=\"tg-031e\"><a href="getfile?id={{task['result']}}">Выполнена</a></td>
+                    {% else %}
+                    <td class=\"tg-031e\">{{task['state']}}</td>
+                    {% endif %}
+                    <td class=\"tg-031e\">
+                    <form action ="/cancel?id={{task['task_id']}}" method="GET">
+                        <div class="line submit"> <button type="submit">Отменить</button> </div>
+                    </form>
+                    </td>
                 </tr>
                 {% endfor %}
             </table>
             
-            <form action ="/tasks" method="GET">
-                <div class="line submit"> <button type="submit">Просмотр задач</button> </div>
+            <form action ="/create" method="GET">
+                <div class="line submit"> <button type="submit">Создать новую задачу</button> </div>
+            </form>
+            
+            <form action ="/state" method="GET">
+                <div class="line submit"> <button type="submit">Просмотр состояния сети</button> </div>
             </form>
             
             <form action ="/logout" method="GET">
