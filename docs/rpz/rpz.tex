@@ -564,7 +564,7 @@ directory/subdirectory_file.extension
 
 Связи между разными типами хранимых данных предоставлены в виде ER-диаграммы на рис.~\ref{fig:db-er}.
 
-\begin{figure}
+\begin{figure}[h!]
   \centering
   \includegraphics[width=.9\linewidth]{diagrams/db/er}
   \caption{ER-диаграмма сущностей, хранимых в СХД}
@@ -579,7 +579,8 @@ directory/subdirectory_file.extension
 
 \subsubsection{Пассивная часть}
 Исходя из требований к СХД и с учётом REST-методик, она должна предоставлять следующее API:
-Условные обозначания:
+\\
+Условные обозначения:
 \begin{itemize}
   \item table -- имя таблицы в БД
   \item PKC -- поле, являющееся (челочисленным) первичным ключом
@@ -587,6 +588,7 @@ directory/subdirectory_file.extension
   \item object -- \{field: value, ...\}, JSON-представление табличного объекта
   \item object <table> -- JSON-предтавление объекта определенной таблицы <table>
   \item value <name> -- значение, передаваемое любым возможным способом
+  \item arrfilter object -- \{field: list value, ...\}
   \item filter object -- object, содержащий не более чем полный набор полей табличного объекта
   \item filter put object -- \{field:value, ..., ``changes'': filter object\}
   \item list object -- список объектов
