@@ -116,6 +116,9 @@ class BeaconWrapper:
     beacon_adapter_cycletime = 10
     beacon = None
     backend_port = None
+    
+    seterr = False
+    geterr = False
     stateNormal = 'Operating normally'
     stateError = 'Connection issues'
     setterEndpoint = None
@@ -142,8 +145,8 @@ class BeaconWrapper:
         print ('No ' + service + ' found') 
     
     def beacon_setter(self):
-        self.messaged = False
-        while (not self.messaged):
+        self.seterr = True
+        while (self.seterr):
             try:
                 if self.selfaddress == None:
                     self.selfaddress = pyrequests.post('/'.join([self.beacon, self.setterEndpoint]), data={'port':self.backend_port, 'state':self.state}).json()['address']
@@ -154,17 +157,19 @@ class BeaconWrapper:
                 thr.daemon = True
                 thr.start()
                 
-                self.state = self.stateNormal
-                self.messaged = True
+                self.seterr = False
+                if (not self.seterr) and (not self.geterr):
+                    self.state = self.stateNormal
             except:
+                self.seterr = True
                 self.errorBeacon()
                 time.sleep(5)
                 
     def beacon_getter(self):
-        gotadr = False
-        errorOccured = False
-        while (not gotadr):
+        self.geterr = True
+        while (self.geterr):
             try:
+                errorOccured = False
                 for sname in self.addresses.keys():
                     r = pyrequests.get(self.beacon + '/services/' + sname)
                     try: self.addresses[sname] = 'http://'+list(r.json().keys())[0]
@@ -172,13 +177,17 @@ class BeaconWrapper:
                         errorOccured = True
                         self.errorGeneric(sname)
                 
+                if errorOccured: raise 'Did not retrieve some address'
+                
                 thr = threading.Timer(self.beacon_adapter_cycletime, self.beacon_getter)
                 thr.daemon = True
                 thr.start()
-                gotadr = True
-                if not errorOccured:
+                
+                self.geterr = False
+                if (not self.seterr) and (not self.geterr):
                     self.state = self.stateNormal
             except:
+                self.geterr = True
                 self.errorBeacon()
                 time.sleep(5)
 
