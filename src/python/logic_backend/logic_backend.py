@@ -49,7 +49,7 @@ def taskPlacing():
             'archive_name':archive_name}), \
         headers = {'content-type':'application/json'}).json()['id']
     
-    for _ in range (0, subtask_count)
+    for _ in range (0, subtask_count):
         sid = requests.post(bw['database'] + '/subtask', \
             data = jsenc({
                 'task_id':tid, \

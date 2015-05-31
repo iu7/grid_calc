@@ -22,7 +22,8 @@ ALLOWED_EXTENSIONS = set(['zip'])
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-unauthorized = render_template('login.html', message='Неавторизованный доступ')
+def unauthorized():
+    return render_template('login.html', message='Неавторизованный доступ')
 
 @app.route('/create', methods=['GET'])
 def create():
@@ -53,7 +54,7 @@ def getfile():
 # done
 #######################################################################
 
-def getuid(sesid)
+def getuid(sesid):
     return requests.get(bw['session_backend'], data={'session_id':sesid}).json()['user_id']
     
 @app.route('/logout', methods=['GET'])
@@ -80,7 +81,7 @@ def loginsubmit():
           
     if button == 'register':
         try:
-            uid = requests.post(bw['session_backend']+'/register', \  
+            uid = requests.post(bw['session_backend']+'/register', \
                 data={'username':login, 'password':password})\
                 .json()['user_id']
         except:
@@ -105,7 +106,7 @@ def view():
         sesid = request.cookies['session_id']
         uid = getuid(sessid)
     except:
-        return unauthorized
+        return unauthorized()
     
     tasks = jsr('get', bw['logic_backend'] + '/tasks', {'uid':uid}).json()['tasks']
     
@@ -117,7 +118,7 @@ def state():
         sesid = request.cookies['session_id']
         uid = getuid(sessid)
     except:
-        return unauthorized
+        return unauthorized()
     
     services = requests.get(bw.beacon + '/services').json()
     servers = []
@@ -133,7 +134,7 @@ def cancel():
         sesid = request.cookies['session_id']
         uid = getuid(sessid)
     except:
-        return unauthorized
+        return unauthorized()
     try:
         taskid = int(request.args['id'])
     except:
@@ -148,7 +149,7 @@ if __name__ == '__main__':
     print('Starting with settings: beacon:{0} self: {1}:{2}'.format(beacon, host, port))
     
     global bw
-    bw = BeaconWrapper(beacon, port, 'services/user_frontend', {'logic_backend', 'filesystem'})
+    bw = BeaconWrapper(beacon, port, 'services/user_frontend', {'logic_backend', 'filesystem', 'session_backend'})
     
     bw.beacon_setter()
     bw.beacon_getter()

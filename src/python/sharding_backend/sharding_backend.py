@@ -1,4 +1,4 @@
-#!/bin/env python
+
 
 import os, sys
 PACKAGE_PARENT = '..'
