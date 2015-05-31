@@ -1,8 +1,8 @@
 from flask import *
 import requests as pyrequests
 import threading, time
-import sys
 import jsonpickle
+import os, sys, platform
 
 # [{'name':'tr1', 'version':'v1'}]
 # 'agent' / 'task'
@@ -180,4 +180,9 @@ class BeaconWrapper:
             except:
                 self.errorBeacon()
                 time.sleep(5)
-        
+
+### Platform-dependent ###
+def platform_dependent_on_run(backend_name):
+    osname = platform.system()
+    if osname == 'Linux':
+        os.system("echo $'\033]30;{0}\007'".format(backend_name))

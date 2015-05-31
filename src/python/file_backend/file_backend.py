@@ -1,5 +1,3 @@
-
-
 import os, sys
 PACKAGE_PARENT = '..'
 SCRIPT_DIR = os.path.dirname(os.path.realpath(os.path.join(os.getcwd(), os.path.expanduser(__file__))))
@@ -105,4 +103,5 @@ if __name__ == '__main__':
     bw = BeaconWrapper(beacon, port, 'services/filesystem')
     bw.beacon_setter()
     print(app.config['GRID_CALC_ROLE'])
+    platform_dependent_on_run(app.config['GRID_CALC_ROLE'])
     app.run(host = host, port = port)

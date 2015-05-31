@@ -16,6 +16,7 @@ from common.common import *
 bw = None
 
 app = Flask(__name__)
+app.config.update(GRID_CALC_ROLE = 'SESSION_BACKEND')
 
 sessions = {}
 
@@ -99,4 +100,5 @@ if __name__ == '__main__':
     bw = BeaconWrapper(beacon, port, 'services/session_backend', {'database'})
     bw.beacon_setter()
     bw.beacon_getter()
+    platform_dependent_on_run(app.config['GRID_CALC_ROLE'])
     app.run(host = host, port = port)

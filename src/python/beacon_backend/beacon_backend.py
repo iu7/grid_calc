@@ -1,5 +1,3 @@
-
-
 import os, sys
 PACKAGE_PARENT = '..'
 SCRIPT_DIR = os.path.dirname(os.path.realpath(os.path.join(os.getcwd(), os.path.expanduser(__file__))))
@@ -12,7 +10,7 @@ import threading
 import time
 import atexit
 
-from common.common import parse_beacon_argv
+from common.common import parse_beacon_argv, platform_dependent_on_run
 
 timeout = 20
 collector_cycletime = 10
@@ -111,4 +109,5 @@ if __name__ == '__main__':
     
     collector()
     print(app.config['GRID_CALC_ROLE'])
+    platform_dependent_on_run(app.config['GRID_CALC_ROLE'])
     app.run(host = host, port = port)

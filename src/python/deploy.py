@@ -1,5 +1,3 @@
-
-#
 # Sample usage:
 # ./deploy.py 10.0.0.10:5432,10.0.0.20:5432 2>/dev/null
 
@@ -9,6 +7,7 @@ SCRIPT_DIR = os.path.dirname(os.path.realpath(os.path.join(os.getcwd(), os.path.
 sys.path.append(os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT)))
 
 import subprocess, platform, shlex
+from time import sleep
 from common.sharding_settings import SHARDS_COUNT
 
 WINDOWS_DETACHED_PROCESS = 8
@@ -20,6 +19,7 @@ def run(cmd):
         args = ['py'] + cmd_args
         subprocess.Popen(args, creationflags=WINDOWS_DETACHED_PROCESS, close_fds=True)
     elif sysname == 'Linux':
+        cmd_args[0] = os.path.join(os.getcwd(), cmd_args[0])
         args = ['konsole', '--new-tab', '-e', 'python'] + cmd_args + ['&']
         subprocess.Popen(args, close_fds=True)
     else:
@@ -61,6 +61,7 @@ def auto_port_deploy(beacon_address, backends_run_fmt, port_start = 5000, port_m
     port = port_start
     for backend_fmt in backends_run_fmt:
         port = auto_adjust_port_run(backend_fmt, port + 1, port_max, beacon_address)
+        sleep(0.05)
  
 if __name__ == '__main__':
     beacon_host = 'localhost'
@@ -82,7 +83,10 @@ if __name__ == '__main__':
             'sharding_backend/sharding_backend.py {{beacon}} {{port}} {dbcaddrs}'.format(dbcaddrs = dbcaddrs),\
             'file_backend/file_backend.py {beacon} {port}',\
             'balancer_backend/balancer_backend.py {beacon} {port}',\
-            'node_frontend/node_frontend.py {beacon} {port}'
+            'session_backend/session_backend.py {beacon} {port}',\
+            'logic_backend/logic_backend.py {beacon} {port}',\
+            'node_frontend/node_frontend.py {beacon} {port}',\
+            'user_frontend/user_frontend.py {beacon} {port}',\
         ],\
         curport + 1,\
     )

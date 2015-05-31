@@ -1,5 +1,3 @@
-
-
 import os, sys
 PACKAGE_PARENT = '..'
 SCRIPT_DIR = os.path.dirname(os.path.realpath(os.path.join(os.getcwd(), os.path.expanduser(__file__))))
@@ -14,7 +12,7 @@ import threading
 from functools import reduce
 
 import settings
-from common.common import get_url_parameter, has_url_parameter, response_builder, BeaconWrapper, parse_argv
+from common.common import get_url_parameter, has_url_parameter, response_builder, BeaconWrapper, parse_argv, platform_dependent_on_run
 
 app = Flask(__name__)
 app.config.update(DEBUG = True)
@@ -455,4 +453,5 @@ if __name__ == '__main__':
     bw.beacon_setter()
     shards = list(map(lambda x: shard_name_fmt.format(x), app.config['DATA_BACKENDS'][:SHARDS_COUNT]))
     print(app.config['GRID_CALC_ROLE'])
+    platform_dependent_on_run(app.config['GRID_CALC_ROLE'])
     app.run(host = host, port = port)

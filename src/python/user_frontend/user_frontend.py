@@ -17,6 +17,7 @@ from common.common import *
 bw = None
 
 app = Flask(__name__)
+app.config.update(GRID_CALC_ROLE = 'USER_FRONTEND')
 
 UPLOAD_FOLDER = '/uploads'
 ALLOWED_EXTENSIONS = set(['zip'])
@@ -153,9 +154,9 @@ if __name__ == '__main__':
     beacon, port = parse_argv(sys.argv)
     print('Starting with settings: beacon:{0} self: {1}:{2}'.format(beacon, host, port))
     
-    global bw
     bw = BeaconWrapper(beacon, port, 'services/user_frontend', {'logic_backend', 'filesystem', 'session_backend'})
     
     bw.beacon_setter()
     bw.beacon_getter()
+    platform_dependent_on_run(app.config['GRID_CALC_ROLE'])
     app.run(host = host, port = port)

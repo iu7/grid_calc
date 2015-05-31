@@ -1,5 +1,3 @@
-
-
 import os, sys
 PACKAGE_PARENT = '..'
 SCRIPT_DIR = os.path.dirname(os.path.realpath(os.path.join(os.getcwd(), os.path.expanduser(__file__))))
@@ -10,7 +8,7 @@ from flask import *
 from werkzeug.routing import BaseConverter
 
 import settings
-from common.common import get_url_parameter, has_url_parameter, response_builder, BeaconWrapper, parse_db_argv
+from common.common import get_url_parameter, has_url_parameter, response_builder, BeaconWrapper, parse_db_argv, platform_dependent_on_run
 from common.sharding_settings import encode_pkv as sh_ev, decode_pkv as sh_dv, SHARDS_COUNT
 
 app = Flask(__name__)
@@ -394,4 +392,5 @@ if __name__ == '__main__':
     print('IMPORTANT: Acting as shard #{0} of {1}'.format(SHARD_NUMBER, SHARDS_COUNT))
     print('This means that all autoincrement IDs WILL be changed accordingly.')
     print('#' * 80)
+    platform_dependent_on_run(app.config['GRID_CALC_ROLE'])
     app.run(host = host, port = port)
