@@ -25,25 +25,6 @@ ALLOWED_EXTENSIONS = set(['zip'])
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-def getuid(sesid):
-    return pyrequests.get(bw['session_backend']+'/auth', {'session_id':sesid}).json()['user_id']
-
-def is_authorized():
-    if 'session_id' not in request.cookies:
-        return False
-    sid = request.cookies['session_id']
-    try:
-        getuid(sid)
-    except:
-        return False
-    return True
-
-@app.route('/', methods=['GET'])
-def default():
-    if is_authorized():
-        return redirect(url_for('state'))
-    else:
-        return redirect(url_for('login'))
     
 @app.route('/create', methods=['GET'])
 def create():
@@ -72,6 +53,27 @@ def getfile():
 # done
 #######################################################################
     
+def unauthorized():
+    return render_template('login.html', message='Неавторизованный доступ')    
+
+def getuid():
+    return pyrequests.get(bw['session_backend']+'/auth', {'session_id':request.cookies['session_id']}).json()['user_id']
+
+def is_authorized():
+    try:
+        getuid()
+        return True
+    except:
+        return False
+     
+    
+@app.route('/', methods=['GET'])
+def default():
+    if is_authorized():
+        return redirect(url_for('state'))
+    else:
+        return redirect(url_for('login'))
+        
 @app.route('/logout', methods=['GET'])
 def logout():
     if not is_authorized():
@@ -101,13 +103,10 @@ def loginsubmit():
         return '', 400
           
     if button == 'register':
-        uidr = None
         try:
-            uidr = pyrequests.post(bw['session_backend']+'/register', {'username':login, 'pw_hash':pw_hash})
-            uid = uidr.json()['user_id']
+            uid = pyrequests.post(bw['session_backend']+'/register', {'username':login, 'pw_hash':pw_hash}).json()['user_id']
         except:
-            return render_template('login.html', message='Ошибка регистрации: {0}'.format(uidr.json()['message']))
-    sidr = None
+            return render_template('login.html', message='Ошибка регистрации')
     try:
         sidr = pyrequests.get(bw['session_backend'] + '/login', {'username':login, 'pw_hash':pw_hash})
         sid = sidr.json()['session_id']
@@ -115,7 +114,7 @@ def loginsubmit():
         response.set_cookie('session_id', sid)
         return response
     except:
-        return render_template('login.html', message='Ошибка входа: {0}'.format(sidr.json()['message']))
+        return render_template('login.html', message='Ошибка входа')
         
 @app.route('/login', methods=['GET'])
 def login():
@@ -125,15 +124,20 @@ def login():
     
 @app.route('/view', methods=['GET'])
 def view():
-    if not is_authorized():
-        return redirect(url_for('login'))
-    tasks = pyrequests.get(bw['logic_backend'] + '/tasks', {'uid':uid}).json()['tasks']
-    return render_template('view.html', tasks = tasks)
+    try:
+        uid = getuid()
+    except:
+        return unauthorized()
+    try:
+        tasks = pyrequests.get(bw['logic_backend'] + '/tasks', {'uid':uid}).json()['tasks']
+    except:
+        tasks = []
+        return render_template('view.html', tasks = tasks)
     
 @app.route('/state', methods=['GET'])
 def state():
     if not is_authorized():
-        return redirect(url_for('login'))
+        return unauthorized()
     services = pyrequests.get(bw.beacon + '/services').json()
     servers = []
     for type in services:
@@ -143,8 +147,10 @@ def state():
         
 @app.route('/cancel', methods=['GET'])
 def cancel():
-    if not is_authorized():
-        return redirect(url_for('login'))
+    try:
+        uid = getuid()
+    except:
+        return unauthorized()
     try:
         taskid = int(request.args['id'])
     except:
