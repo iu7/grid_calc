@@ -3,7 +3,7 @@ import requests as pyrequests
 import json as pyjson
 import threading, time
 import jsonpickle
-import os, sys, platform
+import os, sys, platform, shutil
 
 def random_string(size):
     return ''.join([random.choice(string.ascii_letters) for i in range(size)])
@@ -14,8 +14,33 @@ def random_string(size):
 # http://example.com:0123
 
 def jsr(method, address, data = {}):
-    return getattr(pyrequests, method)(address, data = pyjson.dumps(data), headers = {'Content-type': 'application/json', 'Accept': 'text/plain'})
+    return getattr(pyrequests, method)(address, data = pyjson.dumps(data), headers = {'Content-type': 'application/json', 'Accept': 'text/plain'})    
+    
+def getFileFromTo(adr, fname):
+    with open(fname, 'wb') as handle:
+        response = pyrequests.get(adr, stream=True)
 
+        if not response.ok:
+            raise Exception('File was not downloaded')
+
+        for block in response.iter_content(1024):
+            if not block:
+                break
+            handle.write(block)
+
+def preparedir(folder, flush=False):
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+    if not flush: return
+    for the_file in os.listdir(folder):
+        file_path = os.path.join(folder, the_file)
+        try:
+            if os.path.isfile(file_path):
+                os.unlink(file_path)
+            elif os.path.isdir(file_path): shutil.rmtree(file_path)
+        except:
+            pass
+            
 def place_bulk_traits(arroftraits, itemtype, jsonid, dbadr):
     traits = jsdec(request.data.decode('utf-8'))['traits']
         
@@ -148,6 +173,11 @@ class BeaconWrapper:
         print ('No ' + service + ' found') 
     
     def beacon_setter(self):
+        thr = threading.Timer(self.beacon_adapter_cycletime, self.beacon_setter_internal)
+        thr.daemon = True
+        thr.start()
+    
+    def beacon_setter_internal(self):
         self.seterr = True
         while (self.seterr):
             try:
@@ -156,19 +186,22 @@ class BeaconWrapper:
                 else:
                     pyrequests.put('/'.join([self.beacon, self.setterEndpoint, self.selfaddress]), data={'state':self.state})
                 
-                thr = threading.Timer(self.beacon_adapter_cycletime, self.beacon_setter)
-                thr.daemon = True
-                thr.start()
-                
                 self.seterr = False
                 if (not self.seterr) and (not self.geterr):
                     self.state = self.stateNormal
+                    
+                self.beacon_setter()
             except:
                 self.seterr = True
                 self.errorBeacon()
                 time.sleep(5)
-                
+
     def beacon_getter(self):
+        thr = threading.Timer(self.beacon_adapter_cycletime, self.beacon_getter_internal)
+        thr.daemon = True
+        thr.start()
+        
+    def beacon_getter_internal(self):
         self.geterr = True
         while (self.geterr):
             try:
@@ -182,13 +215,11 @@ class BeaconWrapper:
                 
                 if errorOccured: raise Exception('Did not retrieve some address')
                 
-                thr = threading.Timer(self.beacon_adapter_cycletime, self.beacon_getter)
-                thr.daemon = True
-                thr.start()
-                
                 self.geterr = False
                 if (not self.seterr) and (not self.geterr):
                     self.state = self.stateNormal
+                    
+                self.beacon_getter()
             except:
                 self.geterr = True
                 self.errorBeacon()

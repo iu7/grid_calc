@@ -25,6 +25,7 @@
 \usepackage{multirow}
 \usepackage{varwidth}
 \usepackage{longtable}
+\usepackage{pdfpages}
 
 \defaultfontfeatures{Mapping=tex-text} % for converting "--" and "---"
 \setmainfont{CMU Serif}
@@ -105,6 +106,211 @@
 \makeatother
 
 \begin{document}
+\setcounter{page}{12}
+\setcounter{section}{1}
+\section{Диаграммы}
+\subsection{Диаграммы прецедентов}
+Комплекс при его работе предоставляет пользователю следующие варианты использования:
+\begin{itemize}
+  \item регистрация пользователя;
+  \item авторизация пользователя;
+  \item постановка задачи на исполнение;
+  \item просмотр статуса задачи;
+  \item отмена задачи.
+\end{itemize}
+
+Диаграмма этих и дополнительных служебных прецедентов приведена на рис.~\ref{fig:prec-common}.
+
+\begin{figure}[b]
+  \centering
+  \includegraphics[width=.9\linewidth]{../diagrams/common/usecase}
+  \caption{Диаграмма прецедентов всего комплекса в целом}
+  \label{fig:prec-common}
+\end{figure}
+
+С учётом требований к разделению внутреннего функционала комплекса, диаграмма прецедентов на рис.~\ref{fig:prec-common}
+расщепляется на набор диаграмм, соответствующих каждой из выделенных подсистем.
+Соответствующие диаграммы приведены на рисунках~\ref{fig:prec-session},\ref{fig:prec-logic},\ref{fig:prec-balancer}.
+
+\begin{figure}
+  \centering
+  \begin{minipage}{.49\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{../diagrams/session/usecase}
+    \caption{Диаграмма прецедентов СУС}
+    \label{fig:prec-session}
+  \end{minipage}
+  \hfill
+  \begin{minipage}{.49\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{../diagrams/logic/usecase}
+    \caption{Диаграмма прецедентов СУ}
+    \label{fig:prec-logic}
+  \end{minipage}  
+\end{figure}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=.6\linewidth]{../diagrams/balancer/usecase}
+  \caption{Диаграмма прецедентов СБН}
+  \label{fig:prec-balancer}
+\end{figure}
+
+\subsection{Диаграммы действий}
+Прецеденты, описанные в предыдущем пункте, отвечают определённой деятельности.
+Диаграмма деятельности на рис.~\ref{fig:act-common} описывает полный процесс взаимодействия пользователя с комплексом.
+
+С учётом требований к разделению внутреннего функционала комплекса, диаграмма деятельности на рис.~\ref{fig:act-common}
+расщепляется на набор диаграмм, соответствующих определённым подсистемам из выделенных.
+
+Диаграммы действий прецедентов подсистемы управления сессией "регистрация" и "вход в систему" приведены на рисунках~\ref{fig:act-register} и~\ref{fig:act-auth} соответственно.
+
+Диаграммы действий прецедентов системы балансировки нагрузки "регистрация", "запрос новой задачи" и "завершение выполнения задачи" приведены на рисунках~\ref{fig:bal-register},~\ref{fig:bal-request} и~\ref{fig:bal-submit} соответственно.
+
+Диаграммы действий прецедентов системы управления "постановка задачи" и "просмотр статсуа задачи" приведены на рисунках~\ref{fig:logic-place} и~\ref{fig:logic-view} соответственно.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=.9\linewidth]{../diagrams/common/activity}
+  \caption{Диаграмма действий прецедента "общая деятельность" для системы в целом}
+  \label{fig:act-common}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \begin{minipage}{.43\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{../diagrams/session/activity-register}
+    \caption{Диаграмма действий прецедента "регистрация" СУС}
+    \label{fig:act-register}
+  \end{minipage}
+  \hfill
+  \begin{minipage}{.53\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{../diagrams/session/activity-authorize}
+    \caption{Диаграмма действий прецедента "вход в систему" СУС}
+    \label{fig:act-auth}
+  \end{minipage}  
+\end{figure}
+
+\begin{figure}  
+  \centering
+  \begin{minipage}{.49\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{../diagrams/balancer/activity-register}
+    \caption{Диаграмма действий прецедента "регистрация" СБН}
+    \label{fig:bal-register}
+  \end{minipage}
+  \hfill
+  \begin{minipage}{.49\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{../diagrams/balancer/activity-request}
+    \caption{Диаграмма действий прецедента "запрос новой задачи" СБН}
+    \label{fig:bal-request}
+  \end{minipage}  
+\end{figure}
+
+\begin{figure}  
+  \centering
+  \begin{minipage}{.49\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{../diagrams/balancer/activity-submit}
+    \caption{Диаграмма действий прецедента "завершение выполнения задачи" СБН}
+    \label{fig:bal-submit}
+  \end{minipage} 
+  \hfill
+  \begin{minipage}{.49\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{../diagrams/logic/activity-place}
+    \caption{Диаграмма действий прецедента "постановка задачи" СУ}
+    \label{fig:logic-place}
+  \end{minipage} 
+\end{figure}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\linewidth]{../diagrams/logic/activity-view}
+  \caption{Диаграмма действий прецедента "просмотр статсуа задачи" СУ}
+  \label{fig:logic-view}
+\end{figure}
+
+\subsection{Диаграмма компонент и развёртывания}
+Для того, чтобы удовлетворить требованиям по предоставлению механизма деградации функциональности,
+а также для упрощения процесса разработки, комплекс должен быть разделен на отдельные слабосвязанные элементы.
+
+Различные подсистемы комплекса имеют некую модель поведения.
+Поведение подсистемы описывается её активной и пассивной частью.
+Активная часть соответствует действиям, которые подсистема выполняет разово либо с некоторой периодичностью, в автоматическом режиме.
+Пассивная часть соответствует API подсистемы.
+Взаимосвязи между различными компонентами системы приведены на диаграмме компонентов на рис.~\ref{fig:comp-common}.
+Физическое размещение компонент по отдельным узлам проиллюстрировано на диаграмме развёртывания на рис.~\ref{fig:depl-common}.
+
+\begin{figure}[b]
+  \centering
+  \includegraphics[width=.7\linewidth]{../diagrams/common/component}
+  \caption{Диаграмма компонент комплекса}
+  \label{fig:comp-common}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\linewidth]{../diagrams/common/deployment}
+  \caption{Диаграмма развёртывания комплекса}
+  \label{fig:depl-common}
+\end{figure}
+
+\subsection{Диаграммы последовательности действий}
+Диаграммы последовательности действий при выполнении прецедентов "регистрация", "запрос новой задачи" и "завершение выполнения задачи" приведены на рис.~\ref{fig:seq-reg}, \ref{fig:seq-req}~и~\ref{fig:seq-sub}.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=.7\linewidth]{../diagrams/frontnode/seq-register}
+  \caption{Диаграмма последовательности действий прецедента "регистрация" ФВУ}
+  \label{fig:seq-reg}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=.7\linewidth]{../diagrams/frontnode/seq-request}
+  \caption{Диаграмма последовательности действий прецедента "запрос новой задачи" ФВУ}
+  \label{fig:seq-req}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=.7\linewidth]{../diagrams/frontnode/seq-submit}
+  \caption{Диаграмма последовательности действий прецедента "завершение выполнения задачи" ФВУ}
+  \label{fig:seq-sub}
+\end{figure}
+
+\subsection{ER-диаграмма}
+
+Связи между разными типами хранимых СХД данных предоставлены в виде ER-диаграммы на рис.~\ref{fig:db-er}.
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=.9\linewidth]{../diagrams/db/er}
+  \caption{ER-диаграмма сущностей, хранимых в СХД}
+  \label{fig:db-er}
+\end{figure}
+
+\subsection{Диаграмма состояний}
+ПО вычислительного узла, обеспечивающее функционирование системы, должно удовлетворять следующим требованиям:
+\begin{itemize}
+  \item До подключения к серверу балансировки приложение должно предоставлять возможность формирования списка черт, характеризующих АО и ПО вычислительного узла
+  \item После подключения к балансировщику (через фронтэнд вычислительных узлов), с определённой периодичностью вычислительный узел должен опрашивать комплекс на предмет наличия доступных задач
+  \item По получении задачи, вычислительный узел должен с определённой периодичностью оповещать балансировщик о ходе выполнения задачи
+  \item По завершении выполнения задачи, вычислительный узел должен передать балансировщику сведения о результате выполнения задачи
+\end{itemize}
+
+Диаграмма состояний ПО вычислительного узла, иллюстрирующая приведённые выше соображения, приведена на рис.~\ref{fig:node-state}.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\linewidth]{../diagrams/compnode/state}
+  \caption{Диаграмма состояний ВУ}
+  \label{fig:node-state}
+\end{figure}
 
 \section{Тестирование}
 \subsection{Модульное тестирование}
@@ -247,27 +453,32 @@
 \end{tabu}
 
 \clearpage
+В ходе тестирования использовался бинарный файл 'a.out', приведённый в приложении.
+
 Тесты:
 
 \noindent
 \begin{tabu}{|L{1cm}|L{3cm}|L{2.5cm}|L{2cm}|X[l]|}\hline
   № & Описание теста & Входные данные & Ожидаемый результат & Полученный результат \\ \hline
-  1 & Проверка возможности сохранения файла & Файл-запрос & Сообщение об успешном сохранении файла & Сообщение протокола HTTP 200 OK, пустой JSON-объект \\ \hline
-  2 & Проверка доступа к существующему файлу & Запрос по адресу файла & Содержимое файла & Сообщение протокола HTTP 200 OK, содержимое искомого файла \\ \hline
-  3 & Проверка удаления существующего файла & Запрос на удаление файла & Сообщение об успешном удалении файла & Сообщение протокола HTTP 200 OK, пустой JSON-объект \\ \hline
-  4 & Проверка удаления несуществующего файла & Запрос на удаление файла по несуществующему пути & Сообщение об ошибке & Сообщение протокола HTTP 404 NOT FOUND, JSON-объект с сообщением об ошибке \\ \hline
-  5 & Проверка доступа к несуществующему файлу & Запрос по адресу несуществующего файла & Сообщение об ошибке & Сообщение протокола HTTP 404 NOT FOUND, JSON-объект с сообщением об ошибке \\\hline
+  1 & Проверка возможности сохранения файла & Файл 'a.out' & Сообщение об успешном сохранении файла & Сообщение протокола HTTP 200 OK, пустой JSON-объект \\ \hline
+  2 & Проверка доступа к существующему файлу & Запрос по адресу файла: '/static/a.out' & Содержимое файла 'a.out' & Сообщение протокола HTTP 200 OK, содержимое искомого файла \\ \hline
+  3 & Проверка удаления существующего файла & Запрос на удаление файла по адресу '/static/a.out' & Сообщение об успешном удалении файла & Сообщение протокола HTTP 200 OK, пустой JSON-объект \\ \hline
+  4 & Проверка удаления несуществующего файла & Запрос на удаление файла по несуществующему пути '/static/a.out' & Сообщение об ошибке & Сообщение протокола HTTP 404 NOT FOUND, JSON-объект с сообщением об ошибке \\ \hline
+  5 & Проверка доступа к несуществующему файлу & Запрос по адресу несуществующего файла '/static/a.out' & Сообщение об ошибке & Сообщение протокола HTTP 404 NOT FOUND, JSON-объект с сообщением об ошибке \\\hline
 \end{tabu}
 
 \clearpage
+В ходе тестирования использовались бинарные файлы 'a.out', 'b.out' и 'c.out', приведённые в приложении.
+
 Подробное описание тестов:
 \subsubsection{Тестирование надёжности и доступности серверов}
 \noindent
 \begin{tabu}{|L{1cm}|L{3cm}|L{2.5cm}|L{2cm}|X[l]|}\hline
   № & Описание теста & Входные данные & Ожидаемый результат & Полученный результат \\ \hline
-  1 & Провести тест, в котором несколько пользователей одновременно загружают файл на сервер & Пользовательские файлы, их имена & Все файлы загружены по верным адресам & Каждый из пользователей успешно загрузил файл на сервер \\\hline
-  2 & Провести тест, в котором происходит разрыв соединения в ходе загрузки файла & Пользовательский файл & Загрузка возобновляется по восстановлении соединения & Возникла ошибка. Необходима повторная загрузка файла. \\\hline
+  1 & Провести тест, в котором несколько пользователей одновременно загружают файл на сервер & Пользовательские файлы 'a.out', 'b.out' и 'c.out' & Все файлы загружены по верным адресам & Каждый из пользователей успешно загрузил файл на сервер \\\hline
+  2 & Провести тест, в котором происходит разрыв соединения в ходе загрузки файла & Пользовательский файл 'a.out' & Загрузка возобновляется по восстановлении соединения & Возникла ошибка. Необходима повторная загрузка файла. \\\hline
 \end{tabu}
+
 
 Отчёт об обнаруженных ошибках:
 
@@ -390,12 +601,20 @@
 \end{table}
 
 
-Вывод:
+\subsubsection{Выводы по результатам интеграционного тестирования}
 
 
 Интеграционное тестирование выявило фатальную ошибку в реализации подсистемы beacon, связанную с неверно документированным
 поведением метода доступа к элементу по ссылке в словарях многократной вложенности в языке Python.
 
 
-Ошибка была устранена с использованием альтернативной библиотченой реализации этого метода.
+Ошибка была устранена с использованием альтернативной библиотечной реализации этого метода.
+
+\section{Приложения}
+\textbf{Содержимое файла a.out}
+
+\textbf{Содержимое файла b.out}
+
+\textbf{Содержимое файла c.out}
+
 \end{document}

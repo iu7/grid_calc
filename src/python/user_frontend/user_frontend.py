@@ -11,6 +11,7 @@ import threading
 import time
 import requests
 import hashlib
+import datetime
 from werkzeug import secure_filename
 from common.common import *
 
@@ -25,53 +26,71 @@ ALLOWED_EXTENSIONS = set(['zip'])
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-def getuid(sesid):
-    return pyrequests.get(bw['session_backend']+'/auth', {'session_id':sesid}).json()['user_id']
-
-def is_authorized():
-    if 'session_id' not in request.cookies:
-        return False
-    sid = request.cookies['session_id']
-    try:
-        getuid(sid)
-    except:
-        return False
-    return True
-
-@app.route('/', methods=['GET'])
-def default():
-    if is_authorized():
-        return redirect(url_for('state'))
-    else:
-        return redirect(url_for('login'))
     
 @app.route('/create', methods=['GET'])
 def create():
-    sesid = request.cookies['session_id']
+    try:
+        uid = getuid()
+    except:
+        return unauthorized()
     ##############
     
     return render_template('create.html')
 
 @app.route('/create', methods=['POST'])
 def createsubmit():
-    sesid = request.cookies['session_id']
+    try:
+        uid = getuid()
+    except:
+        return unauthorized()
     ##############
     
     return redirect(url_for('view'))
 
 
-@app.route('/getfile', methods=['GET'])
-def getfile():
-    sesid = request.cookies['session_id']
-    fileid = request.args['id']
-    ##############
-    return 'wot', 404
-
-    
 #######################################################################
 # done
 #######################################################################
+
+@app.route('/getfile', methods=['GET'])
+def getfile():
+    try:
+        uid = getuid()
+    except:
+        return unauthorized()
+    try:
+        fileid = request.args['id']
+    except:
+        return jsenc({'status':'failure', 'message':'File not found'}), 400
     
+    try:
+        getFileFromTo(bw['filesystem']+'/static/'+fileid, 'tmp/'+fileid)
+        return send_from_directory('tmp', fileid)
+    except Exception as e:
+        print (e)
+        return jsenc({'status':'failure', 'message':'File not found'}), 404
+    
+def unauthorized():
+    return render_template('login.html', message='Неавторизованный доступ')    
+
+def getuid():
+    return pyrequests.get(bw['session_backend']+'/auth', {'session_id':request.cookies['session_id']}).json()['user_id']
+
+def is_authorized():
+    try:
+        getuid()
+        return True
+    except:
+        return False
+     
+    
+@app.route('/', methods=['GET'])
+def default():
+    if is_authorized():
+        return redirect(url_for('state'))
+    else:
+        return redirect(url_for('login'))
+        
 @app.route('/logout', methods=['GET'])
 def logout():
     if not is_authorized():
@@ -101,13 +120,10 @@ def loginsubmit():
         return '', 400
           
     if button == 'register':
-        uidr = None
         try:
-            uidr = pyrequests.post(bw['session_backend']+'/register', {'username':login, 'pw_hash':pw_hash})
-            uid = uidr.json()['user_id']
+            uid = pyrequests.post(bw['session_backend']+'/register', {'username':login, 'pw_hash':pw_hash}).json()['user_id']
         except:
-            return render_template('login.html', message='Ошибка регистрации: {0}'.format(uidr.json()['message']))
-    sidr = None
+            return render_template('login.html', message='Ошибка регистрации')
     try:
         sidr = pyrequests.get(bw['session_backend'] + '/login', {'username':login, 'pw_hash':pw_hash})
         sid = sidr.json()['session_id']
@@ -115,7 +131,7 @@ def loginsubmit():
         response.set_cookie('session_id', sid)
         return response
     except:
-        return render_template('login.html', message='Ошибка входа: {0}'.format(sidr.json()['message']))
+        return render_template('login.html', message='Ошибка входа')
         
 @app.route('/login', methods=['GET'])
 def login():
@@ -125,15 +141,22 @@ def login():
     
 @app.route('/view', methods=['GET'])
 def view():
-    if not is_authorized():
-        return redirect(url_for('login'))
-    tasks = pyrequests.get(bw['logic_backend'] + '/tasks', {'uid':uid}).json()['tasks']
-    return render_template('view.html', tasks = tasks)
+    try:
+        uid = getuid()
+    except:
+        return unauthorized()
+    try:
+        tasks = jsr('get', bw['logic_backend'] + '/tasks', {'uid':uid}).json()['tasks']
+        message = ''
+    except:
+        tasks = []
+        message = 'Ошибка при чтении задач'
+    return render_template('view.html', tasks = tasks, message = message)
     
 @app.route('/state', methods=['GET'])
 def state():
     if not is_authorized():
-        return redirect(url_for('login'))
+        return unauthorized()
     services = pyrequests.get(bw.beacon + '/services').json()
     servers = []
     for type in services:
@@ -143,8 +166,10 @@ def state():
         
 @app.route('/cancel', methods=['GET'])
 def cancel():
-    if not is_authorized():
-        return redirect(url_for('login'))
+    try:
+        uid = getuid()
+    except:
+        return unauthorized()
     try:
         taskid = int(request.args['id'])
     except:
@@ -156,6 +181,8 @@ def cancel():
 ###    
     
 if __name__ == '__main__':
+    preparedir('tmp', flush=True)
+    
     host = '0.0.0.0'
     beacon, port = parse_argv(sys.argv)
     print('Starting with settings: beacon:{0} self: {1}:{2}'.format(beacon, host, port))
