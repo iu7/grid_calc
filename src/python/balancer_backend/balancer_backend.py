@@ -68,6 +68,8 @@ def newTaskHandler():
         
         activenodes[nid] = ActiveNode('Was assigned task', tid, sid, nid)
         
+
+
         return jsenc({'archive_name':archive_name}), 200
     else:
         return jsenc({'status':'failure', 'message':'no suitable tasks'}),404
@@ -130,7 +132,7 @@ if __name__ == '__main__':
     beacon, port = parse_argv(sys.argv)
     print('Starting with settings: beacon:{0} self: {1}:{2}'.format(beacon, host, port))
     
-    bw = BeaconWrapper(beacon, port, 'services/balancer', {'database'})
+    bw = BeaconWrapper(beacon, port, 'services/balancer', {'database', 'filesystem'})
     bw.beacon_setter()
     bw.beacon_getter()
     cleaner()

@@ -11,58 +11,84 @@ import time
 import requests
 from werkzeug import secure_filename
 from common.common import *
+import tempfile
 
 bw = None
 
 app = Flask(__name__)
+app.config.update(DEBUG = True)
 app.config.update(GRID_CALC_ROLE = 'NODE_FRONTEND')
+app.config.update(UPLOAD_FOLDER = os.path.join(tempfile.gettempdir(), '_'.join([app.config['GRID_CALC_ROLE'], 'upload'])))
+app.config.update(ALLOWED_EXTENSIONS = ['zip'])
 
-UPLOAD_FOLDER = '/uploads'
-ALLOWED_EXTENSIONS = set(['zip'])
+msg_required_params_fmt = 'Required: {0}'
+msg_error_params_fmt = 'Error parameters: {0}'
 
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+def allowed_file(filename):
+    if '.' in filename:
+        if filename[::-1].split('.')[0][::-1] in app.config['ALLOWED_EXTENSIONS']:
+            return True
+    return False
+
+def save_file_locally(filename):
+    filename = secure_filename(fl.filename)
+    fullpath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    fl.save(fullpath)
 
 @app.route('/nodes', methods=['POST'])
 def nodesHandler():
-    r = requests.post(bw['balancer'] + '/nodes', \
-        data = request.data, \
-        headers = {'content-type':'application/json'})
+    if 'key' not in request.data:
+        return msg_required_params_fmt.format('"key"'), 422
+    r = jsr('post', bw['balancer'] + '/nodes', data = request.data) 
     return r.text, r.status_code
     
 @app.route('/nodes/<string:nodeid>', methods=['PUT'])
 def nodesSpecificHandler(nodeid):
-    r = requests.put(bw['balancer'] + '/nodes/' + nodeid, \
-        data = request.data, \
-        headers = {'content-type':'application/json'})
+    if 'key_new' not in request.data and 'key_old' not in request.data:
+        return msg_required_params_fmt.format('"key_old", "key"'), 422
+    r = jsr('put', bw['balancer'] + '/nodes/' + nodeid, data = request.data) 
     return r.text, r.status_code
     
 @app.route('/tasks/newtask', methods=['GET'])
 def newTaskHandler():
-    r = requests.get(bw['balancer'] + '/tasks/newtask', \
-        data = request.data, \
-        headers = {'content-type':'application/json'})
+    if 'key' not in request.data:
+        return msg_required_params_fmt.format('"key"'), 422
+    r = jsr('get', bw['balancer'] + '/tasks/newtask', data = request.data)
+    
+    arch = r.get_json()['archive_name']
+    fr = requests.get(bw['filesystem']  + '/static/{0}'.format(arch))
+    if fr.status_code != 200:
+        return r.text, 500
+    save_file_locally(requests['file'])
+
     return r.text, r.status_code
     
 @app.route('/tasks/<string:taskid>', methods=['POST'])
 def submitTaskHandler(taskid):
-    file = request.files['file']
-    if file and allowed_file(file.filename):
-        filename = secure_filename(file.filename)
+    if 'key' not in request.data:
+        return msg_required_params_fmt.format('"key"'), 422
+
+    fl = request.files['file']
+    if not fl:
+        return msg_required_params_fmt.format('"file" as file parameter'), 422
+
+    if allowed_file(fl.filename):
+        filename = secure_filename(fl.filename)
         fullpath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        file.save(fullpath)
+        fl.save(fullpath)
         
-        r = requests.post(bw['fileserver'] + '/static',
+        r = requests.post(bw['filesystem'] + '/static',
             files = {'file':open(fullpath, 'rb')})
         
-        r = requests.post(bw['balancer'] + '/tasks/'+taskid, \
-            data = {'filename':nid}, \
-            headers = {'content-type':'application/json'})
+        if r.status_code == 200:
+            r = jsr('post', bw['balancer'] + '/tasks/' + taskid, data = {'filename': r.json()['name']})
+
+        os.unlink(fullpath)
         return r.text, r.status_code
     else:
-        return '', 422
-
-def jsenc(o):
-    return jsonpickle.encode(o, unpicklable=False)
+        return msg_error_params_fmt.format(\
+            '"file". Allowed extensions: {0}'.format(','.join(app.config['ALLOWED_EXTENSIONS']))\
+        )
     
 if __name__ == '__main__':
     host = '0.0.0.0'
@@ -73,6 +99,11 @@ if __name__ == '__main__':
     
     bw.beacon_setter()
     bw.beacon_getter()
+ 
+    if not os.path.exists(app.config['UPLOAD_FOLDER']):
+        print('Creating directories for temp upload files: {0}'.format(app.config['UPLOAD_FOLDER']))
+        os.makedirs(app.config['UPLOAD_FOLDER'])
+
     print(app.config['GRID_CALC_ROLE'])
     platform_dependent_on_run(app.config['GRID_CALC_ROLE'])
     app.run(host = host, port = port)

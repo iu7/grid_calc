@@ -5,6 +5,9 @@ import threading, time
 import jsonpickle
 import os, sys, platform
 
+def random_string(size):
+    return ''.join([random.choice(string.ascii_letters) for i in range(size)])
+
 # [{'name':'tr1', 'version':'v1'}]
 # 'agent' / 'task'
 # 7

@@ -149,16 +149,18 @@ def init_models(Base):
         metainf = type('metainf', (), dict(\
             col_type_d = {\
                 'id' : int,\
+                'key': str,\
             },\
             col_type_parsers = {},\
             filename_fields = [],\
             pk_field = 'id',\
             fk_fields = [],\
-            required_flds = [],\
-            duplicatable = True,\
+            required_flds = ['key'],\
+            duplicatable = False,\
         )),\
 \
         id = Column(Integer(), primary_key = True, autoincrement = True),\
+        key = Column(String(64), unique = True)
 \
         __init__ = agent_init,\
         __repr__ = lambda self :', '.join(['{0}: {1}'.format(f, getattr(self, f)) for f in self.metainf.col_type_d.keys()])\
