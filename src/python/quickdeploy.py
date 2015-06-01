@@ -1,9 +1,13 @@
 import subprocess
-import sys
+import sys, os
 
 DETACHED_PROCESS = 8
 def run(str):
-    subprocess.Popen('py ' + str, creationflags=DETACHED_PROCESS, close_fds=True)
+    spl = str.split('/')
+    subprocess.Popen('py ' + spl[1], \
+        creationflags=DETACHED_PROCESS, \
+        close_fds=True, \
+        cwd = (os.getcwd().replace('\\','/') + '/'+spl[0]))
 
 beacon_address = '127.0.0.1:1666'
 

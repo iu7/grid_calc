@@ -26,7 +26,7 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 @app.route('/tasks', methods=['POST'])
 def taskPlacing():
     try:
-        payload = jsdec(request.data.decode('utf-8'))
+        payload = request.get_json()
         uid = payload['uid']
         traits = payload['traits']
         task_name = payload['task_name']
