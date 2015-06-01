@@ -177,7 +177,7 @@ class BeaconWrapper:
                         errorOccured = True
                         self.errorGeneric(sname)
                 
-                if errorOccured: raise 'Did not retrieve some address'
+                if errorOccured: raise Exception('Did not retrieve some address')
                 
                 thr = threading.Timer(self.beacon_adapter_cycletime, self.beacon_getter)
                 thr.daemon = True

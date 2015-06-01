@@ -224,112 +224,117 @@
 Все тесты пройдены успешно, класс готов к использованию.
 
 \clearpage
-\subsection{Системное тестирование}
-Производится системное тестирования файлового сервера (методом чёрного ящика).
-Тест покрывает $100\%$ АПИ файлового сервера.
+\subsection{Интеграционное тестирование}
+Производится интеграционное тестирование подсистем работы с файлами, данными и подсистемы мониторинга. Целью тестирования явлеяется проверка
+корректности регистрации подсистем на маяке, играющем ключевую роль в работе распределленной системы.
 
-Входными данными всех тестов являются адрес и порт сервера.
-При проведении тестирования сервер был запущен по адресу \url{localhost:50002}
-
-Все тесты были пройдены успешно.
-
-Список тестов:
-
+Интерфейс подсистемы мониторинга(категория -- beacon, сокращенно -- маяк):
 \begin{itemize}
-  \item Сохранение файла в корневой директории сервера
-  \begin{description}
-    \item[Ресурс:] \url{/static}
-    \item[HTTP-метод:] POST
-    \item[Параметры запроса:] file: a.out, headers: "Content-type"="multipart/form-data"
-    \item[Код, содержимое ответа:] 200, пустой JSON-объект "\{\}"
-  \end{description}
-  
-  \item Сохранение файла в произвольной директории сервера
-  \begin{description}
-    \item[Ресурс:] \url{/static}
-    \item[HTTP-метод:] POST
-    \item[Параметры запроса:] query: "path=1\textbackslash 2\textbackslash 3\textbackslash4", file: a.out, headers: "Content-type"="multipart/form-data"
-    \item[Код, содержимое ответа:] 200, пустой JSON-объект "\{\}"
-  \end{description}
-  
-  \item Доступ к существующему файлу в корневой директории сервера
-  \begin{description}
-    \item[Ресурс:] \url{/static/a.out}
-    \item[HTTP-метод:] GET
-    \item[Код, содержимое ответа:] 200, содержимое файла a.out
-    \item[Замечание:] содержимое ответа перенаправлено в файл a\_.out
-  \end{description}
-  
-  \item Доступ к существующему файлу в произвольной директории сервера
-  \begin{description}
-    \item[Ресурс:] \url{/static/1\ 2\ 3\ 4\ a.out}
-    \item[HTTP-метод:] GET
-    \item[Код, содержимое ответа:] 200, содержимое файла a.out
-  \end{description}
-  
-  \item Удаление существующего файла
-  \begin{description}
-    \item[Ресурс:] \url{/static/a.out}
-    \item[HTTP-метод:] DELETE
-    \item[Код, содержимое ответа:] 200, пустой JSON-объект "\{\}"
-  \end{description}
-  
-  \item Удаление существующего файла в произвольной директории сервера
-  \begin{description}
-    \item[Ресурс:] \url{/static/1\ 2\ 3\ 4\ a.out}
-    \item[HTTP-метод:] DELETE
-    \item[Код, содержимое ответа:] 200, пустой JSON-объект "\{\}"
-  \end{description}
-  
-  \item Удаление несуществующего файла
-  \begin{description}
-    \item[Ресурс:] \url{/static/a.out}
-    \item[HTTP-метод:] DELETE
-    \item[Код, содержимое ответа:] 404, JSON-объект "\{"error":"Not Found"\}"
-    \item[Замечание:] файл "a.out" удалён с сервера в ходе предыдущих тестов
-  \end{description}
-  
-  \item Удаление несуществующего файла в произвольной директории сервера
-  \begin{description}
-    \item[Ресурс:] \url{/static/1\ 2\ 3\ 4\ a.out}
-    \item[HTTP-метод:] DELETE
-    \item[Код, содержимое ответа:] 404, JSON-объект "\{"error":"Not Found"\}"
-  \end{description}
-  
-  \item Доступ к несуществующему файлу в корневой директории сервера
-  \begin{description}
-    \item[Ресурс:] \url{/static/a.out}
-    \item[HTTP-метод:] GET
-    \item[Код, содержимое ответа:] 404, JSON-объект "\{"error":"Not Found"\}"
-  \end{description}
-  
-  \item Доступ к несуществующему файлу в произвольной директории сервера
-  \begin{description}
-    \item[Ресурс:] \url{/static/1\ 2\ 3\ 4\ a.out}
-    \item[HTTP-метод:] GET
-    \item[Код, содержимое ответа:] 404, JSON-объект "\{"error":"Not Found"\}"
-  \end{description}
+  \item GET /services/<service\_group>
+  \item PUT /services/<service\_group>/<service\_host>:<service\_port>
+  \item POST /services
 \end{itemize}
 
-\subsubsection{Код теста}
-\lstinputlisting[language=bash]{src/queries_st.sh}
+Методы подсистемы работы с файлами(категория -- filesystem):
+\begin{itemize}
+  \item beacon\_setter
+  \item beacon\_getter
+\end{itemize}
 
-\subsubsection{Выход терминала в ходе тестов}
-\lstinputlisting{src/queries_st.log}
+Методы подсистемы работы с данными(категория -- database):
+\begin{itemize}
+  \item beacon\_setter
+  \item beacon\_getter
+\end{itemize}
+
+\begin{table}[h]
+\caption{Тестирование регистрации бекендов на не запущенном маяке}
+\begin{tabu} to \textwidth {|c|X|}
+\hline
+Название файла & TestNoBeaconGetter.sh \\ \hline
+Взаимодействующие подсистемы & database, filesystem, beacon \\ \hline
+Описание теста & Подсистемы filesystem и database выполняют метод beacon\_setter при запуске \\ \hline
+Начальные условия & beacon не запущен \\
+Ожидаемый результат & подсистемы не могут подключиться к beacon и сообщают об этом пользователю; повторный поиск происходит регулярно, с интервалом в 10 секунд \\ \hline
+Степень важности & Фатальная \\ \hline
+Результат теста & Тест пройден \\ \hline
+\end{tabu}
+\end{table}
+
+%%%
+\clearpage
+%%%
+
+\begin{table}[H]
+\caption{Тестирование регистрации бекендов на запущенном маяке}
+\begin{tabu} to \textwidth {|c|X|}
+\hline
+Название файла & TestBeaconPoster.sh \\ \hline
+Взаимодействующие подсистемы & database, filesystem, beacon \\ \hline
+Описание теста & Подсистемы filesystem и database выполняют метод beacon\_setter при запуске \\ \hline
+Начальные условия & beacon запущен \\
+\multirow{4}{*}{Ожидаемый результат} & Подсистемы подключаются к маяку и выполняют POST-запрос на адрес /services/<категория бекенда>, 
+                                       передавая через JSON свою адрес \\
+                                     & Журнал маяка: \\
+                                     & POST /services/database HTTP/1.1 200 \\
+                                     & POST /services/filesystem HTTP/1.1 200 \\
+\hline
+Степень важности & Фатальная \\ \hline
+Результат теста & Тест пройден \\ \hline
+\end{tabu}
+\end{table}
+
+%%%
+
+\begin{table}[H]
+\caption{Тестирование регистрации бекендов на запущенном маяке}
+\begin{tabu} to \textwidth {|c|X|}
+\hline
+Название файла & TestBeaconPutter.sh \\ \hline
+Взаимодействующие подсистемы & database, filesystem, beacon \\ \hline
+Описание теста & Подсистемы filesystem и database выполняют метод beacon\_setter повторно \\ \hline
+Начальные условия & beacon запущен, подсистемы уже выполнили первичный POST запрос \\
+\multirow{5}{*}{Ожидаемый результат} & Подсистемы подключаются к маяку и выполняют PUT-запрос на адрес \\
+                                     & /services/<категория бекенда>/ \\
+                                     &<адрес бекенда>:<порт>. \\
+                                     & Пример журнала маяка: \\
+                                     & PUT /services/database/localhost:5000 HTTP/1.1 200 \\
+                                     & PUT /services/filesystem/localhost:5001 HTTP/1.1 200 \\
+\hline
+Степень важности & Фатальная \\ \hline
+Результат теста & Тест пройден \\ \hline
+\end{tabu}
+\end{table}
+
+%%%
+\clearpage
+%%%
+
+\begin{table}[h]
+\caption{Тестирование регистрации бекендов на запущенном маяке}
+\begin{tabu} to \textwidth {|c|X|}
+\hline
+Название файла & TestBeaconGetter.sh \\ \hline
+Взаимодействующие подсистемы & filesystem, beacon \\ \hline
+Описание теста & Подсистема filesystem запрашивает адреса всех подсистем database у маяка \\ \hline
+Начальные условия & beacon запущен, подсистемы уже выполнили первичный POST запрос \\
+\multirow{2}{*}{Ожидаемый результат} & filesystem подключаются к маяку и выполняет GET-запрос(метод beacon\_getter)
+                                       на адрес /services/database/. \\
+                                      & Маяк отвечает все известные адреса бекендов, категории database
+                                       в JSON-формате. Пример ответа -- [\{``localhost'': 5000\}] \\
+\hline
+Степень важности & Фатальная \\ \hline
+Результат теста & Тест пройден \\ \hline
+\end{tabu}
+\end{table}
 
 
-\subsection{Интеграционное тестирование}
-Производится интеграционное тестирование подсистем работы с файлами, данными и подсистемы мониторинга.
+Вывод:
 
 
-Тест покрывает прецедент регистрации подсистем работы с файлами и данными в подсистеме мониторинга.
-Тест не требует входных данных.
+Интеграционное тестирование выявило фатальную ошибку в реализации подсистемы beacon, связанную с неверно документированным
+поведением метода доступа к элементу по ссылке в словарях многократной вложенности в языке Python.
 
 
-\subsubsection{Код теста}
-\lstinputlisting[language=bash]{src/beacon_data_file_it.sh}
-
-\subsubsection{Выход терминала в ходе тестов}
-\lstinputlisting{src/beacon_data_file_it.log}
-
+Ошибка была устранена с использованием альтернативной библиотченой реализации этого метода.
 \end{document}
