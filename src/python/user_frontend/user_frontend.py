@@ -11,6 +11,7 @@ import threading
 import time
 import requests
 import hashlib
+import datetime
 from werkzeug import secure_filename
 from common.common import *
 
@@ -28,30 +29,46 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
     
 @app.route('/create', methods=['GET'])
 def create():
-    sesid = request.cookies['session_id']
+    try:
+        uid = getuid()
+    except:
+        return unauthorized()
     ##############
     
     return render_template('create.html')
 
 @app.route('/create', methods=['POST'])
 def createsubmit():
-    sesid = request.cookies['session_id']
+    try:
+        uid = getuid()
+    except:
+        return unauthorized()
     ##############
     
     return redirect(url_for('view'))
 
 
-@app.route('/getfile', methods=['GET'])
-def getfile():
-    sesid = request.cookies['session_id']
-    fileid = request.args['id']
-    ##############
-    return 'wot', 404
-
-    
 #######################################################################
 # done
 #######################################################################
+
+@app.route('/getfile', methods=['GET'])
+def getfile():
+    try:
+        uid = getuid()
+    except:
+        return unauthorized()
+    try:
+        fileid = request.args['id']
+    except:
+        return jsenc({'status':'failure', 'message':'File not found'}), 400
+    
+    try:
+        getFileFromTo(bw['filesystem']+'/static/'+fileid, 'tmp/'+fileid)
+        return send_from_directory('tmp', fileid)
+    except Exception as e:
+        print (e)
+        return jsenc({'status':'failure', 'message':'File not found'}), 404
     
 def unauthorized():
     return render_template('login.html', message='Неавторизованный доступ')    
@@ -164,6 +181,8 @@ def cancel():
 ###    
     
 if __name__ == '__main__':
+    preparedir('tmp', flush=True)
+    
     host = '0.0.0.0'
     beacon, port = parse_argv(sys.argv)
     print('Starting with settings: beacon:{0} self: {1}:{2}'.format(beacon, host, port))
