@@ -10,8 +10,8 @@ import threading
 import time
 import requests
 from werkzeug import secure_filename
-from common.common import *
 import tempfile
+from common.common import *
 
 bw = None
 
@@ -30,43 +30,56 @@ def allowed_file(filename):
             return True
     return False
 
-def save_file_locally(filename):
-    filename = secure_filename(fl.filename)
-    fullpath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-    fl.save(fullpath)
+def is_key_valid(key):
+    if key:
+        resp = jsr('get', bw['database'] + '/agents/filter', data = {'key': key})
+        return len(resp.get_json()['result']) > 0
+    return False
+
+def is_key_id_valid(key, id_):
+    if key and id_:
+        resp = jsr('get', bw['database'] + '/agents/filter', data = {'key': key, 'id': id_})
+        return len(resp.get_json()['result']) > 0
+    return False
 
 @app.route('/nodes', methods=['POST'])
 def nodesHandler():
-    if 'key' not in request.data:
+    key = get_url_parameter('key')
+    if not is_key_valid(key):
         return msg_required_params_fmt.format('"key"'), 422
     r = jsr('post', bw['balancer'] + '/nodes', data = request.data) 
     return r.text, r.status_code
     
 @app.route('/nodes/<string:nodeid>', methods=['PUT'])
 def nodesSpecificHandler(nodeid):
-    if 'key_new' not in request.data and 'key_old' not in request.data:
-        return msg_required_params_fmt.format('"key_old", "key"'), 422
-    r = jsr('put', bw['balancer'] + '/nodes/' + nodeid, data = request.data) 
-    return r.text, r.status_code
+    key = get_url_parameter('key')
+    keyold = get_url_parameter('key_old')
+    if not (key and keyold):
+        return msg_required_params_fmt.format('"key", "key_old"'), 422
+    if not is_key_id_valid(keyold, nodeid):
+        return msg_required_params_fmt.format('valid "key_old"'), 422
+    
+    dr = jsr('put', bw['database'] + '/agent/filter', data = {'id': nodeid, 'key': key_old, 'changes': {'key' : key}})
+    if int(dr.get_json()['count']) > 0:
+        r = jsr('put', bw['balancer'] + '/nodes/' + nodeid, data = request.data) 
+        return r.text, r.status_code
+    return msg_required_params_fmt.format('valid nodeid(in endpoint), "key", "key_old" cortege'), 422
     
 @app.route('/tasks/newtask', methods=['GET'])
 def newTaskHandler():
-    if 'key' not in request.data:
-        return msg_required_params_fmt.format('"key"'), 422
+    key = get_url_parameter('key')
+    nodeid = get_url_parameter('id')
+    if not is_key_id_valid(key, nodeid):
+        return msg_required_params_fmt.format('valid "id", "key" cortege'), 422
     r = jsr('get', bw['balancer'] + '/tasks/newtask', data = request.data)
-    
-    arch = r.get_json()['archive_name']
-    fr = requests.get(bw['filesystem']  + '/static/{0}'.format(arch))
-    if fr.status_code != 200:
-        return r.text, 500
-    save_file_locally(requests['file'])
-
     return r.text, r.status_code
     
 @app.route('/tasks/<string:taskid>', methods=['POST'])
 def submitTaskHandler(taskid):
-    if 'key' not in request.data:
-        return msg_required_params_fmt.format('"key"'), 422
+    key = get_url_parameter('key')
+    nodeid = get_url_parameter('id')
+    if not is_key_id_valid(key, nodeid):
+        return msg_required_params_fmt.format('valid "id", "key" cortege'), 422
 
     fl = request.files['file']
     if not fl:
@@ -88,14 +101,34 @@ def submitTaskHandler(taskid):
     else:
         return msg_error_params_fmt.format(\
             '"file". Allowed extensions: {0}'.format(','.join(app.config['ALLOWED_EXTENSIONS']))\
-        )
+        ), 422
+
+@app.route('/getfile', methods=['GET'])
+def getfile():
+    key = get_url_parameter('key')
+    nodeid = get_url_parameter('id')
+    if not is_key_id_valid(key, nodeid):
+        return msg_required_params_fmt.format('valid "id", "key" cortege'), 422
+    
+    filename = None
+    try:
+        filename = get_url_parameter('arhive_name')
+    except:
+        return msg_required_params_fmt.format('valid "id", "key", "archive_name" cortege'), 422
+    
+    try:
+        getFileFromTo(bw['filesystem']+'/static/'+filename, os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+    except Exception as e:
+        return 'Error: {0}'.format(str(e)), 500
+
     
 if __name__ == '__main__':
     host = '0.0.0.0'
     beacon, port = parse_argv(sys.argv)
     print('Starting with settings: beacon:{0} self: {1}:{2}'.format(beacon, host, port))
     
-    bw = BeaconWrapper(beacon, port, 'services/node_frontend', {'balancer', 'filesystem'})
+    bw = BeaconWrapper(beacon, port, 'services/node_frontend', {'balancer', 'filesystem', 'database'})
     
     bw.beacon_setter()
     bw.beacon_getter()

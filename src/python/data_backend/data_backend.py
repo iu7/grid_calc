@@ -26,7 +26,7 @@ if __name__ == '__main__':
 
     init_conn_string(dbhost, dbport)
 else:
-    init_conn_string('10.0.0.10', 5432)
+    init_conn_string('10.0.0.20', 5432)
 ###<< MAIN ##
 
 ###>> init models

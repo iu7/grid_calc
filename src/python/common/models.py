@@ -160,7 +160,7 @@ def init_models(Base):
         )),\
 \
         id = Column(Integer(), primary_key = True, autoincrement = True),\
-        key = Column(String(64), unique = True)
+        key = Column(String(64), unique = True),\
 \
         __init__ = agent_init,\
         __repr__ = lambda self :', '.join(['{0}: {1}'.format(f, getattr(self, f)) for f in self.metainf.col_type_d.keys()])\
