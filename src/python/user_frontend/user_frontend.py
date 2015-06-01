@@ -129,10 +129,12 @@ def view():
     except:
         return unauthorized()
     try:
-        tasks = pyrequests.get(bw['logic_backend'] + '/tasks', {'uid':uid}).json()['tasks']
+        tasks = jsr('get', bw['logic_backend'] + '/tasks', {'uid':uid}).json()['tasks']
+        message = ''
     except:
         tasks = []
-        return render_template('view.html', tasks = tasks)
+        message = 'Ошибка при чтении задач'
+    return render_template('view.html', tasks = tasks, message = message)
     
 @app.route('/state', methods=['GET'])
 def state():

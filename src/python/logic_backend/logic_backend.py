@@ -62,7 +62,7 @@ def taskPlacing():
 @app.route('/tasks', methods=['GET'])
 def taskViewing():
     try:
-        payload = jsdec(request.data.decode('utf-8'))
+        payload = request.get_json()
         uid = payload['uid']
     except:
         return jsenc({'status':'failure', 'message':'malformed syntax'}), 400
