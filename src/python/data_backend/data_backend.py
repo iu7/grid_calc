@@ -242,10 +242,10 @@ def table_arrayfilter_get(table, value_json):
                 pvl += [maybe_val]
                 #if f in tbl.metainf.fk_fields + [tbl.metainf.pk_field]:
                 if f in [tbl.metainf.pk_field]:
-                    pvl = (encode_pkv(v) for v in pvl)
+                    pvl = [encode_pkv(v) for v in pvl]
             qry = qry.filter(getattr(tbl, f).in_(pvl))
         else:
-            return msg_col_not_found_fmt.format(table, f)
+            return api_400(msg_col_not_found_fmt.format(table, f))
     qres = qry.all()
 
     resld = list(map(lambda x: to_dict(x), qres))

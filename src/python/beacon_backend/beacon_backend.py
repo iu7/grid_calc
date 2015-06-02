@@ -70,7 +70,7 @@ def collector():
         typedict = services[type]
         
         for addr in list(typedict.keys()):
-            if (now - typedict[addr].lastbeat).seconds > timeout:
+            if (now - typedict[addr].lastbeat).total_seconds() > timeout:
                 del typedict[addr]
                 
         if len(typedict) == 0:

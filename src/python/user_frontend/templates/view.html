@@ -22,18 +22,34 @@
             <table class="tg">
                 <tr> 
                     <th class=\"tg-031e\">Название задачи</th>
-                    <th class=\"tg-031e\">Состояние подзадачи</th>
+                    <th class=\"tg-031e\">Дата создания</th>
+                    <th class=\"tg-031e\">Черты задачи</th>
+                    <th class=\"tg-031e\">Состояния подзадач</th>
                 </tr>
                 {% for task in tasks %}
                 <tr> 
                     <td class=\"tg-031e\">{{task['taskname']}}</td>
-                    {% if 'result' in task %}
-                    <td class=\"tg-031e\"><a href="getfile?id={{task['result']}}">Выполнена</a></td>
-                    {% else %}
-                    <td class=\"tg-031e\">{{task['state']}}</td>
-                    {% endif %}
+                    <td class=\"tg-031e\">{{task['dateplaced']}}</td>
+                    
+                    <td class=\"tg-031e\" style="white-space:nowrap;">
+                    {% for trait in task['traits']%}
+                        <small>{{trait}}</small><br/>
+                    {% endfor %}
+                    </td>
+                    
+                    <td class=\"tg-031e\" style="white-space:nowrap;">
+                    {% for status in task['statuses']%}
+                        {% if 'result' in status %}
+                        <a href="getfile?id={{status['result']}}"><small>Выполнена</small></a><br/>
+                        {% else %}
+                        <small>{{status['status']}}</small><br/>
+                        {% endif %}
+                    {% endfor %}
+                    </td>
+                    
                     <td class=\"tg-031e\">
-                    <form action ="/cancel?id={{task['task_id']}}" method="GET">
+                    <form action ="/cancel" method="GET">
+                        <input type="hidden" name="id" value="{{task['id']}}" />
                         <div class="line submit"> <button type="submit">Отменить</button> </div>
                     </form>
                     </td>

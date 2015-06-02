@@ -19,46 +19,48 @@
     </head>
     <body>
         <div id="container">
-            {% if archivePending: %}
+            {% if archivePending %}
             <small>Архив выбран</small>
             <form action="/cancelarchive" method="POST">
                 <button type="submit">Удалить</button>
             </form>
-            {% else: %}
+            {% else %}
             <small>Укажите путь к архиву задачи</small>
             <form action="/sendarchive" method="POST" enctype="multipart/form-data">
                 <input type="file" name="archive" size="50">
                 <button type="submit">Отправить</button>
             </form>
-            {% endif: %}
+            {% endif %}
         </div>
     
         <div id="container">
-            {% if traitsPending: %}
+            {% if traitsPending %}
             <small>Список черт выбран</small>
             <form action="/canceltraits" method="POST">
                 <button type="submit">Удалить</button>
             </form>
-            {% else: %}
+            {% else %}
             <small>Укажите путь к файлу черт</small>
             <form action="/sendtraits" method="POST" enctype="multipart/form-data">
                 <input type="file" name="traits" size="50">
                 <button type="submit">Отправить</button>
             </form>
-            {% endif: %}
+            {% endif %}
         </div>
     
         <div id="container">
-            {% if traitsPending and archivePending: %}
+            {% if traitsPending and archivePending %}
             <form action="/create" method="POST">
                 <div class="line"><label for="taskname">Имя задачи</label><input type="text" name="taskname"/></div>
+                <div class="line"><label for="maxtime">Максимальное время простоя</label><input type="text" name="maxtime"/></div>
+                <div class="line"><label for="maxtime">Количество экземпляров задачи (минимум 1)</label><input type="text" name="subtaskcount" value="1"/></div>
                 <button type="submit">Создать задачу</button>
             </form>
-            {% endif: %}
+            {% endif %}
         </div>
     
         <div id="container">
-            <form action ="/tasks" method="GET">
+            <form action ="/view" method="GET">
                 <div class="line submit"> <button type="submit">Просмотр задач</button> </div>
             </form>
             
