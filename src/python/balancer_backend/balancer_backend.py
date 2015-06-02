@@ -85,8 +85,17 @@ def submitTaskHandler():
 
 ################################
 
-def cleaner():
-    return 0
+def actualityCheck():
+    sts = jsr('get', bw['database']+'/subtask/filter', {'status':'assigned'}).json()['result']
+    stids = list(map(lambda x:x['id'], sts))
+    
+
+def actualityChecker():
+    actualityCheck()
+    
+    thr = threading.Timer(60, actualityChecker)
+    thr.daemon = True
+    thr.start()
 
 
 ################################
@@ -127,7 +136,7 @@ if __name__ == '__main__':
     bw = BeaconWrapper(beacon, port, 'services/balancer', {'database'})
     bw.beacon_setter()
     bw.beacon_getter()
-    cleaner()
+    actualityChecker()
     print(app.config['GRID_CALC_ROLE'])
     platform_dependent_on_run(app.config['GRID_CALC_ROLE'])
     app.run(host = host, port = port)

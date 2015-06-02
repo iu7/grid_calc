@@ -293,7 +293,7 @@ def table_bulk_get(table):
     return process_filter_request(bind_try_request)
 
 ### Custom ###
-def get_free_subtask_by_agent_id(agent_id, status = 'queued', newstatus = 'taken'):
+def get_free_subtask_by_agent_id(agent_id, status = 'queued', newstatus = 'assigned'):
     bres, maybe_val = parse_field_value(table_name_d['agent'], 'id', agent_id)
     if not bres:
         return maybe_val
