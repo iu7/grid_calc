@@ -26,16 +26,34 @@ ALLOWED_EXTENSIONS = set(['zip'])
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-    
 @app.route('/create', methods=['GET'])
 def create():
     try:
         uid = getuid()
     except:
         return unauthorized()
-    ##############
+        
+    archivePending = False
+    traitsPending = False
+    if uid in pendingCreations:
+        pc = pendingCreations[uid]
+        if 'pending_archive' in request.cookies:
+            pa = request.cookies['pending_archive'] 
+            if 'archive' in pc and pc['archive'] == pa:
+                archivePending = True
+            else:
+                response = make_response(url_for('create'))
+                response.set_cookies('pending_archive', '', expires=0)
+                return response
+        if 'pending_traits' in request.cookies:
+            if 'traits' in pc:
+                traitsPending = True
+            else:
+                response = make_response(url_for('create'))
+                response.set_cookies('pending_traits', '', expires=0)
+                return response
     
-    return render_template('create.html')
+    return render_template('create.html', archivePending = archivePending, traitsPending = traitsPending)
 
 @app.route('/create', methods=['POST'])
 def createsubmit():
@@ -43,11 +61,140 @@ def createsubmit():
         uid = getuid()
     except:
         return unauthorized()
-    ##############
+        
+    try:
+        archivename = pendingCreations[uid]['archive']
+        traits = pendingCreations[uid]['traits']
+        taskname = request.form['taskname']
+        jsr('post', bw['logic_backend'] + '/tasks', {'uid':uid, 'traits':traits, 'task_name':taskname, 'archive_name':archivename})
+        
+        pendingCreations[uid]['archive_time'] = pendingCreations[uid]['traits_time'] = datetime.datetime.now() + datetime.timedelta(-30)
+        
+        return redirect(url_for('view'))
+    except:
+        return redirect(url_for('create'))
+
+pendingCreations = {}
+
+@app.route('sendarchive', methods=['POST'])
+def sendarchive():
+    try:
+        uid = getuid()
+    except:
+        return unauthorized()
     
-    return redirect(url_for('view'))
-
-
+    response = make_response(redirect(url_for('create')))
+    if not uid in pendingCreations
+        pendingCreations[uid] = {}
+    try:
+        f = request.files['archive']
+        filename = secure_filename(random_string(32))
+        fullpath = os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        f.save(fullpath)
+        
+        if 'archive' in pendingCreations[uid]:
+            os.remove(os.path.join(app.config['UPLOAD_FOLDER'], \
+                pendingCreations[uid]['archive']))
+        
+        pendingCreations[uid]['archive'] = filename
+        pendingCreations[uid]['archive_time'] = datetime.datetime.now()
+        
+        response.set_cookie('pending_archive', filename)
+        return response
+    except:
+        safedel(os.path.join(app.config['UPLOAD_FOLDER'], \
+            pendingCreations[uid]['archive']))
+        pendingCreations[uid].pop('archive', '')
+        response.set_cookie('pending_archive', '', expires=0)                
+        return response
+    
+@app.route('sendtraits', methods=['POST'])
+def sendtraits():
+    try:
+        uid = getuid()
+    except:
+        return unauthorized()
+    
+    response = make_response(redirect(url_for('create')))
+    if not uid in pendingCreations
+        pendingCreations[uid] = {}
+    try:
+        f = request.files['traits']
+        filename = secure_filename(random_string(32))
+        fullpath = os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        f.save(fullpath)
+        
+        traits = []
+        with open(fullpath) as f:
+            lines = f.readlines()
+            for line in lines:
+                s = filter(None, lines.split(' '))
+                assert len(s) == 2
+                traits.append({'name':s[0], 'version':s[1])
+        safedel(fullpath)
+    #except:
+    #   redirect with 'wrong file syntax'
+    #try:
+        pendingCreations[uid]['traits'] = traits
+        pendingCreations[uid]['traits_time'] = datetime.datetime.now()
+        
+        response.set_cookie('pending_traits', filename)
+        return response
+    except:
+        safedel(fullpath)
+        response.set_cookie('pending_traits', '', expires=0)     
+        return response
+    
+@app.route('cancelarchive', methods=['POST'])
+def cancelarchive():
+    try:
+        uid = getuid()
+    except:
+        return unauthorized()
+    if uid in pendingCreations:
+        if 'archive' in pendingCreations[uid]:
+            safedel(os.path.join(app.config['UPLOAD_FOLDER'], \
+                pendingCreations[uid]['archive']))
+            pendingCreations[uid].pop('archive', '')
+            pendingCreations[uid].pop('archive_time', '')
+            
+    response = make_response(redirect(url_for('create')))
+    response.set_cookie('pending_archive', '', expires=0)      
+    return response
+        
+@app.route('canceltraits', methods=['POST'])
+def canceltraits():
+    try:
+        uid = getuid()
+    except:
+        return unauthorized()
+    if uid in pendingCreations:
+        if 'traits' in pendingCreations[uid]:
+            pendingCreations[uid].pop('traits', '')
+            pendingCreations[uid].pop('traits_time', '')
+            
+    response = make_response(redirect(url_for('create')))
+    response.set_cookie('pending_traits', '', expires=0)      
+    return response
+    
+def pendingCleaner():
+    now = datetime.datetime.now
+    for uid in pendingCreations:
+        t = pendingCreations[uid]
+        if 'archive_time' in t:
+            if (now - t['archive_time']).seconds > 60*20:
+                safedel(os.path.join(app.config['UPLOAD_FOLDER'], \
+                    t['archive']))
+                t.pop('archive_time', '')
+                t.pop('archive', '')
+        if 'traits_time' in t:
+            if ((now - t['traits_time']).seconds > 60*20:
+                t.pop('traits_time', '')
+                t.pop('traits', '')
+    thr = threading.Timer(60, pendingCleaner)
+    thr.daemon = True
+    thr.start()
+    
 #######################################################################
 # done
 #######################################################################
@@ -82,7 +229,6 @@ def is_authorized():
         return True
     except:
         return False
-     
     
 @app.route('/', methods=['GET'])
 def default():
@@ -191,5 +337,6 @@ if __name__ == '__main__':
     
     bw.beacon_setter()
     bw.beacon_getter()
+    pending_cleaner()
     platform_dependent_on_run(app.config['GRID_CALC_ROLE'])
     app.run(host = host, port = port)
