@@ -240,9 +240,8 @@ def table_arrayfilter_get(table, value_json):
                 if not bres:
                     return maybe_val
                 pvl += [maybe_val]
-                #if f in tbl.metainf.fk_fields + [tbl.metainf.pk_field]:
-                if f in [tbl.metainf.pk_field]:
-                    pvl = (encode_pkv(v) for v in pvl)
+            if f in [tbl.metainf.pk_field]:
+                pvl = [encode_pkv(v) for v in filter(lambda pkv: pkv % SHARDS_COUNT == SHARD_NUMBER, pvl)] #a bit ugly
             qry = qry.filter(getattr(tbl, f).in_(pvl))
         else:
             return msg_col_not_found_fmt.format(table, f)
