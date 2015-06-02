@@ -19,15 +19,16 @@ app = Flask(__name__)
 app.config.update(DEBUG = True)
 app.config.update(GRID_CALC_ROLE = 'NODE_FRONTEND')
 app.config.update(UPLOAD_FOLDER = os.path.join(tempfile.gettempdir(), '_'.join([app.config['GRID_CALC_ROLE'], 'upload'])))
-app.config.update(ALLOWED_EXTENSIONS = ['zip'])
+app.config.update(ALLOWED_EXTENSIONS = ['tar.gz'])
 
 msg_required_params_fmt = 'Required: {0}'
 msg_error_params_fmt = 'Error parameters: {0}'
 
 def allowed_file(filename):
     if '.' in filename:
-        if filename[::-1].split('.')[0][::-1] in app.config['ALLOWED_EXTENSIONS']:
-            return True
+        for ext in app.config['ALLOWED_EXTENSIONS']:
+            if filename[::-1][:len(ext)] == ext[::-1]:
+                return True
     return False
 
 def is_key_valid(key):
@@ -97,7 +98,7 @@ def submitTaskHandler():
             files = {'file':open(fullpath, 'rb')})
         
         if r.status_code == 200:
-            r = requests.post(bw['balancer'] + '/tasks', data = {'filename': r.json()['name']})
+            r = requests.post(bw['balancer'] + '/tasks', data = {'filename': r.json()['name'], 'nodeid': nodeid})
 
         os.unlink(fullpath)
         return r.text, r.status_code
@@ -108,8 +109,6 @@ def submitTaskHandler():
 
 @app.route('/getfile', methods=['GET'])
 def getfile():
-    import pdb
-    pdb.set_trace()
     key = get_url_parameter('key')
     nodeid = get_url_parameter('nodeid')
     if not is_key_id_valid(key, nodeid):

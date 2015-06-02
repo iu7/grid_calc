@@ -74,7 +74,7 @@ def newTaskHandler():
     
 @app.route('/tasks', methods=['POST'])
 def submitTaskHandler():
-    if not 'nodeid' in request.form: return '', 422
+    if not 'nodeid' in request.form: return 'Required: nodeid', 422
     nid = request.form['nodeid']
     filename = request.form['filename']
     if nid in activenodes: 

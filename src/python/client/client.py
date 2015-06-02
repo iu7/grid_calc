@@ -21,8 +21,8 @@ PLATFORM_INFO_OTHER_FMTS       = ['{platform}', '']
 START_SCRIPT_PREFIX = 'start'
 STOP_SCRIPT_PREFIX  = 'stop'
 
-SCRIPT_RESULTS_DIR = 'results'
-SCRIPT_EXTENTIONS = ['', 'exe', 'sh', 'py']
+SCRIPT_RESULTS_DIR = 'result'
+SCRIPT_EXTENTIONS = ['exe', 'sh', 'py']
 
 ZIPPER_CMD_FMT   = 'tar -czf {{name}}.{archext} {{wildcard}}'.format(archext = ARCHIVE_EXTENTION)
 UNZIPPER_CMD_FMT = 'tar -xzf {wildcard}'
@@ -119,26 +119,26 @@ class Node:
                     print('Retrying after {0}s'.format(self.req_timeout))
                     sleep(self.req_timeout)
             ###<< retrieving file
-
-            ###>> unzipping
-            try:
-                print('  Extracting archive')
-                os.chdir(config['ARCHIVE_DIRECTORY'])
-                unzipcmd = UNZIPPER_CMD_FMT.format(wildcard = '*')
-                if not os.system(unzipcmd):
-                    raise Exception('Failed to extract: {0}'.format(unzipcmd))
-                os.chdir(config['WORKING_DIRECTORY'])
-                print('  Done')
-            except Exception as e:
-                print('Failed: {0}'.format(str(e)))
-                requests.put(front, '/nodes/{0}'.format(self.node_id), data = {'key': self.key, 'status': 'failed', 'message': str(e)})
-                print('  Clearing working and archive directories')
-                clear_directory(config['ARCHIVE_DIRECTORY'])
-                clear_directory(config['WORKING_DIRECTORY'])
-                return False, None
-            ###<< unzipping
         else:
             print('Found unfinished task')
+            clear_directory(config['WORKING_DIRECTORY'])
+
+        ###>> unzipping
+        try:
+            print('  Extracting archive')
+            os.chdir(config['WORKING_DIRECTORY'])
+            unzipcmd = UNZIPPER_CMD_FMT.format(wildcard = os.path.join(config['ARCHIVE_DIRECTORY'], '*'))
+            code = os.system(unzipcmd)
+            if code:
+                raise Exception('Failed to extract: {0}'.format(unzipcmd))
+            print('  Done')
+        except Exception as e:
+            print('Failed: {0}'.format(str(e)))
+            requests.put(front + '/nodes/{0}'.format(self.node_id), data = {'key': self.key, 'status': 'failed', 'message': str(e)})
+            print('  Clearing working and archive directories')
+            clear_directory(config['ARCHIVE_DIRECTORY'])
+            return False, None
+        ###<< unzipping
 
         try:
             print('Creating task lock file: {0}'.format(tasklockfile))
@@ -154,28 +154,29 @@ class Node:
         if not (start_script):
             msg = 'Failed: Not found start script: start = {0}'.format(start_script)
             print(msg)
-            requests.put(front, '/nodes/{0}'.format(self.node_id), data = {'key': self.key, 'status': 'failed', 'message': msg})
+            requests.put(front + '/nodes/{0}'.format(self.node_id), data = {'key': self.key, 'status': 'failed', 'message': msg})
             return False, None
         ###>> finding scripts
 
         ###>> starting
         try:
-            print('  Attemting to run {0}'.format(start_script))
+            print('  Attempting to run {0}'.format(start_script))
             os.chdir(config['WORKING_DIRECTORY'])
             self.pdesc = run(start_script)
         except Exception as e:
             msg = 'Failed to run: {0}'.format(str(e))
             print(msg)
-            requests.put(front, '/nodes/{0}'.format(self.node_id), data = {'key': self.key, 'status': 'failed', 'message': msg})
+            requests.put(front + '/nodes/{0}'.format(self.node_id), data = {'key': self.key, 'status': 'failed', 'message': msg})
             return False, None
         ###<< starting
 
         ###>> watchdog
         ### bark-bark!
-        print('Setting watchdog on PID = {0}'.format(pdesc.pid))
+        print('Setting watchdog on PID = {0}'.format(self.pdesc.pid))
         try:
             w = Watchdog(n.pdesc)
             w.start()
+            w.wait()
             print('Good boy!')
         except Exception as e:
             msg = 'Watchdog is sick: {0}'.format(str(e))
@@ -183,7 +184,7 @@ class Node:
             raise Exception(msg)
         ###<< wahchdog
 
-        if self.popen.returncode:
+        if self.pdesc.returncode:
             print('Task failed with code: {0}, but we will return what we can'.format(self.popen.returncode))
 
         ###>> task done, find results
@@ -192,21 +193,22 @@ class Node:
         if not os.path.exists(resdir):
             msg = 'Failed: results directory not found'
             print(msg)
-            requests.put(front, '/nodes/{0}'.format(self.node_id), data = {'key': self.key, 'status': 'failed', 'message': msg})
+            requests.put(front + '/nodes/{0}'.format(self.node_id), data = {'key': self.key, 'status': 'failed', 'message': msg})
             raise Exception(msg)
         
         ### results dir exists, zip it
         os.chdir(resdir)
         newarchfn = random_string(32)
-        newarchfile = os.path.join(config['ARCHIVE_DIRECTORY'], '.'.join(newarchfn, ARCHIVE_EXTENTION))
+        newarchfile = os.path.join(config['ARCHIVE_DIRECTORY'], newarchfn)
         zipcmd = ZIPPER_CMD_FMT.format(name = newarchfile, wildcard = '*')
-        if not os.system(zipcmd):
+        if os.system(zipcmd):
             raise Exception('Failed to compress: {0}'.format(zipcmd))
         os.chdir(config['WORKING_DIRECTORY'])
 
         ### send it
+        newarchfile = '.'.join([newarchfile, ARCHIVE_EXTENTION])
         front = 'http://{0}'.format(config['NODE_FRONTEND'])
-        resp = requests.post(front, '/tasks', files = {'file': open(newarchfile, 'rb')}, data = {'key': self.key, 'nodeid': self.node_id})
+        resp = requests.post(front + '/tasks', files = {'file': open(newarchfile, 'rb')}, data = {'key': self.key, 'nodeid': self.node_id})
         if resp.status_code != 200:
             raise Exception('Failed: {0}'.format(str(e)))
 
@@ -228,7 +230,7 @@ class Watchdog:
     pdesc     = None
     timestamp = None
     timeout   = 2 # days
-    cycletime = 600 # 10 minutes
+    cycletime = 60 # 1 minutes
     running   = False
     kill_to_term = 10 # seconds
 
@@ -236,7 +238,7 @@ class Watchdog:
         self.pdesc = pdesc
         self.timestamp = datetime.utcnow()
 
-    def check():
+    def check(self):
         if self.pdesc.poll():
             if (datetime.utcnow() - self.timestamp).days > self.timeout:
                 self.pdesc.terminate()
@@ -250,10 +252,15 @@ class Watchdog:
         print('Bark!')
 
 
-    def start():
+    def start(self):
+        self.running = True
         thr = threading.Timer(self.cycletime, self.check)
         thr.daemon = True
         thr.start()
+
+    def wait(self):
+        while self.running:
+            sleep(self.cycletime)
 
 ###
 def jsr(method, address, data = {}):
@@ -264,14 +271,15 @@ def run(cmd):
     sysname = platform.system()
     cmd_args = shlex.split(cmd)
     if sysname == 'Windows':
-        print('  Attemting to run detached ...')
+        print('  Attempting to run detached ...')
         popen = subprocess.Popen(cmd_args, creationflags=WINDOWS_DETACHED_PROCESS)
-        print('  Attemting to set IDLE_PRIORITY_CLASS ...')
+        print('  Attempting to set IDLE_PRIORITY_CLASS ...')
         psutil.Process(popen.pid).nice(psutil.IDLE_PRIORITY_CLASS)
         return popen
     elif sysname == 'Linux':
-        print('  Attemting to run and nice(20) ...')
+        print('  Attempting to run and nice(20) ...')
         cmd_args[0] = os.path.join(os.getcwd(), cmd_args[0])
+        cmd_args += ['&']
         return subprocess.Popen(cmd_args, close_fds=True, preexec_fn=lambda : os.nice(20))
     else:
         raise Exception('Executing on OS {0} is currently not supported'.format(sysname))
@@ -293,6 +301,7 @@ def download_file(resp, fullpath):
     print('  Done.')
 
 def find_script(prefix, path, valid_fmts):
+    print('  Searching for start script:')
     for fmt in valid_fmts:
         name = PLATFORM_INFO_SEP.join([\
             prefix,\
@@ -304,9 +313,11 @@ def find_script(prefix, path, valid_fmts):
         ])
         fullpath = os.path.join(path, name)
         for ext in SCRIPT_EXTENTIONS:
-            if os.path.exists('.'.join([fullpath, ext])):
-                return name
-        return name
+            fn = '.'.join([fullpath, ext])
+            print('  Attempting {0}'.format(fn))
+            if os.path.exists(fn):
+                print('  Found: {0}'.format(fn))
+                return '.'.join([name, ext])
     return None
 
 def create_dir_if_not_exists(path):
