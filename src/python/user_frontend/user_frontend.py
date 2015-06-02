@@ -22,9 +22,11 @@ app.config.update(DEBUG = True)
 app.config.update(GRID_CALC_ROLE = 'USER_FRONTEND')
 
 UPLOAD_FOLDER = 'uploads'
-ALLOWED_EXTENSIONS = set(['zip'])
+ALLOWED_EXTENSIONS = set(['tar.gz'])
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+pendingCreations = {}
 
 #######################################################################
 # done
@@ -83,7 +85,19 @@ def createsubmit():
         taskname = request.form['taskname']
         maxtime = request.form['maxtime']
         subtaskcount = request.form['subtaskcount']
-        assert jsr('post', bw['logic_backend'] + '/tasks', {'uid':uid, 'traits':traits, 'task_name':taskname, 'archive_name':archivename, 'max_time':maxtime, 'subtask_count':subtaskcount}).status_code == 200
+
+        resp = requests.post(bw['filesystem'] + '/static', files = {'file': open(os.path.join(app.config['UPLOAD_FOLDER'], archivename), 'rb')})
+        assert resp.status_code == 200
+        archivename = resp.json()['name']
+
+        assert jsr('post', bw['logic_backend'] + '/tasks', {\
+            'uid':uid,\
+            'traits':traits,\
+            'task_name':taskname,\
+            'archive_name':archivename,\
+            'max_time':maxtime,\
+            'subtask_count':subtaskcount\
+        }).status_code == 200
         
         pendingCreations[uid]['archive_time'] = pendingCreations[uid]['traits_time'] = datetime.datetime.now() + datetime.timedelta(-30)
         pending_cleaner_clean(uid)
@@ -91,8 +105,6 @@ def createsubmit():
         return redirect(url_for('view'))
     except:
         return redirect(url_for('create'))
-
-pendingCreations = {}
 
 @app.route('/sendarchive', methods=['POST'])
 def sendarchive():

@@ -19,7 +19,7 @@ app = Flask(__name__)
 app.config.update(GRID_CALC_ROLE = 'LOGIC_BACKEND')
 
 UPLOAD_FOLDER = '/uploads'
-ALLOWED_EXTENSIONS = set(['zip'])
+ALLOWED_EXTENSIONS = set(['tar.gz'])
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config.update(DEBUG = True)

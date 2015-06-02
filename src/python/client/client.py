@@ -1,13 +1,14 @@
-import os, sys, shutil
+import os, sys, shutil, shlex
 from datetime import datetime
 from time import sleep
-import requests
+import requests, json
 import tempfile
 import subprocess
 import platform
 import itertools
 import psutil
 import threading
+import random, string
 
 ARCHIVE_EXTENTION = 'tar.gz'
 
@@ -29,20 +30,28 @@ UNZIPPER_CMD_FMT = 'tar -xzf {wildcard}'
 config = {}
 
 config.update(GRID_CALC_ROLE = 'GRID_CALC_CLIENT')
-config.update(WORKING_DIRECTORY = os.path.join(tempfile.gettempdir(), '_'.join([config['GRID_CALC_ROLE'], 'upload'])))
+config.update(WORKING_DIRECTORY = os.path.join(tempfile.gettempdir(), '_'.join([config['GRID_CALC_ROLE'], 'work'])))
 config.update(HOME_DIRECTORY = os.path.join(os.path.expanduser("~"), config['GRID_CALC_ROLE']))
-config.update(ARCHIVE_DIRECTORY = os.path.join(config['WORKING_DIRECTORY'], 'archive'))
+config.update(ARCHIVE_DIRECTORY = os.path.join(tempfile.gettempdir(), '_'.join([config['GRID_CALC_ROLE'], 'arch'])))
 config.update(NODE_FRONTEND = None)
 config.update(LOCK_FILE = 'key.lock')
 config.update(SCRIPT_VALID_POSTFIX_FMTS = PLATFORM_INFO_OS_ARCH_REL_FMTS + PLATFORM_INFO_OS_ARCH_FMTS + PLATFORM_INFO_OS_REL_FMTS + PLATFORM_INFO_OTHER_FMTS)
+config.update(CLIENT_TRAITS = [])
+
+### Traits auto extract ###
+### TODO: parse from some input file
+def auto_extract_traits():
+    platf, arch, release = platform.system(), platform.machine(), platform.release()
+    config['CLIENT_TRAITS'] += [dict(name = 'os', version = platf)]
+    config['CLIENT_TRAITS'] += [dict(name = 'os_version', version = release)]
+    config['CLIENT_TRAITS'] += [dict(name = 'architecture', version = arch)]
 
 class Node:
     key            = None
     busy           = False
     pdesc          = None
     input_archive  = None
-    output_archive = None    
-    sleep_interval = 600 # 10 minutes
+    output_archive = None
     req_timeout    = 1
     node_id        = None
     task_id        = None
@@ -53,7 +62,10 @@ class Node:
     def __repr__(self):
         return ', '.join(map(lambda x: str(getattr(self, x)), filter(lambda x: not hasattr(x, '__call__'))))
 
-    def run():
+    def run(self):
+        auto_extract_traits()
+        import pdb
+        pdb.set_trace()
         homedir = config['HOME_DIRECTORY']
         workdir = config['WORKING_DIRECTORY']
         front = 'http://{0}'.format(config['NODE_FRONTEND'])
@@ -62,32 +74,32 @@ class Node:
         
         ###>> keyfile ###
         if (os.path.exists(os.path.join(keyfile))):
-            ifs = open('r', keyfile).read()
+            ifh = open(keyfile, 'r')
+            ifs = ifh.read()
             id_, oldkey = None, None
             try:
                 id_, oldkey = ifs.split('#')
             except:
                 raise Exception('Syntax error in {0}. Try to remove it and retart.'.format(keyfile))
-            resp = requests.put(front + '/nodes/{0}'.format(id_), data = {'key': self.key, 'key_old': oldkey})
+            resp = requests.put(front + '/nodes/{0}'.format(id_), data = {'key': self.key, 'key_old': oldkey, 'nodeid': id_})
             assert_response(resp)
             self.node_id = id_
-            ifs.close()
         else:
-            resp = requests.post(front + '/nodes', data = {'key': self.key})
+            resp = jsr('post', front + '/nodes', data = {'key': self.key, 'traits': config['CLIENT_TRAITS']})
             assert_response(resp)
-            self.node_id = resp.json()['id']
+            self.node_id = resp.json()['agent_id']
 
-        ofs = open('w', keyfile)
-        ofs.write('#'.join(self.node_id, self.key))
+        ofs = open(keyfile, 'w')
+        ofs.write('#'.join(map(str, [self.node_id, self.key])))
         ofs.close()
         ###<< keyfile ###
 
         if not os.path.exists(tasklockfile):
             print('Found nothing to resume.')
-            clear_directory(config['ARCHIVE_DIRECTORY'])
             clear_directory(config['WORKING_DIRECTORY'])
+            clear_directory(config['ARCHIVE_DIRECTORY'])
 
-            resp = requests.get(front + '/tasks/newtask', data = {'key': self.key})
+            resp = requests.get(front + '/tasks/newtask', data = {'key': self.key, 'nodeid': self.node_id})
             if resp.status_code != 200:
                 print('No available tasks so far')
                 return False, None
@@ -97,9 +109,10 @@ class Node:
             while True:
                 try:
                     arch = resp.json()['archive_name']
-                    fresp = requests.get(front + '/getfile', data = {'key': self.key, 'nodeid': self.id_, 'archive_name': arch}, stream = True)
+                    fresp = requests.get(front + '/getfile', data = {'key': self.key, 'nodeid': self.node_id, 'archive_name': arch}, stream = True)
+                    assert_response(fresp)
                     print('Retrieving archive!')
-                    download_file(fresp, config['ARCHIVE_DIRECTORY'])
+                    download_file(fresp, os.path.join(config['ARCHIVE_DIRECTORY'], '.'.join([arch, ARCHIVE_EXTENTION])))
                     break
                 except Exception as e:
                     print('Error occured during retrieving archive: {0}!'.format(str(e)))
@@ -110,11 +123,11 @@ class Node:
             ###>> unzipping
             try:
                 print('  Extracting archive')
-                os.chdir['ARCHIVE_DIRECTORY']
-                unzipcmd = UNZIPPER_CMD_FMT.format('*')
+                os.chdir(config['ARCHIVE_DIRECTORY'])
+                unzipcmd = UNZIPPER_CMD_FMT.format(wildcard = '*')
                 if not os.system(unzipcmd):
                     raise Exception('Failed to extract: {0}'.format(unzipcmd))
-                os.chdir['WORKING_DIRECTORY']
+                os.chdir(config['WORKING_DIRECTORY'])
                 print('  Done')
             except Exception as e:
                 print('Failed: {0}'.format(str(e)))
@@ -129,7 +142,7 @@ class Node:
 
         try:
             print('Creating task lock file: {0}'.format(tasklockfile))
-            ofs = open('w', tasklockfile)
+            ofs = open(tasklockfile, 'w')
             ofs.write('Make it so!')
             ofs.close()
         except Exception as e:
@@ -170,6 +183,9 @@ class Node:
             raise Exception(msg)
         ###<< wahchdog
 
+        if self.popen.returncode:
+            print('Task failed with code: {0}, but we will return what we can'.format(self.popen.returncode))
+
         ###>> task done, find results
         os.chdir(config['WORKING_DIRECTORY'])
         resdir = os.path.join(config['WORKING_DIRECTORY'], SCRIPT_RESULTS_DIR)
@@ -183,14 +199,14 @@ class Node:
         os.chdir(resdir)
         newarchfn = random_string(32)
         newarchfile = os.path.join(config['ARCHIVE_DIRECTORY'], '.'.join(newarchfn, ARCHIVE_EXTENTION))
-        zipcmd = ZIPPER_CMD_FMT.format(newarchfile, '*')
+        zipcmd = ZIPPER_CMD_FMT.format(name = newarchfile, wildcard = '*')
         if not os.system(zipcmd):
             raise Exception('Failed to compress: {0}'.format(zipcmd))
         os.chdir(config['WORKING_DIRECTORY'])
 
         ### send it
         front = 'http://{0}'.format(config['NODE_FRONTEND'])
-        resp = requests.post(front, '/nodes', files = open('rb', newarchfile))
+        resp = requests.post(front, '/tasks', files = {'file': open(newarchfile, 'rb')}, data = {'key': self.key, 'nodeid': self.node_id})
         if resp.status_code != 200:
             raise Exception('Failed: {0}'.format(str(e)))
 
@@ -212,7 +228,7 @@ class Watchdog:
     pdesc     = None
     timestamp = None
     timeout   = 2 # days
-    cycletime = 600
+    cycletime = 600 # 10 minutes
     running   = False
     kill_to_term = 10 # seconds
 
@@ -240,6 +256,8 @@ class Watchdog:
         thr.start()
 
 ###
+def jsr(method, address, data = {}):
+    return getattr(requests, method)(address, data = json.dumps(data), headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}) 
 
 WINDOWS_DETACHED_PROCESS = 8
 def run(cmd):
@@ -260,7 +278,7 @@ def run(cmd):
 
 def assert_response(resp, code = 200):
     if resp.status_code != code:
-        raise Exception('Response was not {0}: {1}'.format(code, resp.get_json()))
+        raise Exception('Response was not {0}: {1}'.format(code, resp.json()))
 
 def random_string(size):
     return ''.join([random.choice(string.ascii_letters) for i in range(size)])
@@ -268,7 +286,7 @@ def random_string(size):
 def download_file(resp, fullpath):
     print('  Downloading to path: {0}'.format(fullpath))
     with open(fullpath, 'wb') as f:
-        for chunk in r.iter_content(chunk_size=1024): 
+        for chunk in resp.iter_content(chunk_size=1024): 
             if chunk: # filter out keep-alive new chunks
                 f.write(chunk)
                 f.flush()
@@ -333,13 +351,12 @@ if __name__ == '__main__':
     create_dir_if_not_exists(config['ARCHIVE_DIRECTORY'])
     create_dir_if_not_exists(config['HOME_DIRECTORY'])
 
-    tasklockfile = os.path.join(config['HOME_DIRECTORY'], 'task.lock')
-    if not os.path.exists():
-        clear_directory(config['WORKING_DIRECTORY'])
-
     print('Setting lowest priority')
     set_lowest_priority()
     
     n = Node()
-    #while True:
-    #    n.run()
+    try:
+        while True:
+            n.run()
+    except Exception as e:
+        print('Error: {0}'.format(str(e)))

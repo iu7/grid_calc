@@ -26,8 +26,7 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 @app.route('/nodes', methods=['POST'])
 def nodesHandler():
-    traits = jsdec(request.data.decode('utf-8'))['traits']
-    
+    traits = request.get_json()['traits']
     key = get_url_parameter('key')
     nidr = jsr('post', bw['database'] + '/agent', data = {'key': key})
     if nidr.status_code == 200:
@@ -63,8 +62,8 @@ def newTaskHandler():
     if (r.status_code == 200):
         subtask = r.json()
         sid = subtask['id']
-        tid = task['task_id']
-        task = requests.get(bw['database']+'/task/'+tid).json()
+        tid = subtask['task_id']
+        task = requests.get(bw['database']+'/task/'+str(tid)).json()
         archive_name = task['archive_name']
         
         activenodes[nid] = ActiveNode('Was assigned task', tid, sid, nid)

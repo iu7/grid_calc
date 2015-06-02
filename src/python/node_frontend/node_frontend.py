@@ -32,35 +32,37 @@ def allowed_file(filename):
 
 def is_key_valid(key):
     if key:
-        resp = jsr('get', bw['database'] + '/agent/filter', data = {'key': key})
+        resp = jsr('get', bw['database'] + '/agent/filter', {'key': key})
         return len(resp.json()['result']) > 0
     return False
 
 def is_key_id_valid(key, id_):
     if key and id_:
-        resp = jsr('get', bw['database'] + '/agent/filter', data = {'key': key, 'id': id_})
+        resp = jsr('get', bw['database'] + '/agent/filter', {'key': key, 'id': id_})
         return len(resp.json()['result']) > 0
     return False
 
 @app.route('/nodes', methods=['POST'])
 def nodesHandler():
-    r = jsr('post', bw['balancer'] + '/nodes', data = request.get_json()) 
+    r = jsr('post', bw['balancer'] + '/nodes', request.get_json()) 
     return r.text, r.status_code
     
 @app.route('/nodes/<int:nodeid>', methods=['PUT'])
 def nodesSpecificHandler(nodeid):
-    key = get_url_parameter('key')
+    keyold = get_url_parameter('key_old')
     nodeid = get_url_parameter('nodeid')
-    if not is_key_id_valid(key, nodeid):
+    if not is_key_id_valid(keyold, nodeid):
         return msg_required_params_fmt.format('valid "nodeid", "key" cortege'), 422
 
     ### Case 1: update keys
-    if has_url_parameter('key_old'):
-        keyold = get_url_parameter('key_old')
-        dr = jsr('put', bw['database'] + '/agent/filter', data = {'id': nodeid, 'key': keyold, 'changes': {'key' : key}})
+    if has_url_parameter('key'):
+        key = get_url_parameter('key')
+        dr = jsr('put', bw['database'] + '/agent/filter', {'id': nodeid, 'key': keyold, 'changes': {'key' : key}})
         if int(dr.json()['count']) == 0:
             return msg_required_params_fmt.format('valid (id(in endpont), "key", "key_old") cortege'), 422
         return 'success', 200
+    else:
+        return msg_required_params_fmt.format('valid (id(in endpont), "key", "key_old") cortege'), 422
     
     ### Case 2: update state
     r = requests.put(bw['balancer'] + '/nodes/' + str(nodeid), data = {'state': get_url_parameter('state')})
@@ -106,23 +108,25 @@ def submitTaskHandler():
 
 @app.route('/getfile', methods=['GET'])
 def getfile():
+    import pdb
+    pdb.set_trace()
     key = get_url_parameter('key')
-    nodeid = get_url_parameter('id')
+    nodeid = get_url_parameter('nodeid')
     if not is_key_id_valid(key, nodeid):
         return msg_required_params_fmt.format('valid "id", "key" cortege'), 422
     
-    filename = get_url_parameter('arhive_name')
+    filename = get_url_parameter('archive_name')
     if not filename:
         return msg_required_params_fmt.format('valid "id", "key", "archive_name" cortege'), 422
     
-    resp = jsr('get', bw['database'] + '/subtask/filter', data = {'agent_id': nodeid})
+    resp = jsr('get', bw['database'] + '/subtask/filter', {'agent_id': nodeid})
     if resp.status_code == 200:
         if len(resp.json()['result']) == 0:
             return 'You are not assigned to any task', 403
 
     subtasks = resp.json()['result']
-    task_ids = (s['task_id'] for s in subtasks)
-    resp = jsr('get', bw['database'] + '/task/arrayfilter', data = {'arhive_name': [filename], 'id' task_ids})
+    task_ids = [s['task_id'] for s in subtasks]
+    resp = jsr('get', bw['database'] + '/task/arrayfilter', {'archive_name': [filename], 'id': task_ids})
     if resp.status_code != 200:
         return 'You are not assigned to this task', 403
 
