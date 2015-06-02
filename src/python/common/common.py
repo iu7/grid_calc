@@ -16,6 +16,12 @@ def random_string(size):
 def jsr(method, address, data = {}):
     return getattr(pyrequests, method)(address, data = pyjson.dumps(data), headers = {'Content-type': 'application/json', 'Accept': 'text/plain'})    
     
+def jsdec(o):
+    return jsonpickle.decode(o)
+
+def jsenc(o):
+    return jsonpickle.encode(o, unpicklable=False)
+
 def getFileFromTo(adr, fname):
     with open(fname, 'wb') as handle:
         response = pyrequests.get(adr, stream=True)
@@ -42,37 +48,25 @@ def preparedir(folder, flush=False):
             pass
             
 def place_bulk_traits(arroftraits, itemtype, jsonid, dbadr):
-    traits = jsdec(request.data.decode('utf-8'))['traits']
-        
-    nid = requests.post(dbadr + '/' + itemtype, \
-        data = jsenc({}), \
-        headers = {'content-type':'application/json'}).json()['id']
-        
+    id_fld = itemtype + '_id'
     try:
-        for trait in traits:
-            jstrait = jsenc(trait)
-            existing = requests.get(dbadr + '/trait/filter', \
-                data = jstrait, \
-                headers = {'content-type':'application/json'})
-            existing = existing.json()['result'] if existing.status_code == 200 else []
+        for trait in arroftraits:
+            existing = jsr('get', dbadr + '/trait/filter', data = trait)
+            existing = existing.json()['result']
             
-            tid = existing[0]['id'] if existing else \
-                requests.post(dbadr + '/trait', \
-                    data = jstrait, \
-                    headers = {'content-type':'application/json'}).json()['id']
+            tid = None
+            if len(existing) > 0:
+                tid = existing[0]['id']
+            else: 
+                tid = jsr('post', dbadr + '/trait', data = trait).json()['id']
             
-            requests.post(dbadr+'/mtm_trait'+itemtype, \
-                data = jsenc({(itemtype + '_id'):nid, 'trait_id':tid}), \
-                headers =  {'content-type':'application/json'}).json()['trait_id']
+            r = jsr('post', dbadr + '/mtm_trait' + itemtype,\
+                data = {str(id_fld) : jsonid, 'trait_id' : tid}\
+            )
+            _ = r.json()['trait_id']
     except Exception as e:
         return jsenc({'status':'failure'}), 422
-    return jsenc({'status':'success', (itemtype + '_id'):nid}), 200
-
-def jsdec(o):
-    return jsonpickle.decode(o)
-
-def jsenc(o):
-    return jsonpickle.encode(o, unpicklable=False)
+    return jsenc({'status' : 'success', str(id_fld) : jsonid}), 200
 
 ### flask.request related ###
 

@@ -16,6 +16,7 @@ from common.common import *
 bw = None
 
 app = Flask(__name__)
+app.config.update(DEBUG = True)
 app.config.update(GRID_CALC_ROLE = 'BALANCER_BACKEND')
 
 UPLOAD_FOLDER = '/uploads'
@@ -26,14 +27,16 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 @app.route('/nodes', methods=['POST'])
 def nodesHandler():
     traits = jsdec(request.data.decode('utf-8'))['traits']
-        
-    nid = requests.post(bw['database'] + '/agent', \
-        data = jsenc({}), \
-        headers = {'content-type':'application/json'}).json()['id']
-        
-    return place_bulk_traits(traits, 'agent', nid, bw['database'])
     
-@app.route('/nodes/<string:nid>', methods=['PUT'])
+    key = get_url_parameter('key')
+    nidr = jsr('post', bw['database'] + '/agent', data = {'key': key})
+    if nidr.status_code == 200:
+        nid = nidr.json()['id']
+    else:
+        return nidr.text, nidr.status_code
+    return place_bulk_traits(traits, 'agent', nid, bw['database'])
+
+@app.route('/nodes/<int:nid>', methods=['PUT'])
 def nodesSpecificHandler(nid):
     state = request.form['state'] if 'state' in request.form else ''
     
@@ -43,9 +46,7 @@ def nodesSpecificHandler(nid):
         else:
             activenodes[nid].Update()
     else:
-        subtask = requests.get(bw['database']+'/subtask/filter', \
-            data = jsenc({'agent_id':nid}), \
-            headers = {'content-type':'application/json'}).json()['result'][0]
+        subtask = jsr('get', bw['database']+'/subtask/filter', data = {'agent_id':nid}).json()['result'][0]
         sid = subtask['id']
         tid = subtask['task_id']            
         
@@ -55,7 +56,7 @@ def nodesSpecificHandler(nid):
     
 @app.route('/tasks/newtask', methods=['GET'])
 def newTaskHandler():
-    if not 'nodeid' in request.form: return '', 422
+    if not 'nodeid' in request.form: return 'Required: nodeid', 422
     nid = request.form['nodeid']
     r = requests.get(bw['database']+'/custom/get_free_subtask_by_agent_id', \
         data = {'agent_id':nid})
@@ -68,8 +69,6 @@ def newTaskHandler():
         
         activenodes[nid] = ActiveNode('Was assigned task', tid, sid, nid)
         
-
-
         return jsenc({'archive_name':archive_name}), 200
     else:
         return jsenc({'status':'failure', 'message':'no suitable tasks'}),404
@@ -120,19 +119,13 @@ class ActiveNode:
 
 ################################
 
-def jsdec(o):
-    return jsonpickle.decode(o)
-
-def jsenc(o):
-    return jsonpickle.encode(o, unpicklable=False)
-
 if __name__ == '__main__':
     global port
     host = '0.0.0.0'
     beacon, port = parse_argv(sys.argv)
     print('Starting with settings: beacon:{0} self: {1}:{2}'.format(beacon, host, port))
     
-    bw = BeaconWrapper(beacon, port, 'services/balancer', {'database', 'filesystem'})
+    bw = BeaconWrapper(beacon, port, 'services/balancer', {'database'})
     bw.beacon_setter()
     bw.beacon_getter()
     cleaner()

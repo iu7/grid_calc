@@ -67,6 +67,7 @@ class Node:
 
         resp = requests.get(front + '/tasks/newtask', data = {'key': self.key})
         assert_response(resp)
+
         
 
 ###

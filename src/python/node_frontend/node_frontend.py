@@ -32,49 +32,46 @@ def allowed_file(filename):
 
 def is_key_valid(key):
     if key:
-        resp = jsr('get', bw['database'] + '/agents/filter', data = {'key': key})
-        return len(resp.get_json()['result']) > 0
+        resp = jsr('get', bw['database'] + '/agent/filter', data = {'key': key})
+        return len(resp.json()['result']) > 0
     return False
 
 def is_key_id_valid(key, id_):
     if key and id_:
-        resp = jsr('get', bw['database'] + '/agents/filter', data = {'key': key, 'id': id_})
-        return len(resp.get_json()['result']) > 0
+        resp = jsr('get', bw['database'] + '/agent/filter', data = {'key': key, 'id': id_})
+        return len(resp.json()['result']) > 0
     return False
 
 @app.route('/nodes', methods=['POST'])
 def nodesHandler():
-    key = get_url_parameter('key')
-    if not is_key_valid(key):
-        return msg_required_params_fmt.format('"key"'), 422
-    r = jsr('post', bw['balancer'] + '/nodes', data = request.data) 
+    r = jsr('post', bw['balancer'] + '/nodes', data = request.get_json()) 
     return r.text, r.status_code
     
-@app.route('/nodes/<string:nodeid>', methods=['PUT'])
+@app.route('/nodes/<int:nodeid>', methods=['PUT'])
 def nodesSpecificHandler(nodeid):
-    key = get_url_parameter('key')
-    keyold = get_url_parameter('key_old')
-    if not (key and keyold):
-        return msg_required_params_fmt.format('"key", "key_old"'), 422
-    if not is_key_id_valid(keyold, nodeid):
-        return msg_required_params_fmt.format('valid "key_old"'), 422
+    ### Case 1: update keys
+    if has_url_parameter('key') and has_url_parameter('key_old'):
+        key = get_url_parameter('key')
+        keyold = get_url_parameter('key_old')
+        dr = jsr('put', bw['database'] + '/agent/filter', data = {'id': nodeid, 'key': keyold, 'changes': {'key' : key}})
+        if int(dr.json()['count']) == 0:
+            return msg_required_params_fmt.format('valid (id(in endpont), "key", "key_old") cortege'), 422
+        return 'success', 200
     
-    dr = jsr('put', bw['database'] + '/agent/filter', data = {'id': nodeid, 'key': key_old, 'changes': {'key' : key}})
-    if int(dr.get_json()['count']) > 0:
-        r = jsr('put', bw['balancer'] + '/nodes/' + nodeid, data = request.data) 
-        return r.text, r.status_code
-    return msg_required_params_fmt.format('valid nodeid(in endpoint), "key", "key_old" cortege'), 422
+    ### Case 2: update state
+    r = requests.put(bw['balancer'] + '/nodes/' + str(nodeid), data = {'state': get_url_parameter('state')})
+    return r.text, r.status_code
     
 @app.route('/tasks/newtask', methods=['GET'])
 def newTaskHandler():
     key = get_url_parameter('key')
-    nodeid = get_url_parameter('id')
+    nodeid = get_url_parameter('nodeid')
     if not is_key_id_valid(key, nodeid):
-        return msg_required_params_fmt.format('valid "id", "key" cortege'), 422
-    r = jsr('get', bw['balancer'] + '/tasks/newtask', data = request.data)
+        return msg_required_params_fmt.format('valid "nodeid", "key" cortege'), 422
+    r = requests.get(bw['balancer'] + '/tasks/newtask', data = {'nodeid': nodeid})
     return r.text, r.status_code
     
-@app.route('/tasks/<string:taskid>', methods=['POST'])
+@app.route('/tasks/<int:taskid>', methods=['POST'])
 def submitTaskHandler(taskid):
     key = get_url_parameter('key')
     nodeid = get_url_parameter('id')
@@ -94,7 +91,7 @@ def submitTaskHandler(taskid):
             files = {'file':open(fullpath, 'rb')})
         
         if r.status_code == 200:
-            r = jsr('post', bw['balancer'] + '/tasks/' + taskid, data = {'filename': r.json()['name']})
+            r = requests.post(bw['balancer'] + '/tasks/' + str(taskid), data = {'filename': r.json()['name']})
 
         os.unlink(fullpath)
         return r.text, r.status_code

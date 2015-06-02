@@ -42,13 +42,13 @@ def taskPlacing():
     except:
         return jsenc({'status':'failure', 'message':'malformed syntax'}), 422
         
-    tid = requests.post(bw['database'] + '/task', \
+    tid = jsr('post', bw['database'] + '/task', \
         data = jsenc({\
             'user_id':uid, \
             'max_time':max_time, \
             'task_name':task_name, \
             'archive_name':archive_name}), \
-        headers = {'content-type':'application/json'}).json()['id']
+    ).json()['id']
     
     for _ in range (0, subtask_count):
         sid = requests.post(bw['database'] + '/subtask', \

@@ -60,15 +60,17 @@ def decode_pkv(val):
     return sh_dv(val, SHARDS_COUNT, SHARD_NUMBER)
 
 def encode_kwargs(tbl, kwargs):
-    #for k, v in kwargs.items():
-    #    if k in tbl.metainf.fk_fields:
-    #        kwargs[k] = encode_pkv(v)
+    affected_flds = [tbl.metainf.pk_field]
+    for k, v in kwargs.items():
+        if k in affected_flds:
+            kwargs[k] = encode_pkv(v)
     return kwargs
 
 def decode_kwargs(tbl, kwargs):
-    #for k, v in kwargs.items():
-    #    if k in tbl.metainf.fk_fields:
-    #        kwargs[k] = decode_pkv(v)
+    affected_flds = [tbl.metainf.pk_field]
+    for k, v in kwargs.items():
+        if k in affected_flds:
+            kwargs[k] = decode_pkv(v)
     return kwargs
 
 def to_dict(obj):
