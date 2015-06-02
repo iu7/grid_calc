@@ -59,7 +59,6 @@ def agent_init(self, **kwargs):
 
 def task_init(self, **kwargs):
     common_init(self, **kwargs)
-    self.max_time = 3600 #seconds
 
 ### Subtask methods ###
 
@@ -253,7 +252,7 @@ def init_models(Base):
         id = Column(Integer(), primary_key = True, autoincrement = True),\
         agent_id = Column(Integer()),\
         task_id = Column(Integer()),\
-        archive_name = Column(String(200), nullable = False),\
+        archive_name = Column(String(200), nullable = True),\
         status = Column(String(200)),\
         dateplaced = Column(DateTime),\
 \

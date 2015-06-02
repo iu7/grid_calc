@@ -22,6 +22,13 @@ UPLOAD_FOLDER = '/uploads'
 ALLOWED_EXTENSIONS = set(['zip'])
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config.update(DEBUG = True)
+
+@app.route('/traits', methods=['GET'])
+def traitsViewing():
+    traits = jsr('get', bw['database'] + '/trait').json()['result']
+    traits = list(map(lambda x:{'name':x['name'], 'version':x['version']}, traits))
+    return jsenc({'result':traits}), 200
 
 @app.route('/tasks', methods=['POST'])
 def taskPlacing():
@@ -35,28 +42,28 @@ def taskPlacing():
             _ = trait['version']
         
         archive_name = payload['archive_name']
-        assert archive_name == secure_filename(archive_name)
-        assert task_name == secure_filename(task_name)
         subtask_count = int(payload['subtask_count'])
         max_time = int(payload['max_time'])
+        
+        for trait in traits:
+            if (not 'name' in trait) or (not 'version' in trait):
+                raise Exception('trait format exception')
     except:
         return jsenc({'status':'failure', 'message':'malformed syntax'}), 422
-        
+    
     tid = jsr('post', bw['database'] + '/task', \
-        data = jsenc({\
-            'user_id':uid, \
-            'max_time':max_time, \
-            'task_name':task_name, \
-            'archive_name':archive_name}), \
-    ).json()['id']
-    
+        {'user_id':uid, \
+        'max_time':max_time, \
+        'task_name':task_name, \
+        'archive_name':archive_name \
+        }).json()['id']
+
     for _ in range (0, subtask_count):
-        sid = requests.post(bw['database'] + '/subtask', \
-            data = jsenc({
-                'task_id':tid, \
-                'status':'queued', }), \
-            headers = {'content-type':'application/json'}).json()['id']
-    
+        sid = jsr('post', bw['database'] + '/subtask', \
+            {'task_id':tid, \
+            'status':'queued', \
+            }).json()['id']
+        
     return place_bulk_traits(traits, 'task', tid, bw['database'])
 
 @app.route('/tasks', methods=['GET'])
@@ -75,12 +82,27 @@ def taskViewing():
     
     taskpars = []
     for task in tasks:
-        subtasks = jsr('get', bw['database'] + '/subtask/filter', {'task_id':task['id']})
+        taskpar = {}
+        subtasks = jsr('get', bw['database'] + '/subtask/filter', {'task_id':task['id']}).json()['result']
+        traitids = jsr('get', bw['database'] + '/mtm_traittask/filter', {'task_id':task['id']}).json()['result']
+        traitids = list(map(lambda x: x['trait_id'], traitids))
+        traits = jsr('get', bw['database'] + '/trait/arrayfilter', {'id':traitids}).json()['result']
+        traits = list(map(lambda x: x['name'] + ' ' + x['version'], traits))
+        
+        taskpar['taskname'] = task['task_name']
+        taskpar['traits'] = traits
+        taskpar['statuses'] = []
+        taskpar['id'] = task['id']
+        taskpar['dateplaced'] = None
         for subtask in subtasks:
+            if taskpar['dateplaced'] is None:
+                taskpar['dateplaced'] = subtask['dateplaced']
             if (subtask['status'] == 'completed'):
-                taskpars.append({'taskname':task['task_name'], 'result':subtask['archive_name']})
+                taskpar['statuses'].append({'result':subtask['archive_name']})
             else:
-                taskpars.append({'taskname':task['task_name'], 'status':subtask['status']})
+                taskpar['statuses'].append({'status':subtask['status']})
+        
+        taskpars.append(taskpar)
     return jsenc({'status':'success', 'tasks':taskpars}), 200
     
 @app.route('/tasks/<int:tid>', methods=['DELETE'])
@@ -95,7 +117,7 @@ def taskCancelling(tid):
         return jsenc({'status':'failure', 'message':'user / task pair unrecognized'}), 422
     
     jsr('delete', bw['database'] + '/subtask/filter', {'task_id':tid})
-    jsr('delete', bw['database'] + '/mtm_traittask', {'task_id':tid})
+    jsr('delete', bw['database'] + '/mtm_traittask/filter', {'task_id':tid})
     # IMPORTANT: fill in balancer_backend.cleaner method
     return jsenc({'status':'success'}), 200
     

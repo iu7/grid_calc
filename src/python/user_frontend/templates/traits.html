@@ -1,0 +1,41 @@
+<!doctype html>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<html>
+    <head>
+        <title>Известные системе черты</title>
+        <style type="text/css">
+            body {font-family:Arial, Sans-Serif;}
+            #container {width:300px; margin:0 auto;}
+            form label {display:inline-block; width:160px;}
+            form input[type="text"],
+            form input[type="password"]
+            form .line {clear:both;}
+            form .line.submit {text-align:right;}
+            
+            .tg  {border-collapse:collapse;border-spacing:0;}
+            .tg td{font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}
+            .tg th{font-family:Arial, sans-serif;font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}
+        </style>
+    </head>
+    <body>
+        <div id="container">
+            <table class="tg">
+                <tr> 
+                    <th class=\"tg-031e\">Название черты</th>
+                    <th class=\"tg-031e\">Версия черты</th>
+                </tr>
+                {% for trait in traits %}
+                <tr> 
+                    <td class=\"tg-031e\">{{trait['name']}}</td>
+                    <td class=\"tg-031e\">{{trait['version']}}</td>
+                </tr>
+                {% endfor %}
+            </table>
+            <div><small> {{message}} </small></div>
+            
+            <form action ="/create" method="GET">
+                <div class="line submit"> <button type="submit">Назад к созданию задачи</button> </div>
+            </form>
+        </div>
+    </body>
+</html>

@@ -244,7 +244,7 @@ def table_arrayfilter_get(table, value_json):
                 pvl = [encode_pkv(v) for v in filter(lambda pkv: pkv % SHARDS_COUNT == SHARD_NUMBER, pvl)] #a bit ugly
             qry = qry.filter(getattr(tbl, f).in_(pvl))
         else:
-            return msg_col_not_found_fmt.format(table, f)
+            return api_400(msg_col_not_found_fmt.format(table, f))
     qres = qry.all()
 
     resld = list(map(lambda x: to_dict(x), qres))

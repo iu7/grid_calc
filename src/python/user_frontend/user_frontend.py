@@ -21,10 +21,25 @@ app = Flask(__name__)
 app.config.update(DEBUG = True)
 app.config.update(GRID_CALC_ROLE = 'USER_FRONTEND')
 
-UPLOAD_FOLDER = '/uploads'
+UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = set(['zip'])
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+#######################################################################
+# done
+#######################################################################
+
+@app.route('/viewtraits', methods=['GET'])
+def viewtraits():
+    try:
+        uid = getuid()
+    except:
+        return unauthorized()
+        
+    traits = jsr('get', bw['logic_backend'] + '/traits').json()['result']
+    
+    return render_template('traits.html', traits=traits)
 
 @app.route('/create', methods=['GET'])
 def create():
@@ -42,15 +57,15 @@ def create():
             if 'archive' in pc and pc['archive'] == pa:
                 archivePending = True
             else:
-                response = make_response(url_for('create'))
-                response.set_cookies('pending_archive', '', expires=0)
+                response = make_response(redirect(url_for('create')))
+                response.set_cookie('pending_archive', '', expires=0)
                 return response
         if 'pending_traits' in request.cookies:
             if 'traits' in pc:
                 traitsPending = True
             else:
-                response = make_response(url_for('create'))
-                response.set_cookies('pending_traits', '', expires=0)
+                response = make_response(redirect(url_for('create')))
+                response.set_cookie('pending_traits', '', expires=0)
                 return response
     
     return render_template('create.html', archivePending = archivePending, traitsPending = traitsPending)
@@ -66,9 +81,12 @@ def createsubmit():
         archivename = pendingCreations[uid]['archive']
         traits = pendingCreations[uid]['traits']
         taskname = request.form['taskname']
-        jsr('post', bw['logic_backend'] + '/tasks', {'uid':uid, 'traits':traits, 'task_name':taskname, 'archive_name':archivename})
+        maxtime = request.form['maxtime']
+        subtaskcount = request.form['subtaskcount']
+        assert jsr('post', bw['logic_backend'] + '/tasks', {'uid':uid, 'traits':traits, 'task_name':taskname, 'archive_name':archivename, 'max_time':maxtime, 'subtask_count':subtaskcount}).status_code == 200
         
         pendingCreations[uid]['archive_time'] = pendingCreations[uid]['traits_time'] = datetime.datetime.now() + datetime.timedelta(-30)
+        pending_cleaner_clean(uid)
         
         return redirect(url_for('view'))
     except:
@@ -76,7 +94,7 @@ def createsubmit():
 
 pendingCreations = {}
 
-@app.route('sendarchive', methods=['POST'])
+@app.route('/sendarchive', methods=['POST'])
 def sendarchive():
     try:
         uid = getuid()
@@ -84,12 +102,12 @@ def sendarchive():
         return unauthorized()
     
     response = make_response(redirect(url_for('create')))
-    if not uid in pendingCreations
+    if not uid in pendingCreations:
         pendingCreations[uid] = {}
     try:
         f = request.files['archive']
         filename = secure_filename(random_string(32))
-        fullpath = os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        fullpath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         f.save(fullpath)
         
         if 'archive' in pendingCreations[uid]:
@@ -102,13 +120,11 @@ def sendarchive():
         response.set_cookie('pending_archive', filename)
         return response
     except:
-        safedel(os.path.join(app.config['UPLOAD_FOLDER'], \
-            pendingCreations[uid]['archive']))
         pendingCreations[uid].pop('archive', '')
         response.set_cookie('pending_archive', '', expires=0)                
         return response
     
-@app.route('sendtraits', methods=['POST'])
+@app.route('/sendtraits', methods=['POST'])
 def sendtraits():
     try:
         uid = getuid()
@@ -116,21 +132,21 @@ def sendtraits():
         return unauthorized()
     
     response = make_response(redirect(url_for('create')))
-    if not uid in pendingCreations
+    if not uid in pendingCreations:
         pendingCreations[uid] = {}
     try:
         f = request.files['traits']
         filename = secure_filename(random_string(32))
-        fullpath = os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        fullpath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         f.save(fullpath)
         
         traits = []
         with open(fullpath) as f:
             lines = f.readlines()
             for line in lines:
-                s = filter(None, lines.split(' '))
+                s = list(filter(None, line.split(' ')))
                 assert len(s) == 2
-                traits.append({'name':s[0], 'version':s[1])
+                traits.append({'name':s[0], 'version':s[1].replace('\n', '')})
         safedel(fullpath)
     #except:
     #   redirect with 'wrong file syntax'
@@ -140,12 +156,13 @@ def sendtraits():
         
         response.set_cookie('pending_traits', filename)
         return response
-    except:
+    except Exception as e:
+        print (e)
         safedel(fullpath)
         response.set_cookie('pending_traits', '', expires=0)     
         return response
     
-@app.route('cancelarchive', methods=['POST'])
+@app.route('/cancelarchive', methods=['POST'])
 def cancelarchive():
     try:
         uid = getuid()
@@ -162,7 +179,7 @@ def cancelarchive():
     response.set_cookie('pending_archive', '', expires=0)      
     return response
         
-@app.route('canceltraits', methods=['POST'])
+@app.route('/canceltraits', methods=['POST'])
 def canceltraits():
     try:
         uid = getuid()
@@ -177,28 +194,28 @@ def canceltraits():
     response.set_cookie('pending_traits', '', expires=0)      
     return response
     
-def pendingCleaner():
-    now = datetime.datetime.now
+def pending_cleaner_clean(uid):  
+    now = datetime.datetime.now()
+    t = pendingCreations[uid]
+    if 'archive_time' in t:
+        if (now - t['archive_time']).total_seconds() > 60*20:
+            safedel(os.path.join(app.config['UPLOAD_FOLDER'], \
+                t['archive']))
+            t.pop('archive_time', '')
+            t.pop('archive', '')
+    if 'traits_time' in t:
+        if (now - t['traits_time']).total_seconds() > 60*20:
+            t.pop('traits_time', '')
+            t.pop('traits', '')  
+            
+def pending_cleaner():
     for uid in pendingCreations:
-        t = pendingCreations[uid]
-        if 'archive_time' in t:
-            if (now - t['archive_time']).seconds > 60*20:
-                safedel(os.path.join(app.config['UPLOAD_FOLDER'], \
-                    t['archive']))
-                t.pop('archive_time', '')
-                t.pop('archive', '')
-        if 'traits_time' in t:
-            if ((now - t['traits_time']).seconds > 60*20:
-                t.pop('traits_time', '')
-                t.pop('traits', '')
-    thr = threading.Timer(60, pendingCleaner)
+        pending_cleaner_clean(uid)
+        
+    thr = threading.Timer(60, pending_cleaner)
     thr.daemon = True
     thr.start()
     
-#######################################################################
-# done
-#######################################################################
-
 @app.route('/getfile', methods=['GET'])
 def getfile():
     try:
@@ -211,8 +228,8 @@ def getfile():
         return jsenc({'status':'failure', 'message':'File not found'}), 400
     
     try:
-        getFileFromTo(bw['filesystem']+'/static/'+fileid, 'tmp/'+fileid)
-        return send_from_directory('tmp', fileid)
+        getFileFromTo(bw['filesystem']+'/static/'+fileid, os.path.join(app.config['UPLOAD_FOLDER'], fileid))
+        return send_from_directory(app.config['UPLOAD_FOLDER'], fileid)
     except Exception as e:
         print (e)
         return jsenc({'status':'failure', 'message':'File not found'}), 404
@@ -321,13 +338,13 @@ def cancel():
     except:
         return '', 400
         
-    pyrequests.delete(bw['logic_backend'] + '/tasks/' + str(taskid), {'uid':uid})
+    jsr('delete', bw['logic_backend'] + '/tasks/' + str(taskid), {'uid':uid})
     return redirect(url_for('view'))
 
 ###    
     
 if __name__ == '__main__':
-    preparedir('tmp', flush=True)
+    preparedir(app.config['UPLOAD_FOLDER'], flush=True)
     
     host = '0.0.0.0'
     beacon, port = parse_argv(sys.argv)

@@ -3,7 +3,7 @@ import requests as pyrequests
 import json as pyjson
 import threading, time
 import jsonpickle
-import os, sys, platform, shutil
+import os, sys, platform, shutil, random, string
 
 def random_string(size):
     return ''.join([random.choice(string.ascii_letters) for i in range(size)])
@@ -57,21 +57,21 @@ def place_bulk_traits(arroftraits, itemtype, jsonid, dbadr):
     id_fld = itemtype + '_id'
     try:
         for trait in arroftraits:
-            existing = jsr('get', dbadr + '/trait/filter', data = trait)
+            existing = jsr('get', dbadr + '/trait/filter', trait)
             existing = existing.json()['result']
             
             tid = None
             if len(existing) > 0:
                 tid = existing[0]['id']
             else: 
-                tid = jsr('post', dbadr + '/trait', data = trait).json()['id']
+                tid = jsr('post', dbadr + '/trait', trait).json()['id']
             
             r = jsr('post', dbadr + '/mtm_trait' + itemtype,\
                 data = {str(id_fld) : jsonid, 'trait_id' : tid}\
             )
             _ = r.json()['trait_id']
     except Exception as e:
-        return jsenc({'status':'failure'}), 422
+        return jsenc({'status':'failure', 'message':'failed to place traits'}), 422
     return jsenc({'status' : 'success', str(id_fld) : jsonid}), 200
 
 ### flask.request related ###
