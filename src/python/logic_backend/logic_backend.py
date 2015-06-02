@@ -24,6 +24,12 @@ ALLOWED_EXTENSIONS = set(['zip'])
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config.update(DEBUG = True)
 
+@app.route('/traits', methods=['GET'])
+def traitsViewing():
+    traits = jsr('get', bw['database'] + '/trait').json()['result']
+    traits = list(map(lambda x:{'name':x['name'], 'version':x['version']}, traits))
+    return jsenc({'result':traits}), 200
+
 @app.route('/tasks', methods=['POST'])
 def taskPlacing():
     try:
@@ -36,8 +42,6 @@ def taskPlacing():
             _ = trait['version']
         
         archive_name = payload['archive_name']
-        assert archive_name == secure_filename(archive_name)
-        assert task_name == secure_filename(task_name)
         subtask_count = int(payload['subtask_count'])
         max_time = int(payload['max_time'])
         

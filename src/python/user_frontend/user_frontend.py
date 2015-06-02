@@ -26,6 +26,21 @@ ALLOWED_EXTENSIONS = set(['zip'])
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
+#######################################################################
+# done
+#######################################################################
+
+@app.route('/viewtraits', methods=['GET'])
+def viewtraits():
+    try:
+        uid = getuid()
+    except:
+        return unauthorized()
+        
+    traits = jsr('get', bw['logic_backend'] + '/traits').json()['result']
+    
+    return render_template('traits.html', traits=traits)
+
 @app.route('/create', methods=['GET'])
 def create():
     try:
@@ -71,6 +86,7 @@ def createsubmit():
         assert jsr('post', bw['logic_backend'] + '/tasks', {'uid':uid, 'traits':traits, 'task_name':taskname, 'archive_name':archivename, 'max_time':maxtime, 'subtask_count':subtaskcount}).status_code == 200
         
         pendingCreations[uid]['archive_time'] = pendingCreations[uid]['traits_time'] = datetime.datetime.now() + datetime.timedelta(-30)
+        pending_cleaner_clean(uid)
         
         return redirect(url_for('view'))
     except:
@@ -178,28 +194,28 @@ def canceltraits():
     response.set_cookie('pending_traits', '', expires=0)      
     return response
     
-def pending_cleaner():
+def pending_cleaner_clean(uid):  
     now = datetime.datetime.now()
+    t = pendingCreations[uid]
+    if 'archive_time' in t:
+        if (now - t['archive_time']).total_seconds() > 60*20:
+            safedel(os.path.join(app.config['UPLOAD_FOLDER'], \
+                t['archive']))
+            t.pop('archive_time', '')
+            t.pop('archive', '')
+    if 'traits_time' in t:
+        if (now - t['traits_time']).total_seconds() > 60*20:
+            t.pop('traits_time', '')
+            t.pop('traits', '')  
+            
+def pending_cleaner():
     for uid in pendingCreations:
-        t = pendingCreations[uid]
-        if 'archive_time' in t:
-            if (now - t['archive_time']).total_seconds() > 60*20:
-                safedel(os.path.join(app.config['UPLOAD_FOLDER'], \
-                    t['archive']))
-                t.pop('archive_time', '')
-                t.pop('archive', '')
-        if 'traits_time' in t:
-            if (now - t['traits_time']).total_seconds() > 60*20:
-                t.pop('traits_time', '')
-                t.pop('traits', '')
+        pending_cleaner_clean(uid)
+        
     thr = threading.Timer(60, pending_cleaner)
     thr.daemon = True
     thr.start()
     
-#######################################################################
-# done
-#######################################################################
-
 @app.route('/getfile', methods=['GET'])
 def getfile():
     try:
