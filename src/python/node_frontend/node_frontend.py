@@ -49,9 +49,13 @@ def nodesHandler():
     
 @app.route('/nodes/<int:nodeid>', methods=['PUT'])
 def nodesSpecificHandler(nodeid):
+    key = get_url_parameter('key')
+    nodeid = get_url_parameter('nodeid')
+    if not is_key_id_valid(key, nodeid):
+        return msg_required_params_fmt.format('valid "nodeid", "key" cortege'), 422
+
     ### Case 1: update keys
-    if has_url_parameter('key') and has_url_parameter('key_old'):
-        key = get_url_parameter('key')
+    if has_url_parameter('key_old'):
         keyold = get_url_parameter('key_old')
         dr = jsr('put', bw['database'] + '/agent/filter', data = {'id': nodeid, 'key': keyold, 'changes': {'key' : key}})
         if int(dr.json()['count']) == 0:
@@ -71,10 +75,10 @@ def newTaskHandler():
     r = requests.get(bw['balancer'] + '/tasks/newtask', data = {'nodeid': nodeid})
     return r.text, r.status_code
     
-@app.route('/tasks/<int:taskid>', methods=['POST'])
-def submitTaskHandler(taskid):
+@app.route('/tasks', methods=['POST'])
+def submitTaskHandler():
     key = get_url_parameter('key')
-    nodeid = get_url_parameter('id')
+    nodeid = get_url_parameter('nodeid')
     if not is_key_id_valid(key, nodeid):
         return msg_required_params_fmt.format('valid "id", "key" cortege'), 422
 
@@ -91,7 +95,7 @@ def submitTaskHandler(taskid):
             files = {'file':open(fullpath, 'rb')})
         
         if r.status_code == 200:
-            r = requests.post(bw['balancer'] + '/tasks/' + str(taskid), data = {'filename': r.json()['name']})
+            r = requests.post(bw['balancer'] + '/tasks', data = {'filename': r.json()['name']})
 
         os.unlink(fullpath)
         return r.text, r.status_code
@@ -107,12 +111,21 @@ def getfile():
     if not is_key_id_valid(key, nodeid):
         return msg_required_params_fmt.format('valid "id", "key" cortege'), 422
     
-    filename = None
-    try:
-        filename = get_url_parameter('arhive_name')
-    except:
+    filename = get_url_parameter('arhive_name')
+    if not filename:
         return msg_required_params_fmt.format('valid "id", "key", "archive_name" cortege'), 422
     
+    resp = jsr('get', bw['database'] + '/subtask/filter', data = {'agent_id': nodeid})
+    if resp.status_code == 200:
+        if len(resp.json()['result']) == 0:
+            return 'You are not assigned to any task', 403
+
+    subtasks = resp.json()['result']
+    task_ids = (s['task_id'] for s in subtasks)
+    resp = jsr('get', bw['database'] + '/task/arrayfilter', data = {'arhive_name': [filename], 'id' task_ids})
+    if resp.status_code != 200:
+        return 'You are not assigned to this task', 403
+
     try:
         getFileFromTo(bw['filesystem']+'/static/'+filename, os.path.join(app.config['UPLOAD_FOLDER'], filename))
         return send_from_directory(app.config['UPLOAD_FOLDER'], filename)

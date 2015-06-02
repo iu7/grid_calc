@@ -62,7 +62,7 @@ def newTaskHandler():
         data = {'agent_id':nid})
     if (r.status_code == 200):
         subtask = r.json()
-        sid = subtask['id'] #result_archive
+        sid = subtask['id']
         tid = task['task_id']
         task = requests.get(bw['database']+'/task/'+tid).json()
         archive_name = task['archive_name']
@@ -73,8 +73,8 @@ def newTaskHandler():
     else:
         return jsenc({'status':'failure', 'message':'no suitable tasks'}),404
     
-@app.route('/tasks/<string:taskid>', methods=['POST'])
-def submitTaskHandler(taskid):
+@app.route('/tasks', methods=['POST'])
+def submitTaskHandler():
     if not 'nodeid' in request.form: return '', 422
     nid = request.form['nodeid']
     filename = request.form['filename']
