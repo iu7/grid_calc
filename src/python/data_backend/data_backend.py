@@ -357,15 +357,6 @@ def rest_post_item(table):
     value = request.get_json()
     return post_item(table, value)
 
-### Custom ###
-@app.route('/custom/get_free_subtask_by_agent_id', methods = ['GET'])
-def hnd_get_free_subtask_by_agent_id():
-    if has_url_parameter('agent_id'):
-        agent_id = get_url_parameter('agent_id')
-        return get_free_subtask_by_agent_id(agent_id)
-    else:
-        return api_400('Bad request: Required <agent_id> parameter')
-
 ### Error handlers ###
 @app.errorhandler(500)
 def api_500(msg = 'Internal error'):
