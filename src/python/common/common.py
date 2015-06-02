@@ -13,6 +13,12 @@ def random_string(size):
 # 7
 # http://example.com:0123
 
+def safedel(fname):
+    try:
+        os.remove(fname)
+    except:
+        pass
+
 def jsr(method, address, data = {}):
     return getattr(pyrequests, method)(address, data = pyjson.dumps(data), headers = {'Content-type': 'application/json', 'Accept': 'text/plain'})    
     

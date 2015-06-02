@@ -2,7 +2,7 @@
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <html>
     <head>
-        <title>Состояние системы</title>
+        <title>Создание задачи</title>
         <style type="text/css">
             body {font-family:Arial, Sans-Serif;}
             #container {width:300px; margin:0 auto;}
@@ -19,21 +19,45 @@
     </head>
     <body>
         <div id="container">
-            <table class="tg">
-                <tr> 
-                    <th class=\"tg-031e\">Тип сервера</th>
-                    <th class=\"tg-031e\">Адрес сервера</th>
-                    <th class=\"tg-031e\">Состояние сервера</th>
-                </tr>
-                {% for server in servers %}
-                <tr> 
-                    <td class=\"tg-031e\">{{server['type']}}</td>
-                    <td class=\"tg-031e\">{{server['address']}}</td>
-                    <td class=\"tg-031e\">{{server['state']}}</td>
-                </tr>
-                {% endfor %}
-            </table>
-            
+            {% if archivePending: %}
+            <small>Архив выбран</small>
+            <form action="/cancelarchive" method="POST">
+                <button type="submit">Удалить</button>
+            </form>
+            {% else: %}
+            <small>Укажите путь к архиву задачи</small>
+            <form action="/sendarchive" method="POST" enctype="multipart/form-data">
+                <input type="file" name="archive" size="50">
+                <button type="submit">Отправить</button>
+            </form>
+            {% endif: %}
+        </div>
+    
+        <div id="container">
+            {% if traitsPending: %}
+            <small>Список черт выбран</small>
+            <form action="/canceltraits" method="POST">
+                <button type="submit">Удалить</button>
+            </form>
+            {% else: %}
+            <small>Укажите путь к файлу черт</small>
+            <form action="/sendtraits" method="POST" enctype="multipart/form-data">
+                <input type="file" name="traits" size="50">
+                <button type="submit">Отправить</button>
+            </form>
+            {% endif: %}
+        </div>
+    
+        <div id="container">
+            {% if traitsPending and archivePending: %}
+            <form action="/create" method="POST">
+                <div class="line"><label for="taskname">Имя задачи</label><input type="text" name="taskname"/></div>
+                <button type="submit">Создать задачу</button>
+            </form>
+            {% endif: %}
+        </div>
+    
+        <div id="container">
             <form action ="/tasks" method="GET">
                 <div class="line submit"> <button type="submit">Просмотр задач</button> </div>
             </form>
