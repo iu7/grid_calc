@@ -51,7 +51,6 @@ def nodesHandler():
 @app.route('/nodes/<int:nodeid>', methods=['PUT'])
 def nodesSpecificHandler(nodeid):
     keyold = get_url_parameter('key_old')
-    nodeid = get_url_parameter('nodeid')
     if not is_key_id_valid(keyold, nodeid):
         return msg_required_params_fmt.format('valid "nodeid", "key" cortege'), 422
 
@@ -61,7 +60,7 @@ def nodesSpecificHandler(nodeid):
         dr = jsr('put', bw['database'] + '/agent/filter', {'id': nodeid, 'key': keyold, 'changes': {'key' : key}})
         if int(dr.json()['count']) == 0:
             return msg_required_params_fmt.format('valid (id(in endpont), "key", "key_old") cortege'), 422
-        return 'success', 200
+        return jsenc('status':'success'), 200
     else:
         return msg_required_params_fmt.format('valid (id(in endpont), "key", "key_old") cortege'), 422
     

@@ -81,7 +81,7 @@ class Node:
                 id_, oldkey = ifs.split('#')
             except:
                 raise Exception('Syntax error in {0}. Try to remove it and retart.'.format(keyfile))
-            resp = requests.put(front + '/nodes/{0}'.format(id_), data = {'key': self.key, 'key_old': oldkey, 'nodeid': id_})
+            resp = requests.put(front + '/nodes/{0}'.format(id_), data = {'key': self.key, 'key_old': oldkey})
             assert_response(resp)
             self.node_id = id_
         else:

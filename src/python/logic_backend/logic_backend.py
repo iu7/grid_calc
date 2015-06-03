@@ -38,16 +38,11 @@ def taskPlacing():
         traits = payload['traits']
         task_name = payload['task_name']
         for trait in traits:
-            _ = trait['name']
-            _ = trait['version']
+            assert 'name' in trait and 'version' in trait
         
         archive_name = payload['archive_name']
         subtask_count = int(payload['subtask_count'])
         max_time = int(payload['max_time'])
-        
-        for trait in traits:
-            if (not 'name' in trait) or (not 'version' in trait):
-                raise Exception('trait format exception')
     except:
         return jsenc({'status':'failure', 'message':'malformed syntax'}), 422
     
@@ -72,7 +67,7 @@ def taskViewing():
         payload = request.get_json()
         uid = payload['uid']
     except:
-        return jsenc({'status':'failure', 'message':'malformed syntax'}), 400
+        return jsenc({'status':'failure', 'message':'malformed syntax'}), 422
     
     tasks = None
     try:
@@ -111,7 +106,7 @@ def taskCancelling(tid):
         payload = jsdec(request.data.decode('utf-8'))
         uid = int(payload['uid'])
     except:
-        return jsenc({'status':'failure', 'message':'malformed syntax'}), 400
+        return jsenc({'status':'failure', 'message':'malformed syntax'}), 422
     
     if (jsr('delete', bw['database']+'/task/filter', {'user_id':uid, 'id':tid}).status_code != 200):
         return jsenc({'status':'failure', 'message':'user / task pair unrecognized'}), 422

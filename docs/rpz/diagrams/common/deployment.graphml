@@ -20,7 +20,7 @@
           <y:Geometry height="80.0" width="137.9596814222221" x="433.45944638630596" y="173.01017277440013"/>
           <y:Fill color="#CCCCFF" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
-          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" modelName="internal" modelPosition="t" textColor="#000000" visible="true" width="129.1796875" x="4.389996961111024" y="4.0">Вычислительный узел</y:NodeLabel>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" modelName="internal" modelPosition="t" textColor="#000000" visible="true" width="129.1796875" x="4.3899969611110805" y="4.0">Вычислительный узел</y:NodeLabel>
           <y:SVGNodeProperties usingVisualBounds="false"/>
           <y:SVGModel svgBoundsPolicy="0">
             <y:SVGContent refid="1"/>
@@ -48,7 +48,7 @@
           <y:Geometry height="80.0" width="137.9596814222221" x="433.459446386306" y="69.7656295808001"/>
           <y:Fill color="#CCCCFF" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
-          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" modelName="internal" modelPosition="t" textColor="#000000" visible="true" width="73.8203125" x="32.06968446111108" y="4.0">Сервер ФВУ</y:NodeLabel>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" modelName="internal" modelPosition="t" textColor="#000000" visible="true" width="73.8203125" x="32.069684461111024" y="4.0">Сервер ФВУ</y:NodeLabel>
           <y:SVGNodeProperties usingVisualBounds="false"/>
           <y:SVGModel svgBoundsPolicy="0">
             <y:SVGContent refid="1"/>
@@ -62,7 +62,7 @@
           <y:Geometry height="80.0" width="137.9596814222221" x="628.0" y="69.7656295808001"/>
           <y:Fill color="#CCCCFF" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
-          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" modelName="internal" modelPosition="t" textColor="#000000" visible="true" width="74.025390625" x="31.967145398611052" y="4.0">Сервер СУС</y:NodeLabel>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" modelName="internal" modelPosition="t" textColor="#000000" visible="true" width="74.025390625" x="31.967145398611024" y="4.0">Сервер СУС</y:NodeLabel>
           <y:SVGNodeProperties usingVisualBounds="false"/>
           <y:SVGModel svgBoundsPolicy="0">
             <y:SVGContent refid="1"/>
@@ -104,7 +104,7 @@
           <y:Geometry height="80.0" width="137.9596814222221" x="822.5405536136939" y="67.40388582367314"/>
           <y:Fill color="#CCCCFF" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
-          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" modelName="internal" modelPosition="t" textColor="#000000" visible="true" width="65.359375" x="36.30015321111108" y="4.0">Сервер СУ</y:NodeLabel>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" modelName="internal" modelPosition="t" textColor="#000000" visible="true" width="65.359375" x="36.300153211111024" y="4.0">Сервер СУ</y:NodeLabel>
           <y:SVGNodeProperties usingVisualBounds="false"/>
           <y:SVGModel svgBoundsPolicy="0">
             <y:SVGContent refid="1"/>
@@ -277,7 +277,7 @@
           <y:Geometry height="80.0" width="137.9596814222221" x="433.459446386306" y="-34.24691361279997"/>
           <y:Fill color="#CCCCFF" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
-          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" modelName="internal" modelPosition="t" textColor="#000000" visible="true" width="67.732421875" x="35.11362977361105" y="4.0">Сервер СМ</y:NodeLabel>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" modelName="internal" modelPosition="t" textColor="#000000" visible="true" width="67.732421875" x="35.113629773611024" y="4.0">Сервер СМ</y:NodeLabel>
           <y:SVGNodeProperties usingVisualBounds="false"/>
           <y:SVGModel svgBoundsPolicy="0">
             <y:SVGContent refid="1"/>
@@ -294,6 +294,36 @@
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="33.40234375" modelName="internal" modelPosition="l" textColor="#000000" visible="true" width="91.404296875" x="4.0" y="3.298828125">&lt;&lt;component&gt;&gt;
 СМ</y:NodeLabel>
+          <y:SVGNodeProperties usingVisualBounds="false"/>
+          <y:SVGModel svgBoundsPolicy="0">
+            <y:SVGContent refid="2"/>
+          </y:SVGModel>
+        </y:SVGNode>
+      </data>
+    </node>
+    <node id="n19">
+      <data key="d6">
+        <y:SVGNode>
+          <y:Geometry height="80.0" width="137.9596814222221" x="821.7463775412972" y="280.15245972512724"/>
+          <y:Fill color="#CCCCFF" transparent="false"/>
+          <y:BorderStyle color="#000000" type="line" width="1.0"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" modelName="internal" modelPosition="t" textColor="#000000" visible="true" width="74.86328125" x="31.548200086111024" y="4.0">Сервер СХФ</y:NodeLabel>
+          <y:SVGNodeProperties usingVisualBounds="false"/>
+          <y:SVGModel svgBoundsPolicy="0">
+            <y:SVGContent refid="1"/>
+          </y:SVGModel>
+        </y:SVGNode>
+      </data>
+    </node>
+    <node id="n20">
+      <data key="d4"/>
+      <data key="d6">
+        <y:SVGNode>
+          <y:Geometry height="40.0" width="115.0" x="831.3463775412971" y="303.9924597251272"/>
+          <y:Fill hasColor="false" transparent="false"/>
+          <y:BorderStyle color="#000000" type="line" width="1.0"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="33.40234375" modelName="internal" modelPosition="l" textColor="#000000" visible="true" width="91.404296875" x="4.0" y="3.298828125">&lt;&lt;component&gt;&gt;
+СХФ</y:NodeLabel>
           <y:SVGNodeProperties usingVisualBounds="false"/>
           <y:SVGModel svgBoundsPolicy="0">
             <y:SVGContent refid="2"/>
@@ -536,6 +566,34 @@
             </y:ModelParameter>
             <y:PreferredPlacementDescriptor angle="0.0" angleOffsetOnRightSide="0" angleReference="absolute" angleRotationOnRightSide="co" distance="-1.0" frozen="true" placement="anywhere" side="anywhere" sideReference="relative_to_edge_flow"/>
           </y:EdgeLabel>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e15" source="n19" target="n2">
+      <data key="d10">
+        <y:PolyLineEdge>
+          <y:Path sx="-3.6195852924081464" sy="-0.07805460512742002" tx="0.0" ty="0.0">
+            <y:Point x="887.1066329600001" y="271.24974720000006"/>
+            <y:Point x="581.3" y="271.24974720000006"/>
+            <y:Point x="581.3" y="109.7656295808001"/>
+          </y:Path>
+          <y:LineStyle color="#000000" type="line" width="1.0"/>
+          <y:Arrows source="none" target="none"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e16" source="n19" target="n4">
+      <data key="d10">
+        <y:PolyLineEdge>
+          <y:Path sx="0.0" sy="0.0" tx="-65.86526536351903" ty="14.53610529279996">
+            <y:Point x="890.7262182524082" y="263.5131916799998"/>
+            <y:Point x="814.8207936000006" y="263.5131916799998"/>
+            <y:Point x="814.8207936000006" y="20.289191680000016"/>
+          </y:Path>
+          <y:LineStyle color="#000000" type="line" width="1.0"/>
+          <y:Arrows source="none" target="none"/>
           <y:BendStyle smoothed="false"/>
         </y:PolyLineEdge>
       </data>

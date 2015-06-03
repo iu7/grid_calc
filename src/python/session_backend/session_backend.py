@@ -78,6 +78,7 @@ def logout():
     try:
         uid = getkbv(sessions, sesid)
         del sessions[uid]
+        return jsenc({'status':'success'}), 200
     except:
         return jsenc({'status':'failure', 'message':'Session unrecognized'}), 403
             

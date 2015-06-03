@@ -86,8 +86,11 @@ def submitTaskHandler():
 ################################
 
 def actualityCheck():
-    sts = jsr('get', bw['database']+'/subtask/filter', {'status':'assigned'}).json()['result']
-    stids = list(map(lambda x:x['id'], sts))
+    try:
+        sts = jsr('get', bw['database']+'/subtask/filter', {'status':'assigned'}).json()['result']
+        stids = list(map(lambda x:x['id'], sts))
+    except:
+        pass
     
 
 def actualityChecker():

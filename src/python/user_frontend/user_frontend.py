@@ -156,9 +156,12 @@ def sendtraits():
         with open(fullpath) as f:
             lines = f.readlines()
             for line in lines:
-                s = list(filter(None, line.split(' ')))
-                assert len(s) == 2
-                traits.append({'name':s[0], 'version':s[1].replace('\n', '')})
+                try:
+                    s = list(filter(None, line.split(' ')))
+                    assert len(s) == 2
+                    traits.append({'name':s[0], 'version':s[1].replace('\n', '')})
+                except:
+                    pass
         safedel(fullpath)
     #except:
     #   redirect with 'wrong file syntax'

@@ -14,10 +14,8 @@ import random, string
 
 from common.common import *
 
-STATIC_PATH = os.path.join(os.getcwd(), 'static')
-
-app = Flask(__name__, static_path=STATIC_PATH)
-app.config.update(DEBUG = True, UPLOAD_FOLDER = STATIC_PATH)
+app = Flask(__name__, static_path='/static')
+app.config.update(DEBUG = True, UPLOAD_FOLDER = 'static/')
 app.config.update(GRID_CALC_ROLE = 'FILE_BACKEND')
 
 filename_size = 32

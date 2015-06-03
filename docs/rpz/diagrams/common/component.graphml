@@ -256,6 +256,36 @@
         </y:SVGNode>
       </data>
     </node>
+    <node id="n16">
+      <data key="d4"/>
+      <data key="d6">
+        <y:SVGNode>
+          <y:Geometry height="40.0" width="115.0" x="324.06514543780736" y="302.23230600314673"/>
+          <y:Fill hasColor="false" transparent="false"/>
+          <y:BorderStyle color="#000000" type="line" width="1.0"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="33.40234375" modelName="internal" modelPosition="l" textColor="#000000" visible="true" width="91.404296875" x="4.0" y="3.298828125">&lt;&lt;component&gt;&gt;
+СХФ</y:NodeLabel>
+          <y:SVGNodeProperties usingVisualBounds="false"/>
+          <y:SVGModel svgBoundsPolicy="0">
+            <y:SVGContent refid="1"/>
+          </y:SVGModel>
+        </y:SVGNode>
+      </data>
+    </node>
+    <node id="n17">
+      <data key="d6">
+        <y:SVGNode>
+          <y:Geometry height="23.466684341430664" width="25.599708557128906" x="339.4405278115738" y="266.29065782928427"/>
+          <y:Fill color="#CCCCFF" transparent="false"/>
+          <y:BorderStyle color="#000000" type="line" width="1.0"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" hasText="false" height="4.0" modelName="sandwich" modelPosition="s" textColor="#000000" visible="true" width="4.0" x="10.799854278564453" y="27.466684341430664"/>
+          <y:SVGNodeProperties usingVisualBounds="false"/>
+          <y:SVGModel svgBoundsPolicy="0">
+            <y:SVGContent refid="5"/>
+          </y:SVGModel>
+        </y:SVGNode>
+      </data>
+    </node>
     <edge id="e0" source="n8" target="n1">
       <data key="d10">
         <y:PolyLineEdge>
@@ -382,9 +412,9 @@
     <edge id="e9" source="n11" target="n1">
       <data key="d10">
         <y:PolyLineEdge>
-          <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0">
+          <y:Path sx="0.0" sy="0.0" tx="-1.3858878227916875" ty="3.4751714428705895">
             <y:Point x="362.8012992252771" y="208.54617277440033"/>
-            <y:Point x="362.8012992252771" y="92.3997085571289"/>
+            <y:Point x="362.8012992252771" y="95.8748799999995"/>
           </y:Path>
           <y:LineStyle color="#000000" type="line" width="1.0"/>
           <y:Arrows source="none" target="none"/>
@@ -451,7 +481,6 @@
       </data>
     </edge>
     <edge id="e14" source="n14" target="n15">
-      <data key="d9"/>
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="-46.40563309655175" sy="0.7380538061618722" tx="0.0" ty="0.0"/>
@@ -462,7 +491,6 @@
       </data>
     </edge>
     <edge id="e15" source="n15" target="n3">
-      <data key="d9"/>
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="0.0" tx="-28.170568388020797" ty="14.67390261256216">
@@ -475,7 +503,6 @@
       </data>
     </edge>
     <edge id="e16" source="n15" target="n1">
-      <data key="d9"/>
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="0.0" tx="-49.8339355014935" ty="6.329361106814531">
@@ -488,7 +515,6 @@
       </data>
     </edge>
     <edge id="e17" source="n15" target="n6">
-      <data key="d9"/>
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="0.0" tx="-6.9018223908803975" ty="13.294678548760118">
@@ -502,7 +528,6 @@
       </data>
     </edge>
     <edge id="e18" source="n15" target="n7">
-      <data key="d9"/>
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="0.0" tx="-7.413822390880341" ty="0.0">
@@ -516,7 +541,6 @@
       </data>
     </edge>
     <edge id="e19" source="n15" target="n2">
-      <data key="d9"/>
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0">
@@ -529,13 +553,56 @@
       </data>
     </edge>
     <edge id="e20" source="n15" target="n5">
-      <data key="d9"/>
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0">
             <y:Point x="336.8649997163718" y="259.4324517245822"/>
           </y:Path>
           <y:LineStyle color="#000000" type="dotted" width="1.0"/>
+          <y:Arrows source="none" target="none"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e21" source="n15" target="n16">
+      <data key="d10">
+        <y:PolyLineEdge>
+          <y:Path sx="0.0" sy="0.0" tx="-44.70014572143555" ty="0.04769399685301323"/>
+          <y:LineStyle color="#000000" type="dotted" width="1.0"/>
+          <y:Arrows source="none" target="none"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e22" source="n17" target="n16">
+      <data key="d10">
+        <y:PolyLineEdge>
+          <y:Path sx="0.0" sy="0.0" tx="-29.32476334766909" ty="-1.2003060031471477"/>
+          <y:LineStyle color="#000000" type="line" width="1.0"/>
+          <y:Arrows source="none" target="none"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e23" source="n17" target="n5">
+      <data key="d10">
+        <y:PolyLineEdge>
+          <y:Path sx="0.0" sy="0.0" tx="-47.1996478227918" ty="-8.544451724582615">
+            <y:Point x="352.24038209013827" y="250.8879999999996"/>
+          </y:Path>
+          <y:LineStyle color="#000000" type="line" width="1.0"/>
+          <y:Arrows source="none" target="none"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e24" source="n1" target="n17">
+      <data key="d10">
+        <y:PolyLineEdge>
+          <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0">
+            <y:Point x="352.24038209013827" y="92.3997085571289"/>
+          </y:Path>
+          <y:LineStyle color="#000000" type="line" width="1.0"/>
           <y:Arrows source="none" target="none"/>
           <y:BendStyle smoothed="false"/>
         </y:PolyLineEdge>
@@ -806,6 +873,78 @@
     &lt;g
        id="g4159"
        transform="matrix(0,-1,1,0,-3.362325,421.36234)"&gt;
+      &lt;path
+         id="path4136"
+         d="m 210.50074,223.85129 a 11.499866,11.499866 0 0 1 -0.50088,0.0109 11.499866,11.499866 0 0 1 -11.49986,-11.49986 11.499866,11.499866 0 0 1 11.49986,-11.49987 11.499866,11.499866 0 0 1 0.50055,0.0109"
+         style="fill:none;stroke:#000000;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+         inkscape:connector-curvature="0" /&gt;
+      &lt;circle
+         r="9.5"
+         cy="212.3622"
+         cx="210"
+         id="path4136-3"
+         style="fill:none;stroke:#000000;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" /&gt;
+    &lt;/g&gt;
+  &lt;/g&gt;
+&lt;/svg&gt;
+</y:Resource>
+      <y:Resource id="5">&lt;?xml version="1.0" encoding="UTF-8" standalone="no"?&gt;
+&lt;!-- Created with Inkscape (http://www.inkscape.org/) --&gt;
+
+&lt;svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="210mm"
+   height="297mm"
+   viewBox="0 0 744.09448819 1052.3622047"
+   id="svg2"
+   version="1.1"
+   inkscape:version="0.91 r13725"
+   sodipodi:docname="component-connector4.svg"&gt;
+  &lt;defs
+     id="defs4" /&gt;
+  &lt;sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="11.2"
+     inkscape:cx="166.54826"
+     inkscape:cy="824.11438"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="1920"
+     inkscape:window-height="1003"
+     inkscape:window-x="-9"
+     inkscape:window-y="-9"
+     inkscape:window-maximized="1" /&gt;
+  &lt;metadata
+     id="metadata7"&gt;
+    &lt;rdf:RDF&gt;
+      &lt;cc:Work
+         rdf:about=""&gt;
+        &lt;dc:format&gt;image/svg+xml&lt;/dc:format&gt;
+        &lt;dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" /&gt;
+        &lt;dc:title&gt;&lt;/dc:title&gt;
+      &lt;/cc:Work&gt;
+    &lt;/rdf:RDF&gt;
+  &lt;/metadata&gt;
+  &lt;g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"&gt;
+    &lt;g
+       id="g4159"
+       transform="matrix(0,1,-1,0,421.36233,3.36234)"&gt;
       &lt;path
          id="path4136"
          d="m 210.50074,223.85129 a 11.499866,11.499866 0 0 1 -0.50088,0.0109 11.499866,11.499866 0 0 1 -11.49986,-11.49986 11.499866,11.499866 0 0 1 11.49986,-11.49987 11.499866,11.499866 0 0 1 0.50055,0.0109"

@@ -8,6 +8,10 @@
 *.gz
 *.gz(busy)
 *.toc
+*-blx.bib
+*.blg
+*.bbl
+*.run.xml
 
 *.suo
 *.pdb
