@@ -14,9 +14,11 @@ import random, string
 
 from common.common import *
 
-app = Flask(__name__, static_path='/static')
-app.config.update(DEBUG = True, UPLOAD_FOLDER = 'static/')
+app = Flask(__name__)
 app.config.update(GRID_CALC_ROLE = 'FILE_BACKEND')
+STATIC_PATH = os.path.abspath(os.path.join(os.path.expanduser("~"), '_'.join([app.config['GRID_CALC_ROLE'], 'static'])))
+app.config.update(static_path = STATIC_PATH)
+app.config.update(DEBUG = True, UPLOAD_FOLDER = STATIC_PATH)
 
 filename_size = 32
 filename_ext = '.dat'
