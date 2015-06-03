@@ -106,7 +106,6 @@ class Node:
             resp = jsr('post', front + '/nodes', data = {'key': self.key, 'traits': config['CLIENT_TRAITS']})
             assert_response(resp, EUnrecoverable)
             self.node_id = resp.json()['agent_id']
-            self.max_time = resp.json()['max_time']
 
         ofs = open(keyfile, 'w')
         ofs.write('#'.join(map(str, [self.node_id, self.key])))
@@ -124,6 +123,7 @@ class Node:
                 return False
         
             print('Retrieved a task!')
+            self.max_time = resp.json()['max_time']
             ###>> retrieving file
             while True:
                 try:
@@ -264,9 +264,7 @@ class Watchdog:
         self.timestamp = datetime.utcnow()
 
     def check(self):
-        print('check')
         if self.pdesc.poll() == None:
-            print('None')
             if (datetime.utcnow() - self.timestamp).seconds > self.timeout:
                 self.pdesc.terminate()
                 sleep(self.kill_to_term)
@@ -276,7 +274,6 @@ class Watchdog:
                 print('Bark!')
                 self.running = True
                 self.start()
-        print('not None')
         self.running = False
 
     def start(self):
