@@ -374,9 +374,18 @@ def view_rest_put_item(table, column, value):
     value_json = request.get_json()
     return put_item(table, column, value, value_json)
 
+@app.route('/<table>/<int:id>', methods=['PUT'])
+def view_rest_put_item_by_id(table, id):
+    value_json = request.get_json()
+    return put_item(table, 'id', id, value_json)
+
 @app.route('/<table>/<column>/<value>', methods=['DELETE'])
 def view_rest_delete_item(table, column, value):
     return delete_item(table, column, value)
+
+@app.route('/<table>/<int:id>', methods=['DELETE'])
+def view_rest_delete_item_by_id(table, id):
+    return delete_item(table, 'id', id)
 
 ### Posting ###
 

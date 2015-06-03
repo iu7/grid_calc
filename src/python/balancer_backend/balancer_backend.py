@@ -28,7 +28,7 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 def nodesHandler():
     traits = request.get_json()['traits']
     key = get_url_parameter('key')
-    nidr = jsr('post', bw['database'] + '/agent', data = {'key': key})
+    nidr = jsr('post', bw['database'] + '/agent', {'key': key})
     if nidr.status_code == 200:
         nid = nidr.json()['id']
     else:
@@ -37,20 +37,20 @@ def nodesHandler():
 
 @app.route('/nodes/<int:nid>', methods=['PUT'])
 def nodesSpecificHandler(nid):
-    state = request.form['state'] if 'state' in request.form else ''
-    
+    if not 'status' in request.form: return 'Required: status', 422
+    status = request.form['status']
     if nid in activenodes:
-        if 'state' in request.form:
-            activenodes[nid].Update(state)
-        else:
-            activenodes[nid].Update()
+        activenodes[nid].update(status)
     else:
-        subtask = jsr('get', bw['database']+'/subtask/filter', data = {'agent_id':nid}).json()['result'][0]
+        subtask = jsr('get', bw['database']+'/subtask/filter', {'agent_id':nid}).json()['result'][0]
         sid = subtask['id']
         tid = subtask['task_id']            
         
-        activenodes[nid] = ActiveNode(state, tid, sid, nid)
+        activenodes[nid] = ActiveNode(status, tid, sid, nid)
     
+    n = activenodes[nid]
+    resp = jsr('put', bw['database'] + '/subtask/{0}'.format(n.sid), {'status': status})
+
     return jsenc({'status':'success'}), 200
     
 @app.route('/tasks/newtask', methods=['GET'])
@@ -65,29 +65,32 @@ def newTaskHandler():
         tid = subtask['task_id']
         task = requests.get(bw['database']+'/task/'+str(tid)).json()
         archive_name = task['archive_name']
+        max_time = task['max_time']
         
         activenodes[nid] = ActiveNode('Was assigned task', tid, sid, nid)
         
-        return jsenc({'archive_name':archive_name}), 200
+        return jsenc({'archive_name':archive_name, 'max_time': max_time}), 200
     else:
         return jsenc({'status':'failure', 'message':'no suitable tasks'}),404
     
 @app.route('/tasks', methods=['POST'])
 def submitTaskHandler():
-    if not 'nodeid' in request.form: return 'Required: nodeid', 422
+    if not (('nodeid' in request.form) and ('filename' in request.form) and ('status' in request.form)): 
+        return 'Required: nodeid, filename, status', 422
     nid = request.form['nodeid']
     filename = request.form['filename']
+    status = request.form['status']
     if nid in activenodes: 
-        sid = activenodes[nid].tid
-        r = requests.put(bw['database']+'/subtask/'+sid, \
-            data = jsenc({'archive_name':filename, 'status':'finished'}))
-    return jsenc({'status':'success'}), 200
+        sid = activenodes[nid].sid
+        r = jsr('put', bw['database']+'/subtask/'+str(sid), {'archive_name':filename, 'status':status})
+        return jsenc({'status':'success'}), 200
+    return jsenc({'message': 'task is dropped'}), 422
 
 ################################
 
 def actualityCheck():
     try:
-        sts = jsr('get', bw['database']+'/subtask/filter', {'status':'assigned'}).json()['result']
+        sts = jsr('get', bw['database']+'/subtask/filter', {'status':TASK_STATUS_ASSIGNED}).json()['result']
         stids = list(map(lambda x:x['id'], sts))
     except:
         pass
@@ -110,20 +113,20 @@ class ActiveNode:
     nid = None
     sid = None
     lastbeat = None
-    state = None
-    def __init__(self, state, tid, sid, nid):
-        self.state = state
+    status = None
+    def __init__(self, status, tid, sid, nid):
+        self.status = status
         self.lastbeat = datetime.datetime.now()
         self.tid = tid
         self.sid = sid
         self.nid = nid
-    def __getstate__(self):
-        state = self.__dict__.copy()
-        for key in state:
-            state[key] = str(state[key])
-        return state
-    def update(self, state):
-        self.state = state
+    def __getstatus__(self):
+        status = self.__dict__.copy()
+        for key in status:
+            status[key] = str(status[key])
+        return status
+    def update(self, status):
+        self.status = status
         self.lastbeat = datetime.datetime.now()
     def update(self):
         self.lastbeat = datetime.datetime.now()

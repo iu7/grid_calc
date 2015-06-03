@@ -14,17 +14,16 @@ import hashlib
 import datetime
 from werkzeug import secure_filename
 from common.common import *
+import tempfile
 
 bw = None
 
 app = Flask(__name__)
 app.config.update(DEBUG = True)
 app.config.update(GRID_CALC_ROLE = 'USER_FRONTEND')
-
-UPLOAD_FOLDER = 'uploads'
-ALLOWED_EXTENSIONS = set(['tar.gz'])
-
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config.update(UPLOAD_FOLDER = os.path.join(tempfile.gettempdir(), '_'.join([app.config['GRID_CALC_ROLE'], 'upload'])))
+ARCHIVE_EXTENTION = 'tar.gz'
+ALLOWED_EXTENSIONS = set([ARCHIVE_EXTENTION])
 
 pendingCreations = {}
 
@@ -242,9 +241,11 @@ def getfile():
     except:
         return jsenc({'status':'failure', 'message':'File not found'}), 400
     
+    outfileid = '.'.join([fileid.split('.')[0], ARCHIVE_EXTENTION])
+
     try:
-        getFileFromTo(bw['filesystem']+'/static/'+fileid, os.path.join(app.config['UPLOAD_FOLDER'], fileid))
-        return send_from_directory(app.config['UPLOAD_FOLDER'], fileid)
+        getFileFromTo(bw['filesystem']+'/static/'+fileid, os.path.join(app.config['UPLOAD_FOLDER'], outfileid))
+        return send_from_directory(app.config['UPLOAD_FOLDER'], outfileid, as_attachment = True)
     except Exception as e:
         print (e)
         return jsenc({'status':'failure', 'message':'File not found'}), 404

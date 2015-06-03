@@ -40,7 +40,7 @@
                     <td class=\"tg-031e\" style="white-space:nowrap;">
                     {% for status in task['statuses']%}
                         {% if 'result' in status %}
-                        <a href="getfile?id={{status['result']}}"><small>Выполнена</small></a><br/>
+                        <a href="getfile?id={{status['result']}}"><small>Выполнена({{status['status']}})</small></a><br/>
                         {% else %}
                         <small>{{status['status']}}</small><br/>
                         {% endif %}

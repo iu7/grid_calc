@@ -50,23 +50,24 @@ def nodesHandler():
     
 @app.route('/nodes/<int:nodeid>', methods=['PUT'])
 def nodesSpecificHandler(nodeid):
-    keyold = get_url_parameter('key_old')
-    if not is_key_id_valid(keyold, nodeid):
+    if not has_url_parameter('key'):
         return msg_required_params_fmt.format('valid "nodeid", "key" cortege'), 422
 
-    ### Case 1: update keys
-    if has_url_parameter('key'):
-        key = get_url_parameter('key')
+    key = get_url_parameter('key')
+    if has_url_parameter('key_old'):
+        ### Case 1: update keys
+        keyold = get_url_parameter('key_old')
+        if not is_key_id_valid(keyold, nodeid):
+            return msg_required_params_fmt.format('valid "nodeid", "key" cortege'), 422
+
         dr = jsr('put', bw['database'] + '/agent/filter', {'id': nodeid, 'key': keyold, 'changes': {'key' : key}})
         if int(dr.json()['count']) == 0:
-            return msg_required_params_fmt.format('valid (id(in endpont), "key", "key_old") cortege'), 422
-        return jsenc('status':'success'), 200
+            return msg_required_params_fmt.format('valid (nodeid(in endpont), "key", "key_old") cortege'), 422
+        return jsenc({'status':'success'}), 200
     else:
-        return msg_required_params_fmt.format('valid (id(in endpont), "key", "key_old") cortege'), 422
-    
-    ### Case 2: update state
-    r = requests.put(bw['balancer'] + '/nodes/' + str(nodeid), data = {'state': get_url_parameter('state')})
-    return r.text, r.status_code
+        ### Case 2: update state
+        r = requests.put(bw['balancer'] + '/nodes/' + str(nodeid), data = {'status': get_url_parameter('status')})
+        return r.text, r.status_code
     
 @app.route('/tasks/newtask', methods=['GET'])
 def newTaskHandler():
@@ -88,16 +89,19 @@ def submitTaskHandler():
     if not fl:
         return msg_required_params_fmt.format('"file" as file parameter'), 422
 
+    status = get_url_parameter('status') # can be failed, but still contain some results
+    if not status:
+        return msg_required_params_fmt.format('"status"'), 422
+
     if allowed_file(fl.filename):
         filename = secure_filename(fl.filename)
         fullpath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         fl.save(fullpath)
         
-        r = requests.post(bw['filesystem'] + '/static',
-            files = {'file':open(fullpath, 'rb')})
+        r = requests.post(bw['filesystem'] + '/static', files = {'file':open(fullpath, 'rb')})
         
         if r.status_code == 200:
-            r = requests.post(bw['balancer'] + '/tasks', data = {'filename': r.json()['name'], 'nodeid': nodeid})
+            r = requests.post(bw['balancer'] + '/tasks', data = {'filename': r.json()['name'], 'nodeid': nodeid, 'status': status})
 
         os.unlink(fullpath)
         return r.text, r.status_code

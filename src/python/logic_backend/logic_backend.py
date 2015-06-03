@@ -56,7 +56,7 @@ def taskPlacing():
     for _ in range (0, subtask_count):
         sid = jsr('post', bw['database'] + '/subtask', \
             {'task_id':tid, \
-            'status':'queued', \
+            'status':TASK_STATUS_QUEUED, \
             }).json()['id']
         
     return place_bulk_traits(traits, 'task', tid, bw['database'])
@@ -92,8 +92,8 @@ def taskViewing():
         for subtask in subtasks:
             if taskpar['dateplaced'] is None:
                 taskpar['dateplaced'] = subtask['dateplaced']
-            if (subtask['status'] == 'completed'):
-                taskpar['statuses'].append({'result':subtask['archive_name']})
+            if (subtask['status'] == TASK_STATUS_FINISHED or subtask['status'] == TASK_STATUS_FAILED and subtask['archive_name']):
+                taskpar['statuses'].append({'result':subtask['archive_name'], 'status' : subtask['status']})
             else:
                 taskpar['statuses'].append({'status':subtask['status']})
         

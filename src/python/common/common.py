@@ -5,6 +5,11 @@ import threading, time
 import jsonpickle
 import os, sys, platform, shutil, random, string
 
+TASK_STATUS_QUEUED = 'queued'
+TASK_STATUS_ASSIGNED = 'assigned'
+TASK_STATUS_FAILED = 'failed'
+TASK_STATUS_FINISHED = 'finished'
+
 def random_string(size):
     return ''.join([random.choice(string.ascii_letters) for i in range(size)])
 
@@ -36,9 +41,9 @@ def getFileFromTo(adr, fname):
             raise Exception('File was not downloaded')
 
         for block in response.iter_content(1024):
-            if not block:
-                break
-            handle.write(block)
+            if block:
+                handle.write(block)
+                handle.flush()
 
 def preparedir(folder, flush=False):
     if not os.path.exists(folder):
