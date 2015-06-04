@@ -268,7 +268,7 @@ class Watchdog:
             if (datetime.utcnow() - self.timestamp).seconds > self.timeout:
                 self.pdesc.terminate()
                 sleep(self.kill_to_term)
-                if self.pdesc.poll():
+                if self.pdesc.poll() == None:
                     self.pdesc.kill()
             else:
                 print('Bark!')
@@ -277,7 +277,6 @@ class Watchdog:
         self.running = False
 
     def start(self):
-        print('Start')
         self.running = True
         thr = threading.Timer(self.cycletime, self.check)
         thr.daemon = True

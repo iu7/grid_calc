@@ -19,10 +19,10 @@ app = Flask(__name__)
 app.config.update(DEBUG = True)
 app.config.update(GRID_CALC_ROLE = 'BALANCER_BACKEND')
 
-UPLOAD_FOLDER = '/uploads'
-ALLOWED_EXTENSIONS = set(['zip'])
+#UPLOAD_FOLDER = '/uploads'
+#ALLOWED_EXTENSIONS = set(['zip'])
 
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+#app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 @app.route('/nodes', methods=['POST'])
 def nodesHandler():
