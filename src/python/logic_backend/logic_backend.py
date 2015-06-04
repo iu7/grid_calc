@@ -79,6 +79,7 @@ def taskViewing():
     for task in tasks:
         taskpar = {}
         subtasks = jsr('get', bw['database'] + '/subtask/filter', {'task_id':task['id']}).json()['result']
+        print(subtasks)
         traitids = jsr('get', bw['database'] + '/mtm_traittask/filter', {'task_id':task['id']}).json()['result']
         traitids = list(map(lambda x: x['trait_id'], traitids))
         traits = jsr('get', bw['database'] + '/trait/arrayfilter', {'id':traitids}).json()['result']

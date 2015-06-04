@@ -30,6 +30,8 @@ TRAITS_COLSEP = ' '
 
 TASK_STATUS_FAILED = 'failed'
 TASK_STATUS_FINISHED = 'finished'
+NODE_STATUS_ACTIVE = 'active'
+NODE_STATUS_ACTIVE = 'down'
 
 config = {}
 
@@ -64,16 +66,15 @@ class ETaskRecoverable(Exception):
 
 class Node:
     key            = None
-    busy           = False
     pdesc          = None
-    input_archive  = None
-    output_archive = None
     req_timeout    = 1
     task_req_timeout = 1
     node_id        = None
     task_id        = None
     max_time       = None
     status         = None
+    task_id        = None
+    subtask_id     = None
 
     def __init__(self):
         self.key = random_string(64)
@@ -81,7 +82,17 @@ class Node:
     def __repr__(self):
         return ', '.join(map(lambda x: str(getattr(self, x)), filter(lambda x: not hasattr(x, '__call__'))))
 
+    def clear(self):
+        self.pdesc, self.node_id, self.task_id, self.max_time, self.status, self.subtask_id = [None] * 6
+
+    def put_task_status(self, adr, status):
+        return requests.put(\
+            adr + '/nodes/{0}'.format(self.node_id),\
+            data = {'key': self.key, 'status': status, 'subtask_id': self.subtask_id}\
+        )
+
     def run(self):
+        self.clear()
         homedir = config['HOME_DIRECTORY']
         workdir = config['WORKING_DIRECTORY']
         front = 'http://{0}'.format(config['NODE_FRONTEND'])
@@ -117,18 +128,23 @@ class Node:
             clear_directory(config['WORKING_DIRECTORY'])
             clear_directory(config['ARCHIVE_DIRECTORY'])
 
-            resp = requests.get(front + '/tasks/newtask', data = {'key': self.key, 'nodeid': self.node_id})
+            resp = requests.get(front + '/tasks/newtask', data = {'key': self.key, 'node_id': self.node_id})
             if resp.status_code != 200:
                 print('No available tasks so far')
                 return False
         
             print('Retrieved a task!')
-            self.max_time = resp.json()['max_time']
+            try:
+                self.max_time = resp.json()['max_time']
+                self.subtask_id = resp.json()['subtask_id']
+                arch = resp.json()['archive_name']
+            except Exception as e:
+                raise EUnrecoverable('Server error: not all task parameters were sent by server!')
+
             ###>> retrieving file
             while True:
                 try:
-                    arch = resp.json()['archive_name']
-                    fresp = requests.get(front + '/getfile', data = {'key': self.key, 'nodeid': self.node_id, 'archive_name': arch}, stream = True)
+                    fresp = requests.get(front + '/getfile', data = {'key': self.key, 'node_id': self.node_id, 'subtask_id': self.subtask_id, 'archive_name': arch}, stream = True)
                     assert_response(fresp, None)
                     print('Retrieving archive!')
                     download_file(fresp, os.path.join(config['ARCHIVE_DIRECTORY'], '.'.join([arch, ARCHIVE_EXTENTION])))
@@ -141,18 +157,19 @@ class Node:
         else:
             print('Found unfinished task')
             clear_directory(config['WORKING_DIRECTORY'])
-            ###>> extracting max waiting time from lockfile
+            ###>> extracting data from lockfile
             try:
                 ifs = open(tasklockfile, 'r')
-                smaxtime = ifs.read()
-                self.max_time = int(smaxtime)
+                fdata = ifs.read()
+                self.subtask_id, self.max_time = fdata.split('#')
+                self.max_time = int(self.max_time)
             except Exception as e:
-                requests.put(front + '/nodes/{0}'.format(self.node_id), data = {'key': self.key, 'status': 'failed', 'message': str(e)})
+                requests.put(front + '/nodes/{0}'.format(self.node_id), data = {'key': self.key, 'status': TASK_STATUS_FAILED, 'subtask_id': self.subtask_id})
                 assert_response(resp, ETaskRecoverable) # It is recoverable unless we can properly reply that it is not
-                raise ETaskUnrecoverable('Malformed task lockfile: can not parse <{0}> as int'.format(smaxtime))
+                raise ETaskUnrecoverable('Malformed task lockfile')
             finally:
                 ifs.close()
-            ###<< extracting max waiting time from lockfile
+            ###<< extracting data from lockfile
 
         ###>> unzipping
         try:
@@ -164,7 +181,7 @@ class Node:
                 raise Exception('Failed to extract: {0}'.format(unzipcmd))
             print('  Done')
         except Exception as e:
-            requests.put(front + '/nodes/{0}'.format(self.node_id), data = {'key': self.key, 'status': 'failed', 'message': str(e)})
+            requests.put(front + '/nodes/{0}'.format(self.node_id), data = {'key': self.key, 'status': TASK_STATUS_FAILED, 'subtask_id': self.subtask_id})
             assert_response(resp, ETaskRecoverable) # It is recoverable unless we can properly reply that it is not
             raise ETaskUnrecoverable(str(e))
         ###<< unzipping
@@ -173,15 +190,19 @@ class Node:
         if not os.path.exists(tasklockfile):
             print('Creating task lock file: {0}'.format(tasklockfile))
             ofs = open(tasklockfile, 'w')
-            ofs.write(str(self.max_time))
+            ofs.write('#'.join(list(map(str, [self.subtask_id, self.max_time]))))
             ofs.close()
         ###<< creating lockfile
+
+        # Let's put here, we can recover task at least
+        requests.put(front + '/nodes/{0}'.format(self.node_id), data = {'key': self.key, 'node_status': NODE_STATUS_ACTIVE})
+        assert_response(resp, ERecoverable)
 
         ###>> finding scripts
         start_script = find_script(START_SCRIPT_PREFIX, config['WORKING_DIRECTORY'], config['SCRIPT_VALID_POSTFIX_FMTS'])
         if not (start_script):
             msg = 'Not found start script: start = {0}'.format(start_script)
-            requests.put(front + '/nodes/{0}'.format(self.node_id), data = {'key': self.key, 'status': 'failed', 'message': msg})
+            requests.put(front + '/nodes/{0}'.format(self.node_id), data = {'key': self.key, 'status': TASK_STATUS_FAILED, 'subtask_id': self.subtask_id})
             assert_response(resp, ETaskRecoverable) # It is recoverable unless we can properly reply that it is not
             raise ETaskUnrecoverable(msg)
         ###< finding scripts
@@ -193,7 +214,7 @@ class Node:
             self.pdesc = run(start_script)
         except Exception as e:
             msg = 'Failed to run: {0}'.format(str(e))
-            requests.put(front + '/nodes/{0}'.format(self.node_id), data = {'key': self.key, 'status': 'failed', 'message': msg})
+            requests.put(front + '/nodes/{0}'.format(self.node_id), data = {'key': self.key, 'status': TASK_STATUS_FAILED, 'subtask_id': self.subtask_id})
             assert_response(resp, ETaskRecoverable) # It is recoverable unless we can properly reply that it is not
             raise ETaskUnrecoverable(msg)
         ###<< starting
@@ -215,7 +236,7 @@ class Node:
         if self.pdesc.returncode:
             msg = 'Task failed with code: {0}'.format(self.pdesc.returncode)
             print(msg + ', but we will return what we can')
-            requests.put(front + '/nodes/{0}'.format(self.node_id), data = {'key': self.key, 'status': 'failed', 'message': msg})
+            requests.put(front + '/nodes/{0}'.format(self.node_id), data = {'key': self.key, 'status': TASK_STATUS_FAILED, 'subtask_id': self.subtask_id})
             assert_response(resp, ETaskRecoverable)
             self.status = TASK_STATUS_FAILED
         else:
@@ -226,7 +247,7 @@ class Node:
         resdir = os.path.join(config['WORKING_DIRECTORY'], SCRIPT_RESULTS_DIR)
         if not os.path.exists(resdir):
             msg = 'Results directory <{0}> not found in archive root'.format(SCRIPT_RESULTS_DIR)
-            requests.put(front + '/nodes/{0}'.format(self.node_id), data = {'key': self.key, 'status': 'failed', 'message': msg})
+            requests.put(front + '/nodes/{0}'.format(self.node_id), data = {'key': self.key, 'status': TASK_STATUS_FAILED, 'subtask_id': self.subtask_id})
             assert_response(resp, ETaskRecoverable) # It is recoverable unless we can properly reply that it is not
             raise ETaskUnrecoverable(msg)
         
@@ -242,7 +263,11 @@ class Node:
         ### send it
         newarchfile = '.'.join([newarchfile, ARCHIVE_EXTENTION])
         front = 'http://{0}'.format(config['NODE_FRONTEND'])
-        resp = requests.post(front + '/tasks', files = {'file': open(newarchfile, 'rb')}, data = {'key': self.key, 'nodeid': self.node_id, 'status': self.status})
+        resp = requests.post(\
+            front + '/tasks',\
+            files = {'file': open(newarchfile, 'rb')},\
+            data = {'key': self.key, 'node_id': self.node_id, 'status': self.status, 'subtask_id': self.subtask_id}\
+        )
         assert_response(resp, ETaskRecoverable)
 
         os.unlink(tasklockfile)
@@ -330,15 +355,18 @@ def download_file(resp, fullpath):
 
 def find_script(prefix, path, valid_fmts):
     print('  Searching for start script:')
-    for fmt in valid_fmts + [START_SCRIPT_PREFIX]:
-        name = PLATFORM_INFO_SEP.join([\
-            prefix,\
-            fmt.format(\
-                platform = platform.system(),\
-                architecture = platform.machine(),\
-                release = platform.release()\
-            )\
-        ])
+    for fmt in valid_fmts + [[]]:
+        if fmt:
+            name = PLATFORM_INFO_SEP.join([\
+                prefix,\
+                fmt.format(\
+                    platform = platform.system(),\
+                    architecture = platform.machine(),\
+                    release = platform.release()\
+                )\
+            ])
+        else:
+            name = prefix
         fullpath = os.path.join(path, name)
         for ext in SCRIPT_EXTENTIONS:
             fn = '.'.join([fullpath, ext])

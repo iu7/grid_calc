@@ -35,16 +35,6 @@ def common_init(self, **kwargs):
 def user_init(self, **kwargs):
     common_init(self, **kwargs)
 
-### UserSesson methods ###
-
-def usersession_init(self, **kwargs):
-    common_init(self, **kwargs)
-    self.refresh()
-
-def usersession_refresh(self):
-    self.session_id = random_string(32)
-    self.timestamp = datetime.utcnow()
-
 ### Trait methods ###
 
 def trait_init(self, **kwargs):
@@ -104,40 +94,6 @@ def init_models(Base):
 \
         __init__ = user_init,\
         __repr__ = lambda self :', '.join(['{0}: {1}'.format(f, getattr(self, f)) for f in self.metainf.col_type_d.keys()])\
-    ))
-
-    ### UserSession ###
-
-    UserSession = type('UserSession', (Base,), dict(\
-        __tablename__ = "usersession",\
-\
-        metainf = type('metainf', (), dict(\
-            col_type_d = {\
-                'id'        : int,\
-                'session_id': str,\
-                'timestamp' : datetime,\
-                'user_id'   : int\
-            },\
-            col_type_parsers = {\
-                'timestamp' : dt_parser.parse\
-            },\
-            filename_fields = [],\
-            pk_field = 'id',\
-            fk_fields = ['user_id'],\
-            required_flds = [],\
-            duplicatable = False,\
-        )),\
-\
-        id = Column(Integer(), primary_key = True, autoincrement = True),\
-        session_id = Column(String(32), unique = True),\
-        timestamp = Column(DateTime),\
-        user_id = Column(Integer()),\
-\
-        __init__ = usersession_init,\
-        __repr__ = lambda self :', '.join(['{0}: {1}'.format(f, getattr(self, f)) for f in self.metainf.col_type_d.keys()]),\
-\
-        refresh = usersession_refresh,\
-        session_expired = lambda self :(self.timestamp - datetime.utcnow()) >= timedelta(hours = 1)\
     ))
 
     ### Agent ###
@@ -314,7 +270,6 @@ def init_models(Base):
         'agent'          : Agent,\
         'trait'          : Trait,\
         'user'           : User,\
-        'usersession'    : UserSession,\
         'mtm_traitagent' : mtmTraitAgent,\
         'mtm_traittask'  : mtmTraitTask\
     })

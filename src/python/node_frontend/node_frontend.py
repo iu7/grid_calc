@@ -48,41 +48,54 @@ def nodesHandler():
     r = jsr('post', bw['balancer'] + '/nodes', request.get_json()) 
     return r.text, r.status_code
     
-@app.route('/nodes/<int:nodeid>', methods=['PUT'])
-def nodesSpecificHandler(nodeid):
+@app.route('/nodes/<int:nid>', methods=['PUT'])
+def nodesSpecificHandler(nid):
     if not has_url_parameter('key'):
-        return msg_required_params_fmt.format('valid "nodeid", "key" cortege'), 422
+        return msg_required_params_fmt.format('valid "nid", "key" cortege'), 422
 
+    #variants:
+    #1 -- key, key_old
+    #2 -- key, node_status
+    #3 -- key, subtask_id, status
     key = get_url_parameter('key')
     if has_url_parameter('key_old'):
-        ### Case 1: update keys
+        # Case 1: update keys
         keyold = get_url_parameter('key_old')
-        if not is_key_id_valid(keyold, nodeid):
-            return msg_required_params_fmt.format('valid "nodeid", "key" cortege'), 422
 
-        dr = jsr('put', bw['database'] + '/agent/filter', {'id': nodeid, 'key': keyold, 'changes': {'key' : key}})
+        if not is_key_id_valid(keyold, nid):
+            return msg_required_params_fmt.format('valid "nid", "key" cortege'), 422
+
+        dr = jsr('put', bw['database'] + '/agent/filter', {'id': nid, 'key': keyold, 'changes': {'key' : key}})
         if int(dr.json()['count']) == 0:
-            return msg_required_params_fmt.format('valid (nodeid(in endpont), "key", "key_old") cortege'), 422
-        return jsenc({'status':'success'}), 200
+            return msg_required_params_fmt.format('valid (nid(in endpont), "key", "key_old") cortege'), 422
+        return jsenc({'status': 'success'}), 200
+    elif has_url_parameter('node_status'):
+        # Case 2: update node_status
+        br = requests.put(bw['balancer'] + '/nodes/' + str(nid), data = {'node_status': node_status})
+        return br.text, br.status_code
     else:
-        ### Case 2: update state
-        r = requests.put(bw['balancer'] + '/nodes/' + str(nodeid), data = {'status': get_url_parameter('status')})
+        # Case 3: update task status
+        status = get_url_parameter('status')
+        sid = get_url_parameter('subtask_id')
+        if not (status and sid):
+            return msg_required_params_fmt.format('status, subtask_id')
+        r = requests.put(bw['balancer'] + '/nodes/' + str(nid), data = {'status': get_url_parameter('status'), 'subtask_id': sid})
         return r.text, r.status_code
     
 @app.route('/tasks/newtask', methods=['GET'])
 def newTaskHandler():
     key = get_url_parameter('key')
-    nodeid = get_url_parameter('nodeid')
-    if not is_key_id_valid(key, nodeid):
-        return msg_required_params_fmt.format('valid "nodeid", "key" cortege'), 422
-    r = requests.get(bw['balancer'] + '/tasks/newtask', data = {'nodeid': nodeid})
+    nid = get_url_parameter('node_id')
+    if not is_key_id_valid(key, nid):
+        return msg_required_params_fmt.format('valid "nid", "key" cortege'), 422
+    r = requests.get(bw['balancer'] + '/tasks/newtask', data = {'node_id': nid})
     return r.text, r.status_code
     
 @app.route('/tasks', methods=['POST'])
 def submitTaskHandler():
     key = get_url_parameter('key')
-    nodeid = get_url_parameter('nodeid')
-    if not is_key_id_valid(key, nodeid):
+    nid = get_url_parameter('node_id')
+    if not is_key_id_valid(key, nid):
         return msg_required_params_fmt.format('valid "id", "key" cortege'), 422
 
     fl = request.files['file']
@@ -90,8 +103,9 @@ def submitTaskHandler():
         return msg_required_params_fmt.format('"file" as file parameter'), 422
 
     status = get_url_parameter('status') # can be failed, but still contain some results
-    if not status:
-        return msg_required_params_fmt.format('"status"'), 422
+    sid = get_url_parameter('subtask_id')
+    if not (status and sid):
+        return msg_required_params_fmt.format('status, subtask_id'), 422
 
     if allowed_file(fl.filename):
         filename = secure_filename(fl.filename)
@@ -101,7 +115,7 @@ def submitTaskHandler():
         r = requests.post(bw['filesystem'] + '/static', files = {'file':open(fullpath, 'rb')})
         
         if r.status_code == 200:
-            r = requests.post(bw['balancer'] + '/tasks', data = {'filename': r.json()['name'], 'nodeid': nodeid, 'status': status})
+            r = requests.post(bw['balancer'] + '/tasks', data = {'filename': r.json()['name'], 'node_id': nid, 'subtask_id': sid, 'status': status})
 
         os.unlink(fullpath)
         return r.text, r.status_code
@@ -113,22 +127,20 @@ def submitTaskHandler():
 @app.route('/getfile', methods=['GET'])
 def getfile():
     key = get_url_parameter('key')
-    nodeid = get_url_parameter('nodeid')
-    if not is_key_id_valid(key, nodeid):
+    nid = get_url_parameter('node_id')
+    if not is_key_id_valid(key, nid):
         return msg_required_params_fmt.format('valid "id", "key" cortege'), 422
     
     filename = get_url_parameter('archive_name')
     if not filename:
-        return msg_required_params_fmt.format('valid "id", "key", "archive_name" cortege'), 422
+        return msg_required_params_fmt.format('archive_name'), 422
     
-    resp = jsr('get', bw['database'] + '/subtask/filter', {'agent_id': nodeid})
-    if resp.status_code == 200:
-        if len(resp.json()['result']) == 0:
-            return 'You are not assigned to any task', 403
+    sid = get_url_parameter('subtask_id')
+    if not sid:
+        return msg_required_params_fmt.format('subtask_id'), 422
 
-    subtasks = resp.json()['result']
-    task_ids = [s['task_id'] for s in subtasks]
-    resp = jsr('get', bw['database'] + '/task/arrayfilter', {'archive_name': [filename], 'id': task_ids})
+
+    resp = jsr('get', bw['database'] + '/subtask/filter', {'archive_name': filename, 'id': sid})
     if resp.status_code != 200:
         return 'You are not assigned to this task', 403
 

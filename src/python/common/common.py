@@ -10,6 +10,8 @@ TASK_STATUS_ASSIGNED = 'assigned'
 TASK_STATUS_FAILED = 'failed'
 TASK_STATUS_FINISHED = 'finished'
 
+NODE_STATUS_ACTIVE = 'active'
+
 def random_string(size):
     return ''.join([random.choice(string.ascii_letters) for i in range(size)])
 
