@@ -1,0 +1,2 @@
+os Windows
+netFramework 4
