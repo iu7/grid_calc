@@ -21,10 +21,15 @@ PLATFORM_INFO_OTHER_FMTS       = ['{platform}']
 START_SCRIPT_PREFIX = 'start'
 
 SCRIPT_RESULTS_DIR = 'result'
-SCRIPT_EXTENTIONS = ['exe', 'sh', 'py']
+SCRIPT_EXTENTIONS = ['exe', 'sh', 'bat', 'py']
 
-ZIPPER_CMD_FMT   = 'tar -czf {{name}}.{archext} {{wildcard}}'.format(archext = ARCHIVE_EXTENTION)
-UNZIPPER_CMD_FMT = 'tar -xzf {wildcard}'
+#I like CHINdows very much 
+#ZIPPER_CMD_FMT   = 'tar -czf {{name}}.{archext} {{wildcard}}'.format(archext = ARCHIVE_EXTENTION)
+#UNZIPPER_CMD_FMT = 'tar -xzf {wildcard}'
+TAR_PACK_CMD_FMT = 'tar -cf {name}.tar {wildcard}'
+GZIP_PACK_CMD_FMT = 'gzip {name}.tar'
+TAR_UNPACK_CMD_FMT = 'tar -xf {name}.tar'
+GZIP_UNPACK_CMD_FMT = 'gzip -d {name}.tar.gz'
 
 TRAITS_COLSEP = ' '
 
@@ -39,6 +44,25 @@ config.update(GRID_CALC_ROLE = 'GRID_CALC_CLIENT')
 config.update(NODE_FRONTEND = None)
 config.update(SCRIPT_VALID_POSTFIX_FMTS = PLATFORM_INFO_OS_ARCH_REL_FMTS + PLATFORM_INFO_OS_ARCH_FMTS + PLATFORM_INFO_OS_REL_FMTS + PLATFORM_INFO_OTHER_FMTS)
 config.update(CLIENT_TRAITS = [])
+
+def pack(name, wildcard, srcpath, dstpath):
+    code = 0
+    os.chdir(srcpath)
+    code += os.system(TAR_PACK_CMD_FMT.format(name = name, wildcard = wildcard))
+    code += os.system(GZIP_PACK_CMD_FMT.format(name = name))
+    shutil.move(name + '.tar.gz', dstpath)
+    return code
+
+def unpack(name, srcpath, dstpath):
+    code = 0
+    archtgz = name + '.tar.gz'
+    os.chdir(dstpath)
+    
+    path = os.path.join(srcpath, archtgz)
+    shutil.copy(path, '.')
+    code += os.system(GZIP_UNPACK_CMD_FMT.format(name = name))
+    code += os.system(TAR_UNPACK_CMD_FMT.format(name = name))
+    return code
 
 ### Traits auto extract ###
 ### TODO: parse from some input file
@@ -75,6 +99,7 @@ class Node:
     status         = None
     task_id        = None
     subtask_id     = None
+    archive_name   = None
 
     def __init__(self):
         self.key = random_string(64)
@@ -83,7 +108,7 @@ class Node:
         return ', '.join(map(lambda x: str(getattr(self, x)), filter(lambda x: not hasattr(x, '__call__'))))
 
     def clear(self):
-        self.pdesc, self.node_id, self.task_id, self.max_time, self.status, self.subtask_id = [None] * 6
+        self.pdesc, self.node_id, self.task_id, self.max_time, self.status, self.subtask_id, self.archive_name = [None] * 7
 
     def put_task_status(self, adr, status):
         return requests.put(\
@@ -137,17 +162,17 @@ class Node:
             try:
                 self.max_time = resp.json()['max_time']
                 self.subtask_id = resp.json()['subtask_id']
-                arch = resp.json()['archive_name']
+                self.archive_name = resp.json()['archive_name']
             except Exception as e:
                 raise EUnrecoverable('Server error: not all task parameters were sent by server!')
 
             ###>> retrieving file
             while True:
                 try:
-                    fresp = requests.get(front + '/getfile', data = {'key': self.key, 'node_id': self.node_id, 'subtask_id': self.subtask_id, 'archive_name': arch}, stream = True)
+                    fresp = requests.get(front + '/getfile', data = {'key': self.key, 'node_id': self.node_id, 'subtask_id': self.subtask_id, 'archive_name': self.archive_name}, stream = True)
                     assert_response(fresp, None)
                     print('Retrieving archive!')
-                    download_file(fresp, os.path.join(config['ARCHIVE_DIRECTORY'], '.'.join([arch, ARCHIVE_EXTENTION])))
+                    download_file(fresp, os.path.join(config['ARCHIVE_DIRECTORY'], '.'.join([self.archive_name, ARCHIVE_EXTENTION])))
                     break
                 except Exception as e:
                     print('Error occured during retrieving archive: {0}!'.format(str(e)))
@@ -161,7 +186,7 @@ class Node:
             try:
                 ifs = open(tasklockfile, 'r')
                 fdata = ifs.read()
-                self.subtask_id, self.max_time = fdata.split('#')
+                self.subtask_id, self.max_time, self.archive_name = fdata.split('#')
                 self.max_time = int(self.max_time)
             except Exception as e:
                 requests.put(front + '/nodes/{0}'.format(self.node_id), data = {'key': self.key, 'status': TASK_STATUS_FAILED, 'subtask_id': self.subtask_id})
@@ -174,9 +199,7 @@ class Node:
         ###>> unzipping
         try:
             print('  Extracting archive')
-            os.chdir(config['WORKING_DIRECTORY'])
-            unzipcmd = UNZIPPER_CMD_FMT.format(wildcard = os.path.join(config['ARCHIVE_DIRECTORY'], '*'))
-            code = os.system(unzipcmd)
+            code = unpack(self.archive_name, config['ARCHIVE_DIRECTORY'], config['WORKING_DIRECTORY'])
             if code:
                 raise Exception('Failed to extract: {0}'.format(unzipcmd))
             print('  Done')
@@ -190,7 +213,7 @@ class Node:
         if not os.path.exists(tasklockfile):
             print('Creating task lock file: {0}'.format(tasklockfile))
             ofs = open(tasklockfile, 'w')
-            ofs.write('#'.join(list(map(str, [self.subtask_id, self.max_time]))))
+            ofs.write('#'.join(list(map(str, [self.subtask_id, self.max_time, self.archive_name]))))
             ofs.close()
         ###<< creating lockfile
 
@@ -252,11 +275,11 @@ class Node:
             raise ETaskUnrecoverable(msg)
         
         ### results dir exists, zip it
-        os.chdir(resdir)
         newarchfn = random_string(32)
         newarchfile = os.path.join(config['ARCHIVE_DIRECTORY'], newarchfn)
-        zipcmd = ZIPPER_CMD_FMT.format(name = newarchfile, wildcard = '*')
-        if os.system(zipcmd):
+        code = pack(newarchfn, '*', resdir, config['ARCHIVE_DIRECTORY'])
+
+        if code:
             raise ETaskUnrecoverable('Failed to compress: {0}'.format(zipcmd))
         os.chdir(config['WORKING_DIRECTORY'])
 
