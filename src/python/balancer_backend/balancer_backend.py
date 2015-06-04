@@ -39,19 +39,21 @@ def nodesHandler():
 def nodesSpecificHandler(nid):
     if not 'status' in request.form: return 'Required: status', 422
     status = request.form['status']
-    if nid in activenodes:
-        activenodes[nid].update(status)
-    else:
-        subtask = jsr('get', bw['database']+'/subtask/filter', {'agent_id':nid}).json()['result'][0]
-        sid = subtask['id']
-        tid = subtask['task_id']            
+    try:
+        if nid in activenodes:
+            activenodes[nid].update(status)
+        else:
+            subtask = jsr('get', bw['database']+'/subtask/filter', {'agent_id':nid}).json()['result'][0]
+            sid = subtask['id']
+            tid = subtask['task_id']
+            maxtime = subtask['max_time']
+            activenodes[nid] = ActiveNode(status, tid, sid, nid, maxtime)
+        n = activenodes[nid]
+        resp = jsr('put', bw['database'] + '/subtask/{0}'.format(n.sid), {'status': status})
+        return jsenc({'status':'success'}), 200
+    except:
+        return jsenc({'status':'failure', 'message':'task was cancelled or reassigned'}), 404
         
-        activenodes[nid] = ActiveNode(status, tid, sid, nid)
-    
-    n = activenodes[nid]
-    resp = jsr('put', bw['database'] + '/subtask/{0}'.format(n.sid), {'status': status})
-
-    return jsenc({'status':'success'}), 200
     
 @app.route('/tasks/newtask', methods=['GET'])
 def newTaskHandler():
@@ -67,7 +69,7 @@ def newTaskHandler():
         archive_name = task['archive_name']
         max_time = task['max_time']
         
-        activenodes[nid] = ActiveNode('Was assigned task', tid, sid, nid)
+        activenodes[nid] = ActiveNode('Was assigned task', tid, sid, nid, max_time)
         
         return jsenc({'archive_name':archive_name, 'max_time': max_time}), 200
     else:
@@ -91,10 +93,30 @@ def submitTaskHandler():
 def actualityCheck():
     try:
         sts = jsr('get', bw['database']+'/subtask/filter', {'status':TASK_STATUS_ASSIGNED}).json()['result']
-        stids = list(map(lambda x:x['id'], sts))
     except:
-        pass
-    
+        print("Error while trying to get list of actual tasks")
+        return
+        
+    now = datetime.datetime.now()
+    for st in sts:
+        try:
+            stid = st['id']
+            nid = st['agent_id']
+            if nid in activenodes:
+                if activenodes[nid].stid == stid:
+                    n = activenodes[nid]
+                    if (now - n.lastbeat).total_seconds() > n.maxtime:
+                        jsr('put', bw['database']+'/subtask/filter', {'status':TASK_STATUS_ASSIGNED, 'id':stid, 'agent_id':nid, \
+                            'changes':{'status':TASK_STATUS_QUEUED, 'agent_id':None}})
+                else:
+                    activenodes.pop(nid, '')
+            else:
+                activenodes[nid] = ActiveNode('Was assigned task', tid, sid, nid, max_time)
+        except Exception as e:
+            print('During handling of a subtask cleaning:')
+            print(e)
+            pass
+                
 
 def actualityChecker():
     actualityCheck()
@@ -113,13 +135,15 @@ class ActiveNode:
     nid = None
     sid = None
     lastbeat = None
+    maxtime = None
     status = None
-    def __init__(self, status, tid, sid, nid):
+    def __init__(self, status, tid, sid, nid, maxtime):
         self.status = status
         self.lastbeat = datetime.datetime.now()
         self.tid = tid
         self.sid = sid
         self.nid = nid
+        self.maxtime = maxtime
     def __getstatus__(self):
         status = self.__dict__.copy()
         for key in status:
