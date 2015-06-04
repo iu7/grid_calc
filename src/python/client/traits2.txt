@@ -1,0 +1,4 @@
+netFramework 3
+netFramework 3.5
+netFramework 4
+netFramework 4.5
