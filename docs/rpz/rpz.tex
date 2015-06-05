@@ -1080,11 +1080,11 @@
   \subsubsection{Система мониторинга}
   Данная система реализована в виде программы на языке Python.
   Запуск данной системы происходит путём выполнения команды 
-  extbf{ beacon\_backend.py port\_number }
+  \textbf{ beacon\_backend.py port\_number }
   , где beacon\_backend является именем скрипта, реализующего подсистему, 
   а port\_number -- номером порта, на котором будет работать данная подсистема.
   Полный адрес данной подсистемы в локальной сети (к примеру, 
-  extbf{localhost:1666} в случае развертывания всех подсистем на одной машине 
+  \textbf{localhost:1666} в случае развертывания всех подсистем на одной машине 
   и при использовании port\_number = 1666)
   необходим для запуска остальных систем.  
   
@@ -1098,14 +1098,14 @@
   \begin{itemize}
     \item Сервер (несколько, в случае использования шардирования) PostgreSQL, с созданным пользователем pg\_user и паролем pg\_password, а так же базой данных grid\_calc\_db. Также необходимо для каждого такого сервера провести его конфигурирование с помощью однократного запуска скрипта init\_db.py
     \item Сервис (несколько, в случае использования шардирования) data\_backend, запущенный командой 
-    extbf{ data\_backend.py shard\_number beacon\_address postgres\_address port\_number },
+    \textbf{ data\_backend.py shard\_number beacon\_address postgres\_address port\_number },
     где shard\_number -- номер шарда БД, соответствующего данному экземпляру сервиса data\_backend (0 в случае одного шарда),
     beacon\_address -- полный адрес сервиса мониторинга,
     postgres\_address -- полный адрес соответствующего данному шарду экземпляра PostgreSQL, 
     port\_number -- номер порта, на котором будет работать данная подсистема.
     На сервере, на котором развёрнута данная система, необходима установка пакета SQLAlchemy.
     \item Сервис sharding\_backend, запущенный командой 
-    extbf{ sharding\_backend.py beacon\_address port\_number data1\_address, data2\_address, ... },
+    \textbf{ sharding\_backend.py beacon\_address port\_number data1\_address, data2\_address, ... },
     где beacon\_address -- полный адрес сервиса мониторинга,
     port\_number -- номер порта, на котором будет работать данная подсистема,
     dataN\_address -- полный адрес очередного сервиса data\_backend, соответсвующего очередному шарду СХД.
@@ -1114,7 +1114,7 @@
   \subsubsection{Остальные подсистемы комплекса}
   Остальные подсистемы комплекса (СХФ, СУ, СУС, ФП, СБН, ФВУ) разворачиваются сходным образом.
   Для их запуска выполняется команда 
-  extbf{ required\_backend.py balancer\_address port\_number }
+  \textbf{ required\_backend.py balancer\_address port\_number }
   , где balancer\_address -- полный адрес вида ipaddress:port, по которому сервис может получить доступ к сервису мониторинга,
   а port\_number -- номер порта, на котором будет работать данная подсистема.
   
@@ -1140,8 +1140,8 @@
   Задача должна самостоятельно завершаться по выполнении.
   
   Архив archive.tar.gz может быть сформирован с помощью последовательного выполнения команд
-  extbf{ tar -cf archive.tar file1 file2 } и 
-  extbf{ gzip archive.tar }
+  \textbf{ tar -cf archive.tar file1 file2 } и 
+  \textbf{ gzip archive.tar }
   , где file1 и file2 - файлы, необходимые задаче (к примеру, start.exe).
   
   \subsubsection{Постановка задачи комплексу}
@@ -1222,7 +1222,7 @@
   \subsection{Регистрация вычислительного узла}
   Для регистрации вычислительного узла необходимо создать файл traits.txt, сходный с таковым для задач. 
   После этого, необходимо выполнить команду  
-  extbf{ client.py client\_number node\_frontend traits.txt }
+  \textbf{ client.py client\_number node\_frontend traits.txt }
   , где client\_number -- произвольный ключ, используемый для различия разных экземпляров клиентского ПО, запущенных на одном ВУ,
   node\_frontend -- полный адрес фронтенда вычислительных узлов,
   traits.txt -- файл черт данного вычислительного узла.
@@ -1233,8 +1233,8 @@
   \subsection{Получение результатов}
   Результаты завершённой задачи доступны по ссылке "Результат" в окне просмотра статусов задач, отображаемой в строке статуса подзадачи на рис.~\ref{fig:interface-tasks-partial}.
   Скачанный по данной ссылке архив может быть разархивирован с помощью послеовательного выполнения команд
-  extbf{ gzip -d archive.tar.gz } и 
-  extbf{ tar -xf archive.tar }.     
+  \textbf{ gzip -d archive.tar.gz } и 
+  \textbf{ tar -xf archive.tar }.     
   
   \begin{figure}
     \centering
