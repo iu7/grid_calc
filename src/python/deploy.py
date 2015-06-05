@@ -83,10 +83,20 @@ if __name__ == '__main__':
             'sharding_backend/sharding_backend.py {{beacon}} {{port}} {dbcaddrs}'.format(dbcaddrs = dbcaddrs),\
             'file_backend/file_backend.py {beacon} {port}',\
             'balancer_backend/balancer_backend.py {beacon} {port}',\
-            'session_backend/session_backend.py {beacon} {port}',\
+            #'session_backend/session_backend.py {beacon} {port}',\
             'logic_backend/logic_backend.py {beacon} {port}',\
             'node_frontend/node_frontend.py {beacon} {port}',\
             'user_frontend/user_frontend.py {beacon} {port}',\
         ],\
         curport + 1,\
     )
+
+    #session_scaling
+    #nginx proxy port -- 5025
+    #session backends -- 5020-5023
+    nginx_proxy_port = 5025
+    session_backends_count = 4
+    session_backend_from = 5020
+    session_backend_to = session_backend_from + session_backends_count
+    session_deploy_cmd_fmt = 'session_backend/session_backend.py {{beacon}} {{port}} {nginx_proxy_port}'.format(nginx_proxy_port = nginx_proxy_port)
+    auto_port_deploy(beacon_address, [session_deploy_cmd_fmt] * session_backends_count, session_backend_from - 1, session_backend_to + 1)

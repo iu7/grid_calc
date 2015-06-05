@@ -152,10 +152,16 @@ def logout():
 if __name__ == '__main__':
     global port
     host = '0.0.0.0'
-    beacon, port = parse_argv(sys.argv)
-    print('Starting with settings: beacon:{0} self: {1}:{2}'.format(beacon, host, port))
+    beacon, port = parse_argv(sys.argv, '[nginx_proxy_port]')
+    using_nginx_proxy = False
+    if len(sys.argv) > 3:
+        using_nginx_proxy = True
+        nginx_proxy_port = int(sys.argv[3])
+        print('Starting with settings: beacon:{0} self: {1}:{2} nginx_proxy_port: {3}'.format(beacon, host, port, nginx_proxy_port))
+    else:
+        print('Starting with settings: beacon:{0} self: {1}:{2}'.format(beacon, host, port))
     
-    bw = BeaconWrapper(beacon, port, 'services/session_backend', {'database'})
+    bw = BeaconWrapper(beacon, port if not using_nginx_proxy else nginx_proxy_port, 'services/session_backend', {'database'})
     bw.beacon_setter()
     bw.beacon_getter()
     
