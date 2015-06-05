@@ -100,11 +100,34 @@
 }
 \makeatother
 
+\usepackage{lastpage}  
+\usepackage[figure,table,lstlisting,xspace]{totalcount}
+
 \bibliography{reference_list} 
 \begin{document}
+  %skip for title page
+  \setcounter{page}{3}
   
+  \section*{Реферат}
+  Отчёт \pageref{LastPage}с., \totaltables табл., \totalfigures изображений, \totallstlistings листингов, 17 источников.
+  
+  \noindent \textbf{Распределённые системы обработки информации, распределённые вычисления, Python, Flask, PostgreSQL.} 
+  
+  Предмет работы составляет разработка системы распределения вычислений.
+  
+  Цель работы - создание программного обеспечения, осуществляющего распределение
+  вычислительных задач по произвольным вычислительным узлам, причём полученная система
+  должна быть распределённой.
+  
+  В процессе работы была спроектирована структура системы и отдельные её компоненты.
+  Были реализованы все сервисы системы и проведено их тестирование.
+  Разработанная система предусматривает наличие механизма деградации функциональности
+  и масштабирование некоторых узлов.
+  
+  В результате была разработана система распределения вычислений и приведены инструкции по её пользованию.
+  
+  \clearpage
   \tableofcontents
-  
   \clearpage
   \section*{Глоссарий}
   \begin{itemize}
@@ -409,22 +432,22 @@
   
   \begin{lstlisting}[float={},language=Java,caption={Пример JSON-представления коллекции верхнего уровня сервиса мониторинга},label=lst:json-beacon]
   {
-    "type1": {
-      "ipaddr1:port1": {
-        "state": "message1",     // arbitrary string
-        "lastbeat": "datetime1"  // ex. "2015-05-25 01:46:35.857670"
-      },
-      "ipaddr2:port2": {
-        "state": "message2",
-        "lastbeat": "datetime2"
-      }
-      },
-    "type2": {
-      "ipaddr3:port3": {
-        "state": "message3",
-        "lastbeat": "datetime3"
-      }
-    }
+  "type1": {
+  "ipaddr1:port1": {
+  "state": "message1",     // arbitrary string
+  "lastbeat": "datetime1"  // ex. "2015-05-25 01:46:35.857670"
+  },
+  "ipaddr2:port2": {
+  "state": "message2",
+  "lastbeat": "datetime2"
+  }
+  },
+  "type2": {
+  "ipaddr3:port3": {
+  "state": "message3",
+  "lastbeat": "datetime3"
+  }
+  }
   }
   \end{lstlisting}
   
@@ -478,7 +501,7 @@
   \begin{lstlisting}[float={},language={},caption={Пример корректного файла со списком черт задачи},label=lst:task-traits]
   cuda_version            5.5
   opengl_version             
-       
+  
   this_string_will_be_ignored
   
   platform                linux
@@ -511,18 +534,18 @@
       \item[Ресурс:] \url{/nodes}
       \item[Метод:] POST
       \item[Параметры:] список черт и ключ вычислительного узла в виде JSON-объекта
-       \lstinline[language=Java]|{ "traits":[{ "name":"name1", "version":"version1" }, ...], "key":"..." }|
+      \lstinline[language=Java]|{ "traits":[{ "name":"name1", "version":"version1" }, ...], "key":"..." }|
       \item[Результат:] сообщение об успешной регистрации узла и назначенный идентификатор 
-       \lstinline[language=Java]|{ "status":"success", "agent_id":"identifier" }|
+      \lstinline[language=Java]|{ "status":"success", "agent_id":"identifier" }|
     \end{description}
     \item
     \begin{description}
       \item[Ресурс:] \url{/nodes/nodeid}
       \item[Метод:] PUT
       \item[Параметры:] состояние расчёта, 
-       form/query-параметры "state", "key\_old". Для обновления ключа также добавлен параметр "key".
+      form/query-параметры "state", "key\_old". Для обновления ключа также добавлен параметр "key".
       \item[Результат:] сообщение об успешном обновлении статуса
-       \lstinline[language=Java]|{ "status":"success" }|
+      \lstinline[language=Java]|{ "status":"success" }|
     \end{description}
     \item
     \begin{description}
@@ -758,7 +781,7 @@
       \item[Ошибки:] Файл отсутствует: HTTP 404, ошибка при удалении файла: HTTP 500
     \end{description}
   \end{itemize}
-    
+  
   \subsection{Система балансировки нагрузки}
   Данная система отвечает за координацию задач и отслеживание состояний активных вычислительных узлов. 
   
@@ -868,6 +891,7 @@
     \item SQLite 3.8.10.2 \cite{sqlite} -- система управления базой данных
     \item tar \cite{tarl, tarw} -- утилита для работы с .tar - архивами
     \item gzip \cite{gzipl, gzipw} -- утилита для работы с .gz - архивами
+    \item Nginx 1.8.0 \cite{nginx} -- веб-сервер
   \end{itemize}
   
   \subsection{Система мониторинга}
@@ -944,11 +968,11 @@
   \subsubsection{Система мониторинга}
   Данная система реализована в виде программы на языке Python.
   Запуск данной системы происходит путём выполнения команды 
-  \lstinline[language=bash]| beacon_backend.py port_number |
+  extbf{ beacon\_backend.py port\_number }
   , где beacon\_backend является именем скрипта, реализующего подсистему, 
   а port\_number -- номером порта, на котором будет работать данная подсистема.
   Полный адрес данной подсистемы в локальной сети (к примеру, 
-  \lstinline[language=bash]|localhost:1666| в случае разворачивания всех подсистем на одной машине 
+  extbf{localhost:1666} в случае разворачивания всех подсистем на одной машине 
   и при использовании port\_number = 1666)
   необходим для запуска остальных систем.  
   
@@ -962,14 +986,14 @@
   \begin{itemize}
     \item Сервер (несколько, в случае использования шардирования) PostgreSQL, с созданным пользователем pg\_user и паролем pg\_password, а так же базой данных grid\_calc\_db. Также необходимо для каждого такого сервера провести его конфигурирование с помощью однократного запуска скрипта init\_db.py
     \item Сервис (несколько, в случае использования шардирования) data\_backend, запущенный командой 
-    \lstinline[language=bash]| data_backend.py shard_number beacon_address postgres_address port_number |,
+    extbf{ data\_backend.py shard\_number beacon\_address postgres\_address port\_number },
     где shard\_number -- номер шарда БД, соответствующего данному экземпляру сервиса data\_backend (0 в случае одного шарда),
     beacon\_address -- полный адрес сервиса мониторинга,
     postgres\_address -- полный адрес соответствующего данному шарду экземпляра PostgreSQL, 
     port\_number -- номер порта, на котором будет работать данная подсистема.
     На сервере, на котором развёрнута данная система, необходима установка пакета SQLAlchemy.
     \item Сервис sharding\_backend, запущенный командой 
-    \lstinline[language=bash]| sharding_backend.py beacon_address port_number data1_address, data2_address, ... |,
+    extbf{ sharding\_backend.py beacon\_address port\_number data1\_address, data2\_address, ... },
     где beacon\_address -- полный адрес сервиса мониторинга,
     port\_number -- номер порта, на котором будет работать данная подсистема,
     dataN\_address -- полный адрес очередного сервиса data\_backend, соответсвующего очередному шарду СХД.
@@ -978,11 +1002,14 @@
   \subsubsection{Остальные подсистемы комплекса}
   Остальные подсистемы комплекса (СХФ, СУ, СУС, ФП, СБН, ФВУ) разворачиваются сходным образом.
   Для их запуска выполняется команда 
-  \lstinline[language=bash]| required_backend.py balancer_address port_number |
+  extbf{ required\_backend.py balancer\_address port\_number }
   , где balancer\_address -- полный адрес вида ipaddress:port, по которому сервис может получить доступ к сервису мониторинга,
   а port\_number -- номер порта, на котором будет работать данная подсистема.
   
-  На сервере, где разворачивается СУ, необходима установка пакета SQLAlchemy и СУБД SQLite.
+  На сервере, где разворачивается СУС, необходима установка пакета SQLAlchemy и СУБД SQLite.
+  
+  СУ может быть развёрнута в режиме масштабирования серверов сессии. 
+  В таком случае сервер СУ должен иметь установленным ПО веб-сервера Nginx, настроенного в режиме round-robin балансировки запросов к нескольким запущенным экземплярам СУ.
   
   \subsection{Постановка задачи}
   \subsubsection{Формирование необходимых комплексу файлов}
@@ -1001,8 +1028,8 @@
   Задача должна самостоятельно завершаться по выполнении.
   
   Архив archive.tar.gz может быть сформирован с помощью последовательного выполнения команд
-  \lstinline[language=bash]| tar -cf archive.tar file1 file2 | и 
-  \lstinline[language=bash]| gzip archive.tar |
+  extbf{ tar -cf archive.tar file1 file2 } и 
+  extbf{ gzip archive.tar }
   , где file1 и file2 - файлы, необходимые задаче (к примеру, start.exe).
   
   \subsubsection{Постановка задачи комплексу}
@@ -1021,7 +1048,7 @@
     и максимальное время в секундах, после которого задача будет отобрана у простаивающего узла и переназначена другому.
     \item После подтверждения параметров, будет произведена переадресация на страницу просмотра поставленных задач, содержащую информацию о созданной задаче (рис.~\ref{fig:interface-tasks-created}).
   \end{enumerate}
-
+  
   \begin{figure}
     \centering
     \begin{minipage}{.49\linewidth}
@@ -1083,7 +1110,7 @@
   \subsection{Регистрация вычислительного узла}
   Для регистрации вычислительного узла необходимо создать файл traits.txt, сходный с таковым для задач. 
   После этого, необходимо выполнить команду  
-  \lstinline[language=bash]| client.py client_number node_frontend traits.txt |
+  extbf{ client.py client\_number node\_frontend traits.txt }
   , где client\_number -- произвольный ключ, используемый для различия разных экземпляров клиентского ПО, запущенных на одном ВУ,
   node\_frontend -- полный адрес фронтенда вычислительных узлов,
   traits.txt -- файл черт данного вычислительного узла.
@@ -1094,9 +1121,9 @@
   \subsection{Получение результатов}
   Результаты завершённой задачи доступны по ссылке "Результат" в окне просмотра статусов задач, отображаемой в строке статуса подзадачи на рис.~\ref{fig:interface-tasks-partial}.
   Скачанный по данной ссылке архив может быть разархивирован с помощью послеовательного выполнения команд
-  \lstinline[language=bash]| gzip -d archive.tar.gz | и 
-  \lstinline[language=bash]| tar -xf archive.tar |.     
-    
+  extbf{ gzip -d archive.tar.gz } и 
+  extbf{ tar -xf archive.tar }.     
+  
   \begin{figure}
     \centering
     \includegraphics[width=.49\linewidth]{img/interface/tasks-created}
