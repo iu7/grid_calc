@@ -136,6 +136,16 @@ def parse_argv(argv, custmom_msg = ''):
         sys.exit()
     return beacon, port
 
+def parse_nginx_scale_argv(argv, custmom_msg = ''):
+    try:
+        beacon = 'http://'+sys.argv[1]
+        nginx_port = int(sys.argv[2])
+        port = int(sys.argv[3])
+    except Exception as e:
+        print('Usage: {0} beacon_host:beacon_port nginx_port port {1}'.format(sys.argv[0], custmom_msg))
+        sys.exit()
+    return beacon, port
+
 def parse_beacon_argv(argv, custmom_msg = ''):
     try:
         port = int(sys.argv[1])
