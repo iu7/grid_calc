@@ -23,7 +23,7 @@
 \usepackage{upquote} % for good-looking quotes in source code (used for custom languages)
 \usepackage{xcolor} % colors!
 \usepackage{enumitem} % for unboxed description labels (long ones)
-\usepackage{caption}
+\usepackage[figurename=Fig.]{caption}
 \usepackage{multirow}
 \usepackage{varwidth}
 \usepackage{longtable}
@@ -600,7 +600,7 @@
     \begin{description}
       \item[Ресурс:] \url{/users}
       \item[Метод:] POST
-      \item[Параметры:] желаемая пара логин / пароль (хешированный). Form/ query/JSON "username", "pw\_hash"
+      \item[Параметры:] желаемая пара логин / пароль (хешированный). Form/query/JSON "username", "pw\_hash"
       \item[Результат:] сообщение об успешной регистрации пользователя 
       \lstinline[language=Java]|{ "status":"success", "user_id":"identifier" }|
       \item[Ошибки:] пользователь с таким именем уже зарегистрирован: HTTP 422
@@ -672,7 +672,6 @@
       \item[Параметры:] идентификатор пользователя. JSON 
       \lstinline[language=Java]|{ "uid":"..." }|
       \item[Результат:] Список задач пользователя, их черт, дат постановки комплексу и статусов их подзадач:
-      \\
       \lstinline[language=Java]|{ "status":"success", "tasks":[{ "taskname":"...", "traits":[...], "statuses":[{"status":"..."}, {"result":"..."}, ...], "id":"...", "dateplaced":"..." }, ...] }|
       \item[Ошибки:] Неверный синтаксис запроса: HTTP 422
     \end{description}
@@ -754,7 +753,7 @@
     \begin{description}
       \item[Ресурс:] \url{/static}
       \item[Метод:] POST
-      \item[Параметры:] файл, переданный с помощью параметра типа multipart/ form-data "file"
+      \item[Параметры:] файл, переданный с помощью параметра типа multipart/form-data "file"
       \item[Результат:] Назначенный идентификатор файла
       \lstinline[language=Java]|{ "name":"..." }|
       \item[Ошибки:] Неверный синтаксис запроса: HTTP 400
@@ -963,8 +962,7 @@
     \item попытка получения идентификатора сессии по неверной паре логин/пароль;
     \item получение идентификатора пользователя по активному идентификатору сессии;
     \item попытка получения идентификатора пользователя по отозванному идентификатору сессии;
-    \item отзыв идентификатора сессии по активному идентификатору сессии;
-    \item попытка отзыва идентификатора сессии по отозванному идентификатору сессии.
+    \item отзыв идентификатора сессии по активному идентификатору сессии;        \item попытка отзыва идентификатора сессии по отозванному идентификатору сессии.
   \end{itemize}
   
   \subsection{Система управления}
@@ -1002,7 +1000,7 @@
   
   \subsection{Система хранения данных}
   \subsubsection{Реализация}
-  Система была реализована с помощью фреймворка Flask и ORM \\ SQLAlchemy, с использованием СУБД PostgreSQL.
+  Система была реализована с помощью фреймворка Flask и ORM SQLAlchemy, с использованием СУБД PostgreSQL.
   Система состоит из одного или нескольких бекендов данных, предоставляющих REST-интерфейс к СУБД, и шардирующего бекенда, осущетвляющего шардирование
   данных на бекенды данных. Шардирование производится функционально по целочисленным первичным ключам.
   
@@ -1117,22 +1115,18 @@
   СХД состоит из следующих серверов (возможно, развёрнутых на одной машине):
   \begin{itemize}
     \item Сервер (несколько, в случае использования шардирования) PostgreSQL, с созданным пользователем pg\_user и паролем pg\_password, а так же базой данных grid\_calc\_db. Также необходимо для каждого такого сервера провести его конфигурирование с помощью однократного запуска скрипта init\_db.py
-    \item Сервис (несколько, в случае использования шардирования) data\_backend, запущенный командой
-    \begin{lstlisting}[numbers=none]
-    data_backend.py shard_number beacon_address postgres_address port_number
-    \end{lstlisting}
+    \item Сервис (несколько, в случае использования шардирования) data\_backend, запущенный командой 
+    \textbf{ data\_backend.py shard\_number beacon\_address postgres\_address port\_number },
     где shard\_number -- номер шарда БД, соответствующего данному экземпляру сервиса data\_backend (0 в случае одного шарда),
-    beacon\_ address -- полный адрес сервиса мониторинга,
+    beacon\_address -- полный адрес сервиса мониторинга,
     postgres\_address -- полный адрес соответствующего данному шарду экземпляра PostgreSQL, 
     port\_number -- номер порта, на котором будет работать данная подсистема.
     На сервере, на котором развёрнута данная система, необходима установка пакета SQLAlchemy.
-    \item Сервис sharding\_backend, запущенный командой
-    \begin{lstlisting}[numbers=none]
-    sharding_backend.py beacon_address port_number data1_address,data2_address,...
-    \end{lstlisting}
+    \item Сервис sharding\_backend, запущенный командой 
+    \textbf{ sharding\_backend.py beacon\_address port\_number data1\_address, data2\_address, ... },
     где beacon\_address -- полный адрес сервиса мониторинга,
     port\_number -- номер порта, на котором будет работать данная подсистема,
-    dataN\_ address -- полный адрес очередного сервиса data\_backend, соответсвующего очередному шарду СХД.
+    dataN\_address -- полный адрес очередного сервиса data\_backend, соответсвующего очередному шарду СХД.
   \end{itemize}
   
   \paragraph{Остальные подсистемы комплекса.}
@@ -1142,7 +1136,7 @@
   , где balancer\_address -- полный адрес вида ipaddress:port, по которому сервис может получить доступ к сервису мониторинга,
   а port\_number -- номер порта, на котором будет работать данная подсистема.
   
-  На сервере, где разворачивается СУС, необходима установка пакета \\ SQLAlchemy и СУБД SQLite.
+  На сервере, где разворачивается СУС, необходима установка пакета SQLAlchemy и СУБД SQLite.
   
   СУ может быть развёрнута в режиме масштабирования серверов сессии. 
   В таком случае сервер СУ должен иметь установленным ПО веб-сервера Nginx, настроенного в режиме round-robin балансировки запросов к нескольким запущенным экземплярам СУ.
