@@ -23,9 +23,6 @@ START_SCRIPT_PREFIX = 'start'
 SCRIPT_RESULTS_DIR = 'result'
 SCRIPT_EXTENTIONS = ['exe', 'sh', 'bat', 'py']
 
-#I like CHINdows very much 
-#ZIPPER_CMD_FMT   = 'tar -czf {{name}}.{archext} {{wildcard}}'.format(archext = ARCHIVE_EXTENTION)
-#UNZIPPER_CMD_FMT = 'tar -xzf {wildcard}'
 TAR_PACK_CMD_FMT = 'tar -cf {name}.tar {wildcard}'
 GZIP_PACK_CMD_FMT = 'gzip {name}.tar'
 TAR_UNPACK_CMD_FMT = 'tar -xf {name}.tar'
